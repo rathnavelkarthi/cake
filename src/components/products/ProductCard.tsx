@@ -72,6 +72,7 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
         <img
           src={product.image}
           alt={product.name}
+          className="product-card-img"
           style={{
             position: "absolute",
             top: 0,
@@ -79,7 +80,7 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
             width: "100%",
             height: "100%",
             objectFit: "cover",
-            transition: "transform 350ms var(--ease-out)",
+            transition: "transform 400ms var(--ease-apple-spring)",
           }}
         />
 

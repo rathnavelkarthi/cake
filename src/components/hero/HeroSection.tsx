@@ -46,25 +46,35 @@ export default function HeroSection() {
         >
           {/* Left Column: Editorial Presentation & Conversion */}
           <div>
-            {/* Location & Kitchen Badge */}
+            {/* Location & Kitchen Live Badge */}
             <div
               style={{
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "8px",
                 backgroundColor: "var(--accent-caramel-subtle)",
-                color: "var(--accent-caramel)",
+                color: "var(--accent-cocoa)",
                 padding: "6px 14px",
                 borderRadius: "var(--radius-full)",
                 fontSize: "13px",
                 fontWeight: 600,
                 marginBottom: "20px",
-                boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.6)",
+                boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 2px 6px rgba(199, 109, 56, 0.08)",
+                border: "1px solid rgba(199, 109, 56, 0.15)",
               }}
             >
-              <MapPin size={14} />
-              <span className="tag-label" style={{ textTransform: "none", letterSpacing: "0.01em" }}>
-                {BUSINESS_CONFIG.address.locality} Counter, Chennai
+              <span
+                style={{
+                  display: "inline-block",
+                  width: "7px",
+                  height: "7px",
+                  borderRadius: "50%",
+                  backgroundColor: "#22C55E",
+                  boxShadow: "0 0 8px #22C55E",
+                }}
+              />
+              <span className="tag-label" style={{ textTransform: "none", letterSpacing: "0.01em", color: "var(--accent-cocoa)" }}>
+                Baking fresh today • {BUSINESS_CONFIG.address.locality}, Chennai
               </span>
             </div>
 

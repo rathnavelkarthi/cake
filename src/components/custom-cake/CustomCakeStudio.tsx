@@ -473,7 +473,7 @@ Please let me know the availability, design feasibility, and price quote. Thank 
               Live Cake Inscription Preview
             </div>
 
-            {/* Visual Cake Simulation Plate with spring scale pulse */}
+            {/* Visual Cake Simulation Plate with porcelain lighting & spring scale pulse */}
             <div
               style={{
                 position: "relative",
@@ -481,9 +481,9 @@ Please let me know the availability, design feasibility, and price quote. Thank 
                 maxWidth: "340px",
                 aspectRatio: "1 / 1",
                 borderRadius: "50%",
-                backgroundColor: "#F4EBE1",
-                boxShadow: "0 20px 48px rgba(58, 32, 22, 0.12), inset 0 0 40px rgba(0,0,0,0.04)",
-                border: "8px solid #FFFFFF",
+                background: "radial-gradient(circle at 35% 35%, #FFFDF9 0%, #F5ECE1 55%, #E6D6C5 100%)",
+                boxShadow: "0 24px 56px rgba(58, 32, 22, 0.14), inset 0 2px 6px rgba(255, 255, 255, 0.95), inset 0 -6px 16px rgba(74, 46, 31, 0.08)",
+                border: "10px solid #FFFFFF",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -491,20 +491,21 @@ Please let me know the availability, design feasibility, and price quote. Thank 
                 padding: "32px",
                 margin: "0 auto 24px",
                 transform: previewPulse ? "scale(0.985)" : "scale(1)",
-                transition: "transform 180ms var(--ease-out)",
+                transition: "transform 180ms var(--ease-apple-spring)",
               }}
             >
-              {/* Frosting perimeter line */}
+              {/* Frosting perimeter line with subtle light reflection */}
               <div
                 style={{
                   position: "absolute",
                   inset: "16px",
                   borderRadius: "50%",
-                  border: "2px dashed rgba(199, 109, 56, 0.3)",
+                  border: "2px dashed rgba(199, 109, 56, 0.35)",
+                  boxShadow: "inset 0 1px 2px rgba(199, 109, 56, 0.15)",
                 }}
               />
 
-              <div style={{ fontSize: "12px", color: "var(--accent-caramel)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "8px" }}>
+              <div style={{ fontSize: "11px", color: "var(--accent-caramel)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "8px" }}>
                 {selectedFlavour}
               </div>
 
@@ -522,13 +523,14 @@ Please let me know the availability, design feasibility, and price quote. Thank 
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  transition: "opacity 160ms var(--ease-out), transform 160ms var(--ease-out)",
+                  textShadow: "0 1px 2px rgba(255,255,255,0.8)",
+                  transition: "opacity 160ms var(--ease-apple-spring), transform 160ms var(--ease-apple-spring)",
                 }}
               >
                 {cakeMessage || "Your message here"}
               </div>
 
-              <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "12px" }}>
+              <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "12px", fontWeight: 500 }}>
                 {selectedWeight.label} • {isEggless ? "100% Eggless" : "Standard"}
               </div>
             </div>

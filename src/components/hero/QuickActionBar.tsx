@@ -1,9 +1,10 @@
 "use client";
 
 import React from "react";
-import { ShoppingBag, MessageCircle, Phone, Navigation } from "lucide-react";
+import { ShoppingBag, MessageCircle, Phone, Navigation, Clock, Sparkles } from "lucide-react";
 import { BUSINESS_CONFIG } from "@/lib/config/business";
 import { trackEvent } from "@/lib/analytics/events";
+import { triggerHaptic } from "@/lib/utils/haptics";
 
 export default function QuickActionBar() {
   return (
@@ -19,7 +20,10 @@ export default function QuickActionBar() {
           {/* 1. ORDER ONLINE */}
           <a
             href="#signature-cakes"
-            onClick={() => trackEvent({ name: "click_phone", source: "quick_action_order" })}
+            onClick={() => {
+              triggerHaptic("impact");
+              trackEvent({ name: "click_phone", source: "quick_action_order" });
+            }}
             className="pressable card-hover"
             style={{
               display: "flex",
@@ -29,7 +33,7 @@ export default function QuickActionBar() {
               backgroundColor: "var(--bg-surface)",
               borderRadius: "var(--radius-lg)",
               border: "1px solid var(--border-subtle)",
-              boxShadow: "var(--shadow-sm)",
+              boxShadow: "0 2px 8px rgba(35, 23, 17, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.85)",
               textDecoration: "none",
             }}
           >
@@ -44,12 +48,13 @@ export default function QuickActionBar() {
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
+                boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.6)",
               }}
             >
               <ShoppingBag size={22} />
             </div>
             <div>
-              <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--accent-cocoa)" }}>
+              <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--accent-cocoa)", letterSpacing: "-0.01em" }}>
                 Order Online
               </div>
               <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>
@@ -63,7 +68,10 @@ export default function QuickActionBar() {
             href={`https://wa.me/${BUSINESS_CONFIG.whatsapp.replace("+", "")}?text=${encodeURIComponent("Hi Kichees! I'd like to ask about a cake order.")}`}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => trackEvent({ name: "click_whatsapp", source: "quick_action_strip" })}
+            onClick={() => {
+              triggerHaptic("impact");
+              trackEvent({ name: "click_whatsapp", source: "quick_action_strip" });
+            }}
             className="pressable card-hover"
             style={{
               display: "flex",
@@ -72,8 +80,8 @@ export default function QuickActionBar() {
               padding: "20px 22px",
               backgroundColor: "var(--bg-surface)",
               borderRadius: "var(--radius-lg)",
-              border: "1px solid rgba(37, 211, 102, 0.2)",
-              boxShadow: "var(--shadow-sm)",
+              border: "1px solid rgba(37, 211, 102, 0.25)",
+              boxShadow: "0 2px 8px rgba(35, 23, 17, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.85)",
               textDecoration: "none",
             }}
           >
@@ -88,12 +96,13 @@ export default function QuickActionBar() {
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
+                boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.6)",
               }}
             >
               <MessageCircle size={22} />
             </div>
             <div>
-              <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--accent-cocoa)" }}>
+              <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--accent-cocoa)", letterSpacing: "-0.01em" }}>
                 WhatsApp Us
               </div>
               <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>
@@ -105,7 +114,10 @@ export default function QuickActionBar() {
           {/* 3. CALL NOW */}
           <a
             href={`tel:${BUSINESS_CONFIG.phone}`}
-            onClick={() => trackEvent({ name: "click_phone", source: "quick_action_strip" })}
+            onClick={() => {
+              triggerHaptic("impact");
+              trackEvent({ name: "click_phone", source: "quick_action_strip" });
+            }}
             className="pressable card-hover"
             style={{
               display: "flex",
@@ -115,7 +127,7 @@ export default function QuickActionBar() {
               backgroundColor: "var(--bg-surface)",
               borderRadius: "var(--radius-lg)",
               border: "1px solid var(--border-subtle)",
-              boxShadow: "var(--shadow-sm)",
+              boxShadow: "0 2px 8px rgba(35, 23, 17, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.85)",
               textDecoration: "none",
             }}
           >
@@ -130,12 +142,13 @@ export default function QuickActionBar() {
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
+                boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.6)",
               }}
             >
               <Phone size={22} />
             </div>
             <div>
-              <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--accent-cocoa)" }}>
+              <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--accent-cocoa)", letterSpacing: "-0.01em" }}>
                 Call Bakery Counter
               </div>
               <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>
@@ -149,7 +162,10 @@ export default function QuickActionBar() {
             href={BUSINESS_CONFIG.mapsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => trackEvent({ name: "click_directions", source: "quick_action_strip" })}
+            onClick={() => {
+              triggerHaptic("impact");
+              trackEvent({ name: "click_directions", source: "quick_action_strip" });
+            }}
             className="pressable card-hover"
             style={{
               display: "flex",
@@ -159,7 +175,7 @@ export default function QuickActionBar() {
               backgroundColor: "var(--bg-surface)",
               borderRadius: "var(--radius-lg)",
               border: "1px solid var(--border-subtle)",
-              boxShadow: "var(--shadow-sm)",
+              boxShadow: "0 2px 8px rgba(35, 23, 17, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.85)",
               textDecoration: "none",
             }}
           >
@@ -174,12 +190,13 @@ export default function QuickActionBar() {
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
+                boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.6)",
               }}
             >
               <Navigation size={22} />
             </div>
             <div>
-              <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--accent-cocoa)" }}>
+              <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--accent-cocoa)", letterSpacing: "-0.01em" }}>
                 Get Directions
               </div>
               <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>
