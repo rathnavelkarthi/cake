@@ -46,7 +46,7 @@ export default function RootLayout({
   const faqSchema = generateFAQSchema();
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* Structured Data for SEO & AEO Discovery */}
         <script
@@ -58,7 +58,9 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
         />
       </head>
-      <body className="paper-texture">{children}</body>
+      <body className="paper-texture" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }

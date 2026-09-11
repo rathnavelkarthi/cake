@@ -189,7 +189,7 @@ export default function Footer() {
             color: "#8E827A",
           }}
         >
-          <div>
+          <div suppressHydrationWarning>
             © {new Date().getFullYear()} {BUSINESS_CONFIG.name}. Handcrafted in Nungambakkam, Chennai.
           </div>
           <div style={{ display: "flex", gap: "20px" }}>

@@ -19,7 +19,7 @@ export default function Home() {
   return (
     <ToastProvider>
       <CartProvider>
-        <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+        <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }} suppressHydrationWarning>
           {/* Header & Sticky Navigation */}
           <Navbar />
 
