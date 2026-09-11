@@ -5,6 +5,7 @@ import Navbar from "@/components/layout/Navbar";
 import HeroSection from "@/components/hero/HeroSection";
 import QuickActionBar from "@/components/hero/QuickActionBar";
 import ProductSection from "@/components/products/ProductSection";
+import TaglineReveal from "@/components/brand/TaglineReveal";
 import CustomCakeStudio from "@/components/custom-cake/CustomCakeStudio";
 import BrandStory from "@/components/brand/BrandStory";
 import LocationSection from "@/components/location/LocationSection";
@@ -33,7 +34,10 @@ export default function Home() {
             {/* 3. Product Discovery & Signature Bakes */}
             <ProductSection />
 
-            {/* 4. Custom Cake Studio */}
+            {/* 4. Mandatory B11 Tagline Reveal Moment */}
+            <TaglineReveal />
+
+            {/* 5. Custom Cake Studio */}
             <CustomCakeStudio />
 
             {/* 5. Brand Story & Kitchen Standards */}
