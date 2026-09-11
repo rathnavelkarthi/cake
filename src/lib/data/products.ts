@@ -26,6 +26,13 @@ export const PRODUCTS: Product[] = [
     ingredients: ["54% Callebaut Dark Chocolate", "Pure Dairy Cream", "Unsalted Butter", "Dutch Cocoa"],
     allergens: ["Dairy", "Gluten"],
     storageInstructions: "Keep refrigerated at 4-8°C. Best enjoyed at room temperature 15 minutes before serving.",
+    flavourNotes: ["54% Callebaut Ganache", "Mild Espresso Maceration", "Gold Leaf & Fresh Berries"],
+    tastingProfile: {
+      cacaoIntensity: 85,
+      sweetness: "Refined Dark",
+      richness: 90,
+      texture: "Velvety Slow-Melt Silk",
+    },
     variants: [
       { id: "v-trf-500", sku: "KCH-TRF-500G", label: "0.5 kg", weight: "0.5 kg", price: 650, servings: "3-4 servings", inStock: true },
       { id: "v-trf-1000", sku: "KCH-TRF-1KG", label: "1.0 kg", weight: "1.0 kg", price: 1200, servings: "6-8 servings", inStock: true },
@@ -50,6 +57,13 @@ export const PRODUCTS: Product[] = [
     ingredients: ["70% Dark Chocolate", "Browned Butter", "California Walnuts", "Maldon Sea Salt"],
     allergens: ["Dairy", "Nuts", "Gluten"],
     storageInstructions: "Store in an airtight container at room temperature for up to 4 days, or warm for 10 seconds before eating.",
+    flavourNotes: ["70% Cacao Core", "Toasted California Walnuts", "Maldon Sea Salt Flakes"],
+    tastingProfile: {
+      cacaoIntensity: 75,
+      sweetness: "Deep Caramelised",
+      richness: 95,
+      texture: "Dense Molten Core",
+    },
     variants: [
       { id: "v-brw-6", sku: "KCH-BRW-BOX6", label: "Box of 6", weight: "380g", price: 480, servings: "6 pieces", inStock: true },
       { id: "v-brw-12", sku: "KCH-BRW-BOX12", label: "Box of 12", weight: "760g", price: 920, servings: "12 pieces", inStock: true },
@@ -72,6 +86,13 @@ export const PRODUCTS: Product[] = [
     ingredients: ["Italian Mascarpone", "Fresh Figs", "Iranian Pistachios", "Madagascar Bourbon Vanilla"],
     allergens: ["Dairy", "Eggs", "Nuts", "Gluten"],
     storageInstructions: "Keep refrigerated. Consume within 24 hours of cutting.",
+    flavourNotes: ["Italian Mascarpone", "Caramelised Fresh Figs", "Bourbon Vanilla Chiffon"],
+    tastingProfile: {
+      cacaoIntensity: 0,
+      sweetness: "Wildflower Honey",
+      richness: 72,
+      texture: "Airy Whipped Chantilly",
+    },
     variants: [
       { id: "v-fig-1000", sku: "KCH-FIG-1KG", label: "1.0 kg", weight: "1.0 kg", price: 1450, servings: "6-8 guests", inStock: true },
       { id: "v-fig-2000", sku: "KCH-FIG-2KG", label: "2.0 kg", weight: "2.0 kg", price: 2800, servings: "14-16 guests", inStock: true },
@@ -95,6 +116,13 @@ export const PRODUCTS: Product[] = [
     ingredients: ["Piedmont Hazelnut Paste", "64% Dark Chocolate", "Feuilletine Wafers", "Dairy Cream"],
     allergens: ["Dairy", "Nuts", "Gluten"],
     storageInstructions: "Keep refrigerated. Serve chilled.",
+    flavourNotes: ["Piedmont Praline", "French Feuilletine Crunch", "64% Dark Mousse"],
+    tastingProfile: {
+      cacaoIntensity: 64,
+      sweetness: "Nutty Caramel",
+      richness: 86,
+      texture: "Crisp Wafer & Pillowy Mousse",
+    },
     variants: [
       { id: "v-hzl-500", sku: "KCH-HZL-500G", label: "0.5 kg", weight: "0.5 kg", price: 750, servings: "3-4 servings", inStock: true },
       { id: "v-hzl-1000", sku: "KCH-HZL-1KG", label: "1.0 kg", weight: "1.0 kg", price: 1400, servings: "6-8 servings", inStock: true },
@@ -117,6 +145,13 @@ export const PRODUCTS: Product[] = [
     ingredients: ["Philadelphia Cream Cheese", "Cultured Buttermilk", "Raw Cocoa", "Pure Vanilla"],
     allergens: ["Dairy", "Gluten"],
     storageInstructions: "Refrigerate immediately. Best consumed within 48 hours.",
+    flavourNotes: ["Philadelphia Cream Cheese", "Cultured Buttermilk", "Toasted Pecan"],
+    tastingProfile: {
+      cacaoIntensity: 40,
+      sweetness: "Tart & Balanced",
+      richness: 82,
+      texture: "Moist Velvet Crumb",
+    },
     variants: [
       { id: "v-rdv-500", sku: "KCH-RDV-500G", label: "0.5 kg", weight: "0.5 kg", price: 700, servings: "3-4 servings", inStock: true },
       { id: "v-rdv-1000", sku: "KCH-RDV-1KG", label: "1.0 kg", weight: "1.0 kg", price: 1350, servings: "6-8 servings", inStock: true },
@@ -139,6 +174,13 @@ export const PRODUCTS: Product[] = [
     ingredients: ["Wild Blueberries", "Almond Flour", "Dark Ganache", "French Buttercream"],
     allergens: ["Dairy", "Nuts", "Gluten"],
     storageInstructions: "Keep chilled at 4°C.",
+    flavourNotes: ["Six Joconde Layers", "Mountain Blueberry Compote", "Glossy Ganache Glaze"],
+    tastingProfile: {
+      cacaoIntensity: 58,
+      sweetness: "Bright Tart Fruit",
+      richness: 76,
+      texture: "Layered Precision Opera",
+    },
     variants: [
       { id: "v-blu-1", sku: "KCH-BLU-1", label: "Single Slice", weight: "120g", price: 190, servings: "1 serving", inStock: true },
       { id: "v-blu-4", sku: "KCH-BLU-4", label: "Box of 4", weight: "480g", price: 720, servings: "4 servings", inStock: true },
@@ -161,6 +203,13 @@ export const PRODUCTS: Product[] = [
     ingredients: ["Iranian Pistachios", "Damask Rose Essence", "Cardamom", "Dairy Cream"],
     allergens: ["Dairy", "Nuts", "Gluten"],
     storageInstructions: "Refrigerate until serving.",
+    flavourNotes: ["Iranian Pistachio Mousse", "Damask Rose Coulis", "Cardamom Sablé Crust"],
+    tastingProfile: {
+      cacaoIntensity: 0,
+      sweetness: "Aromatic Damask Rose",
+      richness: 68,
+      texture: "Silky Bavarian Entremet",
+    },
     variants: [
       { id: "v-pst-1", sku: "KCH-PST-1", label: "Single Slice", weight: "135g", price: 210, servings: "1 serving", inStock: true },
       { id: "v-pst-4", sku: "KCH-PST-4", label: "Box of 4", weight: "540g", price: 800, servings: "4 servings", inStock: true },

@@ -199,12 +199,34 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
             fontSize: "13px",
             color: "var(--text-secondary)",
             lineHeight: 1.45,
-            marginBottom: "16px",
+            marginBottom: "10px",
             minHeight: "38px",
           }}
         >
           {product.shortDescription}
         </p>
+
+        {/* Tasting Notes Micro Chips */}
+        {product.flavourNotes && product.flavourNotes.length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginBottom: "14px" }}>
+            {product.flavourNotes.slice(0, 2).map((note, idx) => (
+              <span
+                key={idx}
+                style={{
+                  fontSize: "11px",
+                  fontWeight: 600,
+                  backgroundColor: "rgba(199, 109, 56, 0.08)",
+                  color: "var(--accent-caramel)",
+                  padding: "2px 8px",
+                  borderRadius: "var(--radius-full)",
+                  letterSpacing: "0.01em",
+                }}
+              >
+                {note}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* Variant Selector Pills with Immediate Price Update */}
         <div style={{ marginBottom: "18px" }}>

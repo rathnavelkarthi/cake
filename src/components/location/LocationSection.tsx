@@ -1,11 +1,30 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { BUSINESS_CONFIG } from "@/lib/config/business";
-import { MapPin, Phone, Clock, Navigation, Truck, MessageCircle } from "lucide-react";
+import { MapPin, Phone, Clock, Navigation, Truck, MessageCircle, CheckCircle } from "lucide-react";
 import { trackEvent } from "@/lib/analytics/events";
+import { triggerHaptic } from "@/lib/utils/haptics";
+
+const CHENNAI_NEIGHBORHOODS = [
+  { name: "Nungambakkam", time: "15–25 min", distance: "0–2 km" },
+  { name: "T. Nagar", time: "25–35 min", distance: "3–4 km" },
+  { name: "Alwarpet", time: "30–40 min", distance: "4–5 km" },
+  { name: "Kilpauk", time: "30–40 min", distance: "3–4 km" },
+  { name: "Mylapore", time: "35–45 min", distance: "5–6 km" },
+  { name: "Anna Nagar", time: "40–50 min", distance: "7–9 km" },
+  { name: "Adyar", time: "45–55 min", distance: "8–10 km" },
+  { name: "Egmore", time: "20–30 min", distance: "2–3 km" },
+];
 
 export default function LocationSection() {
+  const [selectedArea, setSelectedArea] = useState(CHENNAI_NEIGHBORHOODS[0]);
+
+  const handleSelectArea = (area: typeof CHENNAI_NEIGHBORHOODS[0]) => {
+    triggerHaptic("selection");
+    setSelectedArea(area);
+  };
+
   return (
     <section id="location" className="section-padding" style={{ backgroundColor: "var(--bg-surface)" }}>
       <div className="container">
@@ -114,7 +133,7 @@ export default function LocationSection() {
                 </div>
               </div>
 
-              {/* Delivery Scope */}
+              {/* Delivery Scope with Interactive Locality Matrix */}
               <div style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
                 <div
                   style={{
@@ -131,12 +150,60 @@ export default function LocationSection() {
                 >
                   <Truck size={20} />
                 </div>
-                <div>
+                <div style={{ width: "100%" }}>
                   <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--accent-cocoa)" }}>
-                    Delivery Coverage
+                    Chennai Delivery Reach
                   </div>
-                  <div style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.45, marginTop: "2px" }}>
-                    {BUSINESS_CONFIG.deliveryZones.primary} and surrounding suburbs.
+                  <div style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.45, marginTop: "2px", marginBottom: "10px" }}>
+                    Direct dispatch across central & greater Chennai from our oven. Click your neighborhood to see delivery estimate:
+                  </div>
+
+                  {/* Locality Chips */}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "8px" }}>
+                    {CHENNAI_NEIGHBORHOODS.map((area) => {
+                      const isSelected = selectedArea.name === area.name;
+                      return (
+                        <button
+                          key={area.name}
+                          type="button"
+                          onClick={() => handleSelectArea(area)}
+                          className="pressable"
+                          style={{
+                            fontSize: "11px",
+                            fontWeight: 600,
+                            padding: "4px 9px",
+                            borderRadius: "var(--radius-full)",
+                            backgroundColor: isSelected ? "var(--accent-cocoa)" : "var(--bg-muted)",
+                            color: isSelected ? "#FFFFFF" : "var(--text-secondary)",
+                            border: isSelected ? "1px solid var(--accent-cocoa)" : "1px solid var(--border-subtle)",
+                            transition: "all 140ms var(--ease-apple-spring)",
+                          }}
+                          aria-pressed={isSelected}
+                        >
+                          {area.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Live Selected Area Transit Estimate */}
+                  <div
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      color: "var(--accent-caramel)",
+                      backgroundColor: "var(--accent-caramel-subtle)",
+                      padding: "4px 10px",
+                      borderRadius: "var(--radius-md)",
+                    }}
+                  >
+                    <CheckCircle size={13} />
+                    <span>
+                      {selectedArea.name} ({selectedArea.distance}): est. <strong>{selectedArea.time}</strong>
+                    </span>
                   </div>
                 </div>
               </div>

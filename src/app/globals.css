@@ -101,13 +101,41 @@ body {
   overflow-x: hidden;
 }
 
-/* Apple Typography System (Principle 15) - Size-Specific Optical Tracking */
+/* Selection & Accessibility Focus States */
+::selection {
+  background-color: var(--accent-caramel-subtle);
+  color: var(--accent-cocoa);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-caramel);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* Custom Luxury Warm Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(74, 46, 31, 0.22);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(74, 46, 31, 0.4);
+}
+
+/* Apple Typography System - Optical Tracking & Pretty Line Breaks */
 h1, .display-headline {
   font-family: var(--font-serif);
   font-size: clamp(34px, 5.2vw, 56px);
   line-height: 1.08;
   letter-spacing: -0.03em;
   font-optical-sizing: auto;
+  text-wrap: balance;
 }
 
 h2, .section-headline {
@@ -116,6 +144,7 @@ h2, .section-headline {
   line-height: 1.16;
   letter-spacing: -0.022em;
   font-optical-sizing: auto;
+  text-wrap: balance;
 }
 
 h3, .card-headline {
@@ -124,14 +153,11 @@ h3, .card-headline {
   line-height: 1.25;
   letter-spacing: -0.015em;
   font-optical-sizing: auto;
+  text-wrap: pretty;
 }
 
-/* Micro labels, badges, captions: slightly positive tracking */
-.tag-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+p {
+  text-wrap: pretty;
 }
 
 /* Touch & Pointer Down Feedback (Apple Principle 1 & 10: Kill Latency) */

@@ -253,7 +253,7 @@ export default function QuickViewModal({ product, onClose }: QuickViewModalProps
             </p>
 
             {/* Preparation time & quality badge */}
-            <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", marginBottom: "24px" }}>
+            <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", marginBottom: "20px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--text-secondary)" }}>
                 <Clock size={15} style={{ color: "var(--accent-caramel)" }} />
                 <span>Prep: {activeProduct.preparationTime}</span>
@@ -263,6 +263,87 @@ export default function QuickViewModal({ product, onClose }: QuickViewModalProps
                 <span>100% Real Butter</span>
               </div>
             </div>
+
+            {/* Sensory Flavour & Tasting Profile */}
+            {activeProduct.tastingProfile && (
+              <div
+                style={{
+                  backgroundColor: "var(--bg-muted)",
+                  padding: "16px",
+                  borderRadius: "var(--radius-md)",
+                  marginBottom: "20px",
+                  border: "1px solid var(--border-subtle)",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    color: "var(--accent-cocoa)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    marginBottom: "12px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <span>Patisserie Tasting Profile</span>
+                  {activeProduct.tastingProfile.texture && (
+                    <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--accent-caramel)" }}>
+                      {activeProduct.tastingProfile.texture}
+                    </span>
+                  )}
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", fontSize: "12px" }}>
+                  {activeProduct.tastingProfile.cacaoIntensity !== undefined && activeProduct.tastingProfile.cacaoIntensity > 0 && (
+                    <div>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px", color: "var(--text-secondary)", fontSize: "11px" }}>
+                        <span>Cacao Intensity</span>
+                        <strong>{activeProduct.tastingProfile.cacaoIntensity}%</strong>
+                      </div>
+                      <div style={{ width: "100%", height: "5px", backgroundColor: "rgba(0,0,0,0.06)", borderRadius: "var(--radius-full)", overflow: "hidden" }}>
+                        <div style={{ width: `${activeProduct.tastingProfile.cacaoIntensity}%`, height: "100%", backgroundColor: "var(--accent-cocoa)", borderRadius: "var(--radius-full)" }} />
+                      </div>
+                    </div>
+                  )}
+
+                  {activeProduct.tastingProfile.richness !== undefined && (
+                    <div>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px", color: "var(--text-secondary)", fontSize: "11px" }}>
+                        <span>Richness</span>
+                        <strong>{activeProduct.tastingProfile.richness}%</strong>
+                      </div>
+                      <div style={{ width: "100%", height: "5px", backgroundColor: "rgba(0,0,0,0.06)", borderRadius: "var(--radius-full)", overflow: "hidden" }}>
+                        <div style={{ width: `${activeProduct.tastingProfile.richness}%`, height: "100%", backgroundColor: "var(--accent-caramel)", borderRadius: "var(--radius-full)" }} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {activeProduct.flavourNotes && activeProduct.flavourNotes.length > 0 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "12px" }}>
+                    {activeProduct.flavourNotes.map((note, idx) => (
+                      <span
+                        key={idx}
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: 600,
+                          backgroundColor: "var(--bg-surface)",
+                          color: "var(--accent-cocoa)",
+                          padding: "3px 9px",
+                          borderRadius: "var(--radius-full)",
+                          border: "1px solid var(--border-subtle)",
+                        }}
+                      >
+                        {note}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Ingredients */}
             <div style={{ marginBottom: "20px" }}>

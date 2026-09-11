@@ -33,6 +33,13 @@ export interface Product {
   variants: ProductVariant[];
   allergens?: string[];
   storageInstructions?: string;
+  flavourNotes?: string[];
+  tastingProfile?: {
+    cacaoIntensity?: number;
+    sweetness?: string;
+    richness?: number;
+    texture?: string;
+  };
 }
 
 export interface CartItem {

@@ -24,6 +24,7 @@ export default function CartDrawer() {
   // Animation lifecycle state: handle graceful symmetrical exit
   const [isVisible, setIsVisible] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
+  const [customerNotes, setCustomerNotes] = useState("");
 
   useEffect(() => {
     if (isCartOpen) {
@@ -98,7 +99,9 @@ ${itemsList}
         : "Delivery across Chennai"
     }
 *Delivery Fee:* ${deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`}
-*Estimated Total:* ₹${total.toLocaleString("en-IN")}
+*Estimated Total:* ₹${total.toLocaleString("en-IN")}${
+      customerNotes ? `\n*Chef's Note / Candles:* ${customerNotes}` : ""
+    }
 
 Please share the payment link / confirm availability. Thank you!`;
 
@@ -261,6 +264,39 @@ Please share the payment link / confirm availability. Thank you!`;
               <span>Counter Pickup (Free)</span>
             </button>
           </div>
+
+          {/* Free Delivery Milestone Progress Track */}
+          {fulfilmentType === "delivery" && items.length > 0 && (
+            <div
+              style={{
+                marginTop: "10px",
+                paddingTop: "10px",
+                borderTop: "1px dashed var(--border-subtle)",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px", fontWeight: 700, marginBottom: "5px" }}>
+                <span style={{ color: subtotal >= BUSINESS_CONFIG.deliveryZones.minOrderFreeDelivery ? "var(--accent-sage)" : "var(--accent-cocoa)" }}>
+                  {subtotal >= BUSINESS_CONFIG.deliveryZones.minOrderFreeDelivery
+                    ? "Free Delivery Unlocked across Chennai! 🛵"
+                    : `Add ₹${(BUSINESS_CONFIG.deliveryZones.minOrderFreeDelivery - subtotal).toLocaleString("en-IN")} more for Free Delivery`}
+                </span>
+                <span style={{ color: "var(--text-muted)" }}>
+                  ₹{subtotal.toLocaleString("en-IN")}/₹{BUSINESS_CONFIG.deliveryZones.minOrderFreeDelivery.toLocaleString("en-IN")}
+                </span>
+              </div>
+              <div style={{ width: "100%", height: "5px", backgroundColor: "rgba(0,0,0,0.06)", borderRadius: "var(--radius-full)", overflow: "hidden" }}>
+                <div
+                  style={{
+                    width: `${Math.min(100, (subtotal / BUSINESS_CONFIG.deliveryZones.minOrderFreeDelivery) * 100)}%`,
+                    height: "100%",
+                    backgroundColor: subtotal >= BUSINESS_CONFIG.deliveryZones.minOrderFreeDelivery ? "var(--accent-sage)" : "var(--accent-caramel)",
+                    borderRadius: "var(--radius-full)",
+                    transition: "width 240ms var(--ease-apple-spring)",
+                  }}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Items List */}
@@ -477,6 +513,29 @@ Please share the payment link / confirm availability. Thank you!`;
                 <span>Total</span>
                 <span style={{ color: "var(--accent-caramel)" }}>₹{total.toLocaleString("en-IN")}</span>
               </div>
+            </div>
+
+            {/* Special Instructions & Birthday Candles */}
+            <div style={{ marginBottom: "14px" }}>
+              <input
+                type="text"
+                value={customerNotes}
+                maxLength={80}
+                onChange={(e) => setCustomerNotes(e.target.value)}
+                placeholder="Candles count, gift card note, or delivery notes..."
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: "var(--radius-md)",
+                  border: "1px solid var(--border-medium)",
+                  backgroundColor: "var(--bg-muted)",
+                  fontSize: "12px",
+                  color: "var(--text-primary)",
+                  outline: "none",
+                  fontFamily: "var(--font-sans)",
+                  transition: "border-color 160ms var(--ease-out)",
+                }}
+              />
             </div>
 
             <button

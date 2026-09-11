@@ -27,9 +27,17 @@ const TIME_SLOTS = [
   "Evening (5:00 PM – 8:30 PM)",
 ];
 
+const PIPING_CREAM_PALETTE = [
+  { id: "dark-ganache", name: "Dark Ganache", color: "#28140B", textShadow: "0 1px 2px rgba(255,255,255,0.85)" },
+  { id: "golden-caramel", name: "Salted Caramel", color: "#B85D1B", textShadow: "0 1px 2px rgba(255,255,255,0.8)" },
+  { id: "ivory-cream", name: "Ivory Vanilla", color: "#5A3825", textShadow: "0 1px 2px rgba(255,255,255,0.9)" },
+  { id: "ruby-berry", name: "Ruby Rose", color: "#881337", textShadow: "0 1px 2px rgba(255,255,255,0.75)" },
+];
+
 export default function CustomCakeStudio() {
   const [selectedFlavour, setSelectedFlavour] = useState(FLAVOURS[0]);
   const [selectedWeight, setSelectedWeight] = useState(WEIGHTS[1]);
+  const [selectedPipingColor, setSelectedPipingColor] = useState(PIPING_CREAM_PALETTE[0]);
   const [cakeMessage, setCakeMessage] = useState("Happy 30th Birthday Priya!");
   const [themeNotes, setThemeNotes] = useState("Minimalist botanical style with fresh flowers");
   const [preferredDate, setPreferredDate] = useState("");
@@ -70,6 +78,7 @@ I'd like to enquire about a custom cake.
 Flavour: ${selectedFlavour} ${isEggless ? "(100% Eggless)" : "(With Egg)"}
 Weight: ${selectedWeight.label} (${selectedWeight.servings})
 Message on Cake: ${cakeMessage ? `"${cakeMessage}"` : "None"}
+Piping Cream: ${selectedPipingColor.name}
 Theme / Design Notes: ${themeNotes || "Standard decoration"}
 Preferred Date: ${preferredDate || "To be discussed"}
 Preferred Time Slot: ${preferredTime}
@@ -253,22 +262,71 @@ Please let me know the availability, design feasibility, and price quote. Thank 
               </div>
             </div>
 
-            {/* Step 3: Message on Cake */}
+            {/* Step 3: Message & Piping Cream on Cake */}
             <div style={{ marginBottom: "28px" }}>
-              <label
-                htmlFor="custom-cake-message"
-                style={{
-                  display: "block",
-                  fontSize: "13px",
-                  fontWeight: 700,
-                  color: "var(--accent-cocoa)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.06em",
-                  marginBottom: "8px",
-                }}
-              >
-                3. Message / Inscription on Cake:
-              </label>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                <label
+                  htmlFor="custom-cake-message"
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    color: "var(--accent-cocoa)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                  }}
+                >
+                  3. Inscription & Piping Cream:
+                </label>
+                <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                  {cakeMessage.length}/45 chars
+                </div>
+              </div>
+
+              {/* Interactive Piping Cream Swatch Selector */}
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "10px" }}>
+                {PIPING_CREAM_PALETTE.map((cream) => {
+                  const isSelected = selectedPipingColor.id === cream.id;
+                  return (
+                    <button
+                      key={cream.id}
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic("selection");
+                        setSelectedPipingColor(cream);
+                        triggerPreviewPulse();
+                      }}
+                      className="pressable"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        padding: "6px 12px",
+                        borderRadius: "var(--radius-full)",
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        backgroundColor: isSelected ? "var(--accent-caramel-subtle)" : "var(--bg-surface)",
+                        color: isSelected ? "var(--accent-cocoa)" : "var(--text-secondary)",
+                        border: isSelected ? "1.5px solid var(--accent-caramel)" : "1px solid var(--border-subtle)",
+                        boxShadow: isSelected ? "0 2px 6px rgba(199, 109, 56, 0.15)" : "none",
+                        transition: "all 140ms var(--ease-apple-spring)",
+                      }}
+                      aria-pressed={isSelected}
+                    >
+                      <span
+                        style={{
+                          width: "10px",
+                          height: "10px",
+                          borderRadius: "50%",
+                          backgroundColor: cream.color,
+                          boxShadow: "0 1px 2px rgba(0,0,0,0.25)",
+                        }}
+                      />
+                      <span>{cream.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
               <input
                 id="custom-cake-message"
                 type="text"
@@ -292,9 +350,6 @@ Please let me know the availability, design feasibility, and price quote. Thank 
                   transition: "border-color 160ms var(--ease-out)",
                 }}
               />
-              <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "4px", textAlign: "right" }}>
-                {cakeMessage.length}/45 characters
-              </div>
             </div>
 
             {/* Step 4: Theme & Date */}
@@ -509,29 +564,35 @@ Please let me know the availability, design feasibility, and price quote. Thank 
                 {selectedFlavour}
               </div>
 
-              {/* Hand-piped message with smooth opacity & transform */}
+              {/* Hand-piped message with dynamic piping cream color & spring transition */}
               <div
                 className="font-serif"
                 style={{
                   fontSize: "clamp(18px, 3vw, 24px)",
                   fontStyle: "italic",
                   fontWeight: 600,
-                  color: "var(--accent-cocoa)",
+                  color: selectedPipingColor.color,
                   lineHeight: 1.3,
                   maxWidth: "240px",
                   minHeight: "48px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  textShadow: "0 1px 2px rgba(255,255,255,0.8)",
-                  transition: "opacity 160ms var(--ease-apple-spring), transform 160ms var(--ease-apple-spring)",
+                  textShadow: selectedPipingColor.textShadow,
+                  transition: "color 200ms var(--ease-apple-spring), text-shadow 200ms var(--ease-apple-spring), opacity 160ms var(--ease-apple-spring), transform 160ms var(--ease-apple-spring)",
                 }}
               >
                 {cakeMessage || "Your message here"}
               </div>
 
-              <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "12px", fontWeight: 500 }}>
-                {selectedWeight.label} • {isEggless ? "100% Eggless" : "Standard"}
+              <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "12px", fontWeight: 500, display: "flex", alignItems: "center", gap: "6px" }}>
+                <span>{selectedWeight.label}</span>
+                <span>•</span>
+                <span>{isEggless ? "100% Eggless" : "Standard"}</span>
+                <span>•</span>
+                <span style={{ color: selectedPipingColor.color, fontWeight: 700 }}>
+                  {selectedPipingColor.name} Piping
+                </span>
               </div>
             </div>
 
@@ -562,6 +623,10 @@ Please let me know the availability, design feasibility, and price quote. Thank 
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <span>Preparation:</span>
                   <strong style={{ color: "var(--accent-sage)" }}>{isEggless ? "Dedicated Eggless" : "Traditional"}</strong>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span>Piping Cream:</span>
+                  <strong style={{ color: selectedPipingColor.color }}>{selectedPipingColor.name}</strong>
                 </div>
                 {preferredDate && (
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
