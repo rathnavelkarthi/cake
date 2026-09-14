@@ -7,14 +7,14 @@ import { trackEvent } from "@/lib/analytics/events";
 import { triggerHaptic } from "@/lib/utils/haptics";
 
 const CHENNAI_NEIGHBORHOODS = [
-  { name: "Nungambakkam", time: "15–25 min", distance: "0–2 km" },
-  { name: "T. Nagar", time: "25–35 min", distance: "3–4 km" },
-  { name: "Alwarpet", time: "30–40 min", distance: "4–5 km" },
-  { name: "Kilpauk", time: "30–40 min", distance: "3–4 km" },
-  { name: "Mylapore", time: "35–45 min", distance: "5–6 km" },
-  { name: "Anna Nagar", time: "40–50 min", distance: "7–9 km" },
-  { name: "Adyar", time: "45–55 min", distance: "8–10 km" },
-  { name: "Egmore", time: "20–30 min", distance: "2–3 km" },
+  { name: "Nungambakkam", time: "15 to 25 min", distance: "Within 2 km" },
+  { name: "T. Nagar", time: "25 to 35 min", distance: "3 to 4 km" },
+  { name: "Alwarpet", time: "30 to 40 min", distance: "4 to 5 km" },
+  { name: "Kilpauk", time: "30 to 40 min", distance: "3 to 4 km" },
+  { name: "Mylapore", time: "35 to 45 min", distance: "5 to 6 km" },
+  { name: "Anna Nagar", time: "40 to 50 min", distance: "7 to 9 km" },
+  { name: "Adyar", time: "45 to 55 min", distance: "8 to 10 km" },
+  { name: "Egmore", time: "20 to 30 min", distance: "2 to 3 km" },
 ];
 
 export default function LocationSection() {

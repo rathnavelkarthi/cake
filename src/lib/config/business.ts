@@ -51,7 +51,7 @@ export const BUSINESS_CONFIG: BusinessConfig = {
   shortDescription: "Handcrafted cakes, fudge brownies, and European pastries baked fresh daily in Nungambakkam, Chennai.",
   foundedYear: 2021,
   phone: "+919840823145",
-  phoneDisplay: "044 - 2827 4912",
+  phoneDisplay: "044 2827 4912",
   whatsapp: "+919840823145",
   whatsappDisplay: "+91 98408 23145",
   email: "orders@kichees.in",
@@ -66,7 +66,7 @@ export const BUSINESS_CONFIG: BusinessConfig = {
   },
   mapsUrl: "https://maps.google.com/?q=Nungambakkam+High+Road+Chennai+600034",
   openingHours: [
-    { days: "Monday – Sunday", hours: "9:00 AM – 10:30 PM", isOpenToday: true },
+    { days: "Monday to Sunday", hours: "9:00 AM to 10:30 PM", isOpenToday: true },
   ],
   deliveryZones: {
     primary: "Nungambakkam, Chetpet, Alwarpet, T. Nagar, Gopalapuram, Kilpauk, Egmore",

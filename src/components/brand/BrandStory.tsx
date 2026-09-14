@@ -42,7 +42,7 @@ export default function BrandStory() {
           </h2>
 
           <p style={{ fontSize: "16px", color: "var(--text-secondary)", lineHeight: 1.65 }}>
-            Most commercial cakes today rely on shelf-stable cake premixes, artificial stabilizers, and vegetable fats. At {BUSINESS_CONFIG.name}, we follow traditional European pastry fundamentals with ingredients you recognise.
+            Most commercial cakes today rely on shelf stable cake premixes, artificial stabilizers, and vegetable fats. At {BUSINESS_CONFIG.name}, we follow traditional European pastry fundamentals with ingredients you recognise.
           </p>
         </div>
 
@@ -183,7 +183,7 @@ export default function BrandStory() {
               Baked in Daily Batches
             </h3>
             <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.55 }}>
-              Sponges are baked each morning for same-day delivery. We never freeze bases or sell day-old display cakes.
+              Sponges are baked each morning for same day delivery. We never freeze bases or sell day old display cakes.
             </p>
           </div>
         </div>

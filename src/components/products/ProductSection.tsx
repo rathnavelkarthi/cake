@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { PRODUCTS, CATEGORIES } from "@/lib/data/products";
+import React, { useState, useMemo, useEffect } from "react";
+import { getLiveProducts, getLiveCategories, subscribeProducts } from "@/lib/data/products";
 import { Product } from "@/lib/data/types";
 import ProductCard from "./ProductCard";
 import QuickViewModal from "./QuickViewModal";
@@ -10,10 +10,19 @@ import { trackEvent } from "@/lib/analytics/events";
 import { triggerHaptic } from "@/lib/utils/haptics";
 
 export default function ProductSection() {
+  const [productList, setProductList] = useState(getLiveProducts);
+  const [categoriesList, setCategoriesList] = useState(getLiveCategories);
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [egglessOnly, setEgglessOnly] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+
+  useEffect(() => {
+    return subscribeProducts(() => {
+      setProductList(getLiveProducts());
+      setCategoriesList(getLiveCategories());
+    });
+  }, []);
 
   const handleCategorySelect = (catId: string) => {
     triggerHaptic("selection");
@@ -22,7 +31,7 @@ export default function ProductSection() {
   };
 
   const filteredProducts = useMemo(() => {
-    return PRODUCTS.filter((product) => {
+    return productList.filter((product) => {
       // Category check
       if (activeCategory === "eggless" && !product.isEggless) {
         return false;
@@ -122,7 +131,7 @@ export default function ProductSection() {
                 gap: "8px",
               }}
             >
-              {CATEGORIES.map((cat) => {
+              {categoriesList.map((cat) => {
                 const isActive = activeCategory === cat.id;
                 return (
                   <button
@@ -244,23 +253,50 @@ export default function ProductSection() {
 
         {/* Product Grid with Stagger Entrance */}
         {filteredProducts.length > 0 ? (
-          <div
-            key={`${activeCategory}-${egglessOnly}-${searchQuery}`}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-              gap: "24px",
-            }}
-          >
-            {filteredProducts.map((product) => (
-              <div key={product.id} className="stagger-item">
-                <ProductCard
-                  product={product}
-                  onQuickView={(p) => setQuickViewProduct(p)}
-                />
-              </div>
-            ))}
-          </div>
+          <>
+            <div
+              key={`${activeCategory}-${egglessOnly}-${searchQuery}`}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                gap: "24px",
+              }}
+            >
+              {filteredProducts.map((product) => (
+                <div key={product.id} className="stagger-item">
+                  <ProductCard
+                    product={product}
+                    onQuickView={(p) => setQuickViewProduct(p)}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Full Shop Link Callout */}
+            <div style={{ textAlign: "center", marginTop: "48px" }}>
+              <a
+                href="/shop"
+                className="pressable"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "14px 28px",
+                  borderRadius: "var(--radius-full)",
+                  backgroundColor: "var(--accent-cocoa)",
+                  color: "#FAF7F2",
+                  textDecoration: "none",
+                  fontSize: "15px",
+                  fontWeight: 600,
+                  boxShadow: "0 6px 20px rgba(58, 32, 22, 0.18)",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <span>Explore Complete 40+ Items Menu & Patisserie</span>
+                <span>→</span>
+              </a>
+            </div>
+          </>
         ) : (
           <div
             style={{

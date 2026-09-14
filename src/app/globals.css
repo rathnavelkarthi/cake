@@ -1,4 +1,33 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 36 33% 97%;
+    --foreground: 20 22% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 20 22% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 22% 10%;
+    --primary: 20 46% 16%;
+    --primary-foreground: 36 33% 97%;
+    --secondary: 36 30% 92%;
+    --secondary-foreground: 20 46% 16%;
+    --muted: 36 30% 92%;
+    --muted-foreground: 20 12% 46%;
+    --accent: 22 57% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 346 61% 35%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 20 15% 88%;
+    --input: 20 15% 88%;
+    --ring: 22 57% 50%;
+    --radius: 0.75rem;
+  }
+}
 
 :root {
   /* Color Palette - Artisanal Luxury Bakery */
@@ -73,9 +102,11 @@
   --radius-xl: 28px;
   --radius-full: 9999px;
   
-  /* Fonts */
-  --font-serif: 'Fraunces', Georgia, serif;
-  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+  /* Typography - Apple SF Pro Stack (Apple Design Skill §15) */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro", "Manrope", system-ui, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro", system-ui, sans-serif;
+  --font-serif: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro", system-ui, sans-serif;
+  --font-mono: 'Geist Mono', -apple-system, monospace;
 }
 
 * {
@@ -84,6 +115,14 @@
   padding: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
 }
 
 html {

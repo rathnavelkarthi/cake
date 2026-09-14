@@ -58,7 +58,7 @@ export default function QuickActionBar() {
                 Order Online
               </div>
               <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>
-                Delivery or 30-min pickup
+                Delivery or 30 min pickup
               </div>
             </div>
           </a>
