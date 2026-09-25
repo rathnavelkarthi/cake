@@ -11,18 +11,21 @@ export interface RecipeIngredient {
 }
 
 export interface AdminProductItem {
-  id: number;
+  id: number | string;
   name: string;
   slug: string;
   sku: string;
   category: string;
   price: number;
+  salePrice?: number;
   stock: number;
   lowStockThreshold: number;
   status: "active" | "inactive" | "archived";
   imageUrl: string;
   featured: boolean;
   bestSeller: boolean;
+  description?: string;
+  isEggless?: boolean;
   recipe?: RecipeIngredient[];
 }
 
@@ -421,9 +424,53 @@ export async function getRawMaterials() {
 // Reactive Inventory Subscription System
 type InventoryChangeListener = () => void;
 const inventoryChangeListeners: Set<InventoryChangeListener> = new Set();
+let hasSyncedFromSupabase = false;
+
+export async function syncAdminProductsFromSupabase(): Promise<void> {
+  if (typeof window === "undefined") return;
+  try {
+    const res = await fetch("/api/products?all=true");
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.products) && data.products.length > 0) {
+        localProducts = data.products.map((p: any, idx: number) => ({
+          id: p.id,
+          name: p.name,
+          slug: p.slug,
+          sku: p.sku || `KCH-${1000 + idx}`,
+          category: p.category_name || (p.category_id ? p.category_id.charAt(0).toUpperCase() + p.category_id.slice(1) : "Cakes"),
+          price: Number(p.price),
+          salePrice: p.sale_price ? Number(p.sale_price) : undefined,
+          stock: Number(p.stock_quantity ?? 10),
+          lowStockThreshold: Number(p.low_stock_threshold ?? 5),
+          status: p.is_active ? "active" : "inactive",
+          imageUrl: p.image_url || "/images/hero-truffle.jpg",
+          featured: Boolean(p.is_featured),
+          bestSeller: Boolean(p.is_bestseller),
+          description: p.description,
+          isEggless: Boolean(p.is_eggless),
+          recipe: p.recipe || [],
+        }));
+        notifyInventoryChange();
+      }
+    }
+    hasSyncedFromSupabase = true;
+  } catch (err) {
+    console.warn("Failed to sync products from Supabase API:", err);
+  }
+}
+
+if (typeof window !== "undefined" && !hasSyncedFromSupabase) {
+  setTimeout(() => {
+    syncAdminProductsFromSupabase();
+  }, 10);
+}
 
 export function subscribeInventory(listener: InventoryChangeListener): () => void {
   inventoryChangeListeners.add(listener);
+  if (typeof window !== "undefined" && !hasSyncedFromSupabase) {
+    syncAdminProductsFromSupabase();
+  }
   return () => {
     inventoryChangeListeners.delete(listener);
   };
@@ -454,7 +501,7 @@ export function addInventoryProduct(item: {
   isEggless?: boolean;
   recipe?: RecipeIngredient[];
 }): AdminProductItem {
-  const newId = localProducts.length + 1;
+  const newId = `kch-prod-${Date.now()}`;
   const initialStock = item.stock || 0;
   const recipe = item.recipe || [];
 
@@ -475,7 +522,7 @@ export function addInventoryProduct(item: {
     id: newId,
     name: item.name.trim(),
     slug: item.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
-    sku: `KCH-${1000 + newId}`,
+    sku: `KCH-${1000 + localProducts.length + 1}`,
     category: item.category,
     price: item.price,
     stock: initialStock,
@@ -484,6 +531,8 @@ export function addInventoryProduct(item: {
     imageUrl: item.imageUrl || "/images/hero-truffle.jpg",
     featured: true,
     bestSeller: false,
+    description: item.description,
+    isEggless: item.isEggless ?? true,
     recipe,
   };
 
@@ -501,30 +550,85 @@ export function addInventoryProduct(item: {
   });
 
   notifyInventoryChange();
+
+  // Persist directly to Supabase via API
+  if (typeof window !== "undefined") {
+    fetch("/api/products", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: newId,
+        name: newProd.name,
+        category: newProd.category,
+        price: newProd.price,
+        stock: newProd.stock,
+        lowStockThreshold: newProd.lowStockThreshold,
+        imageUrl: newProd.imageUrl,
+        description: item.description,
+        isEggless: item.isEggless,
+        isActive: newProd.status === "active",
+        recipe,
+      }),
+    }).catch((err) => console.error("Failed to persist product to Supabase:", err));
+  }
+
   return newProd;
 }
 
 export function updateInventoryProduct(
-  id: number,
+  id: number | string,
   updates: Partial<AdminProductItem>
 ): AdminProductItem | undefined {
-  const index = localProducts.findIndex((p) => p.id === id);
+  const index = localProducts.findIndex((p) => String(p.id) === String(id));
   if (index >= 0) {
     localProducts[index] = { ...localProducts[index], ...updates };
     if (typeof updates.stock === "number") {
       localProducts[index].status = localProducts[index].stock > 0 ? "active" : "archived";
     }
     notifyInventoryChange();
+
+    // Persist to Supabase via API
+    if (typeof window !== "undefined") {
+      fetch("/api/products", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: String(id),
+          name: updates.name,
+          category: updates.category,
+          price: updates.price,
+          salePrice: updates.salePrice,
+          stock: updates.stock,
+          lowStockThreshold: updates.lowStockThreshold,
+          imageUrl: updates.imageUrl,
+          description: updates.description,
+          isActive: updates.status ? updates.status === "active" : undefined,
+          isFeatured: updates.featured,
+          isBestSeller: updates.bestSeller,
+          isEggless: updates.isEggless,
+          recipe: updates.recipe,
+        }),
+      }).catch((err) => console.error("Failed to update product in Supabase:", err));
+    }
+
     return localProducts[index];
   }
   return undefined;
 }
 
-export function deleteInventoryProduct(id: number): boolean {
-  const index = localProducts.findIndex((p) => p.id === id);
+export function deleteInventoryProduct(id: number | string): boolean {
+  const index = localProducts.findIndex((p) => String(p.id) === String(id));
   if (index >= 0) {
     localProducts.splice(index, 1);
     notifyInventoryChange();
+
+    // Persist to Supabase via API
+    if (typeof window !== "undefined") {
+      fetch(`/api/products?id=${encodeURIComponent(String(id))}`, {
+        method: "DELETE",
+      }).catch((err) => console.error("Failed to delete product in Supabase:", err));
+    }
+
     return true;
   }
   return false;
@@ -555,10 +659,10 @@ export async function adjustRawMaterialStock(
 
 // Produce a finished product batch and deduct raw materials from raw inventory!
 export async function produceProductBatch(
-  productId: number,
+  productId: number | string,
   batchQuantity: number
 ) {
-  const product = localProducts.find((p) => p.id === productId);
+  const product = localProducts.find((p) => String(p.id) === String(productId));
   if (!product) throw new Error("Product not found");
 
   const recipe = product.recipe || [];

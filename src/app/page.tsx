@@ -22,12 +22,22 @@ export default function Home() {
   return (
     <ToastProvider>
       <CartProvider>
-        <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }} suppressHydrationWarning>
+        <div
+          style={{
+            minHeight: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            width: "100%",
+            maxWidth: "100vw",
+            overflowX: "clip",
+          }}
+          suppressHydrationWarning
+        >
           {/* Header & Sticky Fluid Island Navigation */}
           <Navbar />
 
           {/* Main Content Sections Dynamic CMS Blocks */}
-          <main style={{ flex: 1 }}>
+          <main style={{ flex: 1, minWidth: 0, width: "100%", maxWidth: "100vw", overflowX: "clip" }}>
             <BlockRenderer blocks={blocks} />
           </main>
 

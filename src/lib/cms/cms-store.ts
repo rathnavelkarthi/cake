@@ -159,6 +159,7 @@ let blogPosts: BlogPost[] = [
 
 type CmsListener = () => void;
 const cmsListeners: Set<CmsListener> = new Set();
+let hasLoadedFromRemote = false;
 
 function notifyCmsListeners() {
   cmsListeners.forEach((fn) => {
@@ -170,8 +171,46 @@ function notifyCmsListeners() {
   });
 }
 
+// Automatically sync from remote Supabase on load in client environment
+export async function syncCmsFromRemote(): Promise<void> {
+  if (typeof window === "undefined") return;
+  try {
+    const res = await fetch("/api/cms/blocks");
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.blocks) && data.blocks.length > 0) {
+        defaultLandingBlocks = data.blocks;
+        notifyCmsListeners();
+      }
+    }
+
+    const blogRes = await fetch("/api/cms/blogs");
+    if (blogRes.ok) {
+      const blogData = await blogRes.json();
+      if (Array.isArray(blogData.posts) && blogData.posts.length > 0) {
+        blogPosts = blogData.posts;
+        notifyCmsListeners();
+      }
+    }
+    hasLoadedFromRemote = true;
+  } catch (err) {
+    console.warn("Failed to sync CMS from Supabase API, using fallback store:", err);
+  }
+}
+
+// Auto-trigger sync on initial module load in browser
+if (typeof window !== "undefined" && !hasLoadedFromRemote) {
+  setTimeout(() => {
+    syncCmsFromRemote();
+  }, 10);
+}
+
 export function subscribeCms(listener: CmsListener): () => void {
   cmsListeners.add(listener);
+  // Also trigger sync if not yet loaded
+  if (typeof window !== "undefined" && !hasLoadedFromRemote) {
+    syncCmsFromRemote();
+  }
   return () => cmsListeners.delete(listener);
 }
 
@@ -179,16 +218,29 @@ export function getLandingPageBlocks(): ContentBlock[] {
   return JSON.parse(JSON.stringify(defaultLandingBlocks));
 }
 
-export function updateLandingPageBlocks(blocks: ContentBlock[]) {
+export async function updateLandingPageBlocks(blocks: ContentBlock[]) {
   defaultLandingBlocks = JSON.parse(JSON.stringify(blocks));
   notifyCmsListeners();
+
+  // Persist directly to Supabase via API
+  if (typeof window !== "undefined") {
+    try {
+      await fetch("/api/cms/blocks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ blocks }),
+      });
+    } catch (err) {
+      console.error("Failed to persist CMS blocks to Supabase:", err);
+    }
+  }
 }
 
 export function getBlogPosts(): BlogPost[] {
   return JSON.parse(JSON.stringify(blogPosts));
 }
 
-export function saveBlogPost(post: BlogPost): BlogPost {
+export async function saveBlogPost(post: BlogPost): Promise<BlogPost> {
   const index = blogPosts.findIndex((p) => p.id === post.id);
   if (index >= 0) {
     blogPosts[index] = JSON.parse(JSON.stringify(post));
@@ -196,10 +248,35 @@ export function saveBlogPost(post: BlogPost): BlogPost {
     blogPosts = [JSON.parse(JSON.stringify(post)), ...blogPosts];
   }
   notifyCmsListeners();
+
+  // Persist to Supabase
+  if (typeof window !== "undefined") {
+    try {
+      await fetch("/api/cms/blogs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(post),
+      });
+    } catch (err) {
+      console.error("Failed to persist blog post to Supabase:", err);
+    }
+  }
+
   return post;
 }
 
-export function deleteBlogPost(id: string) {
+export async function deleteBlogPost(id: string) {
   blogPosts = blogPosts.filter((p) => p.id !== id);
   notifyCmsListeners();
+
+  // Persist to Supabase
+  if (typeof window !== "undefined") {
+    try {
+      await fetch(`/api/cms/blogs?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+    } catch (err) {
+      console.error("Failed to delete blog post from Supabase:", err);
+    }
+  }
 }

@@ -105,6 +105,9 @@ export function PulseFitHero({
         background: hasVideo
           ? "#140a05"
           : "linear-gradient(180deg, #E8F0FF 0%, #F5F9FF 50%, #FFFFFF 100%)",
+        maxWidth: "100vw",
+        overflowX: "clip",
+        contain: "paint",
         ...backgroundStyle,
       }}
       role="banner"
@@ -113,8 +116,12 @@ export function PulseFitHero({
       {/* 1. Cinematic Ambient YouTube Video Background */}
       {youtubeVideoId && (
         <div
-          className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0"
-          style={{ backgroundColor: "#180d07" }}
+          className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0 hidden sm:block"
+          style={{
+            backgroundColor: "#180d07",
+            contain: "paint",
+            clipPath: "inset(0)",
+          }}
         >
           <iframe
             src={`https://www.youtube.com/embed/${youtubeVideoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${youtubeVideoId}&showinfo=0&rel=0&iv_load_policy=3&disablekb=1&modestbranding=1&playsinline=1&enablejsapi=1`}
@@ -124,11 +131,12 @@ export function PulseFitHero({
               position: "absolute",
               top: "50%",
               left: "50%",
-              width: "100vw",
-              height: "56.25vw",
+              width: "100%",
+              height: "100%",
+              minWidth: "100%",
               minHeight: "100%",
-              minWidth: "177.77vh",
-              transform: "translate(-50%, -50%) scale(1.25)",
+              maxWidth: "none",
+              transform: "translate(-50%, -50%) scale(1.3)",
               pointerEvents: "none",
               border: 0,
               opacity: 0.72,
@@ -578,21 +586,22 @@ export function PulseFitHero({
 
       {/* Cards Carousel */}
       {programs.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 80 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.7 }}
+        <div
           className="relative z-10 w-full overflow-hidden"
           style={{
-            paddingTop: "32px",
-            paddingBottom: "48px",
+            paddingTop: "24px",
+            paddingBottom: "36px",
+            overflowX: "clip",
+            contain: "paint",
+            clipPath: "inset(0)",
+            maxWidth: "100%",
           }}
         >
           {/* Gradient Overlays */}
           <div
             className="absolute left-0 top-0 bottom-0 z-10 pointer-events-none"
             style={{
-              width: "120px",
+              width: "clamp(24px, 8vw, 120px)",
               background: hasVideo
                 ? "linear-gradient(90deg, rgba(15, 8, 4, 0.92) 0%, rgba(15, 8, 4, 0) 100%)"
                 : "linear-gradient(90deg, var(--bg-primary, #FAF7F2) 0%, rgba(250, 247, 242, 0) 100%)",
@@ -601,7 +610,7 @@ export function PulseFitHero({
           <div
             className="absolute right-0 top-0 bottom-0 z-10 pointer-events-none"
             style={{
-              width: "120px",
+              width: "clamp(24px, 8vw, 120px)",
               background: hasVideo
                 ? "linear-gradient(270deg, rgba(15, 8, 4, 0.92) 0%, rgba(15, 8, 4, 0) 100%)"
                 : "linear-gradient(270deg, var(--bg-primary, #FAF7F2) 0%, rgba(250, 247, 242, 0) 100%)",
@@ -623,15 +632,15 @@ export function PulseFitHero({
               },
             }}
             style={{
-              gap: "24px",
-              paddingLeft: "24px",
+              gap: "20px",
+              paddingLeft: "20px",
             }}
           >
             {/* Duplicate programs for seamless loop */}
             {[...programs, ...programs].map((program, index) => (
               <motion.div
                 key={index}
-                whileHover={{ scale: 1.05, y: -8 }}
+                whileHover={{ scale: 1.03, y: -4 }}
                 transition={{ type: "spring", damping: 20, stiffness: 240 }}
                 onClick={() => {
                   if (program.href) {
@@ -640,11 +649,9 @@ export function PulseFitHero({
                     program.onClick();
                   }
                 }}
-                className="flex-shrink-0 cursor-pointer relative overflow-hidden group"
+                className="flex-shrink-0 cursor-pointer relative overflow-hidden group w-[240px] h-[330px] sm:w-[320px] sm:h-[420px]"
                 style={{
-                  width: "320px",
-                  height: "420px",
-                  borderRadius: "22px",
+                  borderRadius: "20px",
                   border: "1px solid rgba(255, 255, 255, 0.22)",
                   boxShadow: "0 18px 42px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25)",
                 }}
@@ -731,7 +738,7 @@ export function PulseFitHero({
               </motion.div>
             ))}
           </motion.div>
-        </motion.div>
+        </div>
       )}
 
       {/* Bottom transition gradient into storefront */}

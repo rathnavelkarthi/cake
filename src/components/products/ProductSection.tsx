@@ -125,10 +125,16 @@ export default function ProductSection() {
           >
             {/* Category Pills */}
             <div
+              className="no-scrollbar"
               style={{
                 display: "flex",
-                flexWrap: "wrap",
+                alignItems: "center",
                 gap: "8px",
+                overflowX: "auto",
+                maxWidth: "100%",
+                paddingBottom: "4px",
+                WebkitOverflowScrolling: "touch",
+                flexWrap: "nowrap",
               }}
             >
               {categoriesList.map((cat) => {
@@ -144,6 +150,8 @@ export default function ProductSection() {
                       borderRadius: "var(--radius-full)",
                       fontSize: "13px",
                       fontWeight: 600,
+                      whiteSpace: "nowrap",
+                      flexShrink: 0,
                       backgroundColor: isActive ? "var(--accent-cocoa)" : "var(--bg-surface)",
                       color: isActive ? "#FFFFFF" : "var(--text-secondary)",
                       border: isActive ? "1px solid var(--accent-cocoa)" : "1px solid var(--border-subtle)",
@@ -258,7 +266,7 @@ export default function ProductSection() {
               key={`${activeCategory}-${egglessOnly}-${searchQuery}`}
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
                 gap: "24px",
               }}
             >

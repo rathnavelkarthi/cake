@@ -3,309 +3,208 @@
 import React, { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
 import {
-  Cake,
   Lock,
   Mail,
-  ShieldAlert,
-  ArrowLeft,
-  ChefHat,
-  Sparkles,
-  UserCheck,
   ShieldCheck,
-  ShoppingBag,
   ArrowRight,
-  Zap,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  Home,
+  CheckCircle2,
 } from "lucide-react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-
-interface DemoCandidate {
-  name: string;
-  role: string;
-  email: string;
-  badge: string;
-  badgeColor: string;
-  icon: React.ComponentType<{ className?: string }>;
-  destination: string;
-  description: string;
-}
-
-const DEMO_CANDIDATES: DemoCandidate[] = [
-  {
-    name: "Selva",
-    role: "Head Chef",
-    email: "selva@kichees.com",
-    badge: "Head Pastry Chef",
-    badgeColor: "bg-amber-100 text-amber-900 border-amber-200",
-    icon: ChefHat,
-    destination: "/admin/kitchen",
-    description: "Sponge aeration, oven scheduling, and kitchen live display dispatch.",
-  },
-  {
-    name: "Anbu",
-    role: "Confectionery Chef",
-    email: "anbu@kichees.com",
-    badge: "Pastry & Piping Artisan",
-    badgeColor: "bg-purple-100 text-purple-900 border-purple-200",
-    icon: Sparkles,
-    destination: "/admin/kitchen",
-    description: "Custom cake decorating, intricate Lambeth piping, and bespoke finishing.",
-  },
-  {
-    name: "Sara Harrisons",
-    role: "Store Manager",
-    email: "sara@kichees.com",
-    badge: "General Manager",
-    badgeColor: "bg-emerald-100 text-emerald-900 border-emerald-200",
-    icon: UserCheck,
-    destination: "/admin/orders",
-    description: "Order fulfillment, customer CRM, and manual instant order dispatch.",
-  },
-  {
-    name: "Super Admin",
-    role: "Admin",
-    email: "admin@kichees.com",
-    badge: "Full System Access",
-    badgeColor: "bg-stone-100 text-stone-900 border-stone-300",
-    icon: ShieldCheck,
-    destination: "/admin",
-    description: "Executive controls: CMS, Inventory, Billing POS, Products & Settings.",
-  },
-  {
-    name: "Priya Sundaram",
-    role: "Normal Shop User",
-    email: "customer@kichees.com",
-    badge: "Customer Account",
-    badgeColor: "bg-blue-100 text-blue-900 border-blue-200",
-    icon: ShoppingBag,
-    destination: "/account/orders",
-    description: "Customer portal to view order history, custom cake tracking & receipts.",
-  },
-];
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@kichees.com");
-  const [password, setPassword] = useState("kichees2026");
+  const [email, setEmail] = useState("admin@kicheesbakeddelights.in");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [activeQuickLogging, setActiveQuickLogging] = useState<string | null>(null);
+  const [loginSuccess, setLoginSuccess] = useState(false);
 
-  const handleLoginWithCredentials = async (
-    loginEmail: string,
-    loginPass: string,
-    destination = "/admin"
-  ) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      setError("Please enter both email and password.");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
     try {
       const res = await signIn("credentials", {
-        email: loginEmail,
-        password: loginPass,
+        email: email.trim().toLowerCase(),
+        password,
         redirect: false,
       });
 
       if (res?.error) {
-        // For customer demo or fallback, if redirect still desired:
-        if (loginEmail === "customer@kichees.com") {
-          router.push(destination);
-          return;
-        }
-        setError("Invalid email or password. Please check your credentials.");
+        setError("Invalid email or password. Please verify your credentials.");
+        setLoading(false);
       } else {
-        router.push(destination);
-        router.refresh();
+        setLoginSuccess(true);
+        setTimeout(() => {
+          router.push("/admin");
+          router.refresh();
+        }, 600);
       }
     } catch {
-      setError("An unexpected authentication error occurred.");
-    } finally {
+      setError("An unexpected authentication error occurred. Please try again.");
       setLoading(false);
-      setActiveQuickLogging(null);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await handleLoginWithCredentials(email, password, "/admin");
-  };
-
-  const handleOneClickCandidate = async (candidate: DemoCandidate) => {
-    setActiveQuickLogging(candidate.email);
-    setEmail(candidate.email);
-    setPassword("kichees2026");
-    await handleLoginWithCredentials(candidate.email, "kichees2026", candidate.destination);
-  };
-
   return (
-    <div className="min-h-screen bg-stone-50/70 px-4 py-12 flex flex-col justify-center items-center">
-      <div className="w-full max-w-4xl space-y-8">
+    <div className="min-h-screen flex flex-col justify-center items-center bg-[#faf7f2] px-4 py-12 relative overflow-hidden">
+      {/* Subtle Background Ambience */}
+      <div className="absolute inset-0 pointer-events-none opacity-40">
+        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-amber-200/50 blur-3xl" />
+        <div className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-amber-100/60 blur-3xl" />
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
         {/* Brand Header */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-900 text-amber-50 shadow-md">
-            <Cake className="h-6 w-6" />
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight text-stone-900 font-serif">
-            Kichees Portal Access
-          </h1>
-          <p className="text-sm text-stone-500 max-w-md mx-auto">
-            Artisanal Commerce, Kitchen Display & Customer Operations.
-            Select a candidate role below for instant demo access.
-          </p>
-        </div>
-
-        {/* 1-Click Candidate Demo Roles Grid */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between px-1">
-            <div className="text-xs font-bold uppercase tracking-wider text-stone-600 flex items-center gap-1.5">
-              <Zap className="h-3.5 w-3.5 text-amber-600 fill-amber-500" />
-              <span>One-Click Candidate Demo Switcher</span>
-            </div>
-            <span className="text-[11px] text-stone-400">
-              No password needed for testing
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-            {DEMO_CANDIDATES.map((cand) => {
-              const Icon = cand.icon;
-              const isLogging = activeQuickLogging === cand.email;
-
-              return (
-                <div
-                  key={cand.email}
-                  onClick={() => !loading && handleOneClickCandidate(cand)}
-                  className={`group relative rounded-xl border p-4 bg-white shadow-2xs hover:shadow-md hover:border-amber-900/40 transition-all cursor-pointer flex flex-col justify-between ${
-                    cand.role === "Normal Shop User"
-                      ? "border-blue-200 bg-blue-50/30 md:col-span-2 lg:col-span-1"
-                      : "border-stone-200"
-                  }`}
-                >
-                  <div>
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-stone-100 group-hover:bg-amber-900 group-hover:text-white transition-colors text-stone-700">
-                          <Icon className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <div className="text-sm font-bold text-stone-900 group-hover:text-amber-950 transition-colors">
-                            {cand.name}
-                          </div>
-                          <div className="text-[11px] font-medium text-stone-500">
-                            {cand.email}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mb-2.5">
-                      <Badge
-                        className={`text-[10px] font-semibold border ${cand.badgeColor}`}
-                      >
-                        {cand.badge}
-                      </Badge>
-                    </div>
-
-                    <p className="text-xs text-stone-600 line-clamp-2 leading-relaxed">
-                      {cand.description}
-                    </p>
-                  </div>
-
-                  <div className="mt-3.5 pt-3 border-t border-stone-100 flex items-center justify-between text-xs font-semibold text-amber-900 group-hover:text-amber-950">
-                    <span>{isLogging ? "Signing in..." : "Launch Demo Workspace"}</span>
-                    <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
-                  </div>
-                </div>
-              );
-            })}
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-block transition-transform hover:scale-105 duration-200">
+            <img
+              src="https://kicheesbakeddelights.com/wp-content/uploads/2025/02/kichees-baked-delights-bakery-logo.png"
+              alt="Kichee's Baked Delights"
+              width={180}
+              height={70}
+              className="mx-auto h-16 w-auto object-contain drop-shadow-xs"
+            />
+          </Link>
+          <div className="mt-3 flex items-center justify-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-amber-800">
+            <ShieldCheck className="w-4 h-4 text-amber-700" />
+            <span>Executive Management Portal</span>
           </div>
         </div>
 
-        {/* Manual Credentials Sign-in Card */}
-        <div className="w-full max-w-md mx-auto pt-2">
-          <Card className="border-stone-200 shadow-sm bg-white">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-bold text-stone-900">
-                Direct Credential Login
-              </CardTitle>
-              <CardDescription className="text-xs text-stone-500">
-                Or enter any staff or customer email manually.
-              </CardDescription>
-            </CardHeader>
+        {/* Login Card */}
+        <Card className="border-stone-200/80 shadow-xl bg-white/95 backdrop-blur-xs rounded-2xl overflow-hidden">
+          <div className="h-1.5 bg-gradient-to-r from-amber-700 via-amber-600 to-amber-800" />
+          
+          <CardHeader className="pt-6 pb-4 text-center">
+            <CardTitle className="text-xl font-serif font-bold text-stone-900">
+              Sign In to Bakery Studio
+            </CardTitle>
+            <CardDescription className="text-xs text-stone-500">
+              Secure authentication for CMS, products, orders & bakery management
+            </CardDescription>
+          </CardHeader>
 
-            <CardContent>
-              {error && (
-                <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 p-3 text-xs text-red-800 border border-red-200">
-                  <ShieldAlert className="h-4 w-4 shrink-0 text-red-600" />
-                  <span>{error}</span>
+          <CardContent className="pt-2 pb-6 px-6">
+            {error && (
+              <div className="mb-5 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {loginSuccess && (
+              <div className="mb-5 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Authenticated! Redirecting to dashboard...</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Email Field */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-stone-700" htmlFor="admin-email">
+                  Staff / Admin Email
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-stone-400" />
+                  <Input
+                    id="admin-email"
+                    type="email"
+                    required
+                    placeholder="admin@kicheesbakeddelights.in"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-9 h-11 text-xs border-stone-200 focus-visible:ring-amber-800"
+                    disabled={loading || loginSuccess}
+                  />
                 </div>
-              )}
+              </div>
 
-              <form onSubmit={handleSubmit} className="space-y-3.5">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold uppercase text-stone-600 tracking-wider">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-2.5 h-4 w-4 text-stone-400" />
-                    <Input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="staff@kichees.com"
-                      required
-                      className="pl-9 h-9 text-xs border-stone-300 focus-visible:ring-amber-800"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold uppercase text-stone-600 tracking-wider">
+              {/* Password Field */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-semibold text-stone-700" htmlFor="admin-password">
                     Password
                   </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-2.5 h-4 w-4 text-stone-400" />
-                    <Input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      required
-                      className="pl-9 h-9 text-xs border-stone-300 focus-visible:ring-amber-800"
-                    />
-                  </div>
                 </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-stone-400" />
+                  <Input
+                    id="admin-password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    placeholder="••••••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-9 pr-10 h-11 text-xs border-stone-200 focus-visible:ring-amber-800"
+                    disabled={loading || loginSuccess}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-stone-400 hover:text-stone-700 focus:outline-hidden"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
 
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full h-9 bg-amber-900 hover:bg-amber-950 text-white font-medium text-xs shadow-xs transition-all"
-                >
-                  {loading ? "Signing in..." : "Sign In with Credentials"}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                className="w-full h-11 bg-amber-900 hover:bg-amber-950 text-white font-semibold text-xs tracking-wider uppercase transition-all shadow-md mt-2"
+                disabled={loading || loginSuccess}
+              >
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Authenticating...
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-2">
+                    <span>Enter Management Dashboard</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </span>
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
 
-          <div className="text-center mt-4">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-stone-600 hover:text-stone-900 transition-colors"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Return to Customer Storefront
-            </Link>
-          </div>
+        {/* Footer info & link */}
+        <div className="mt-6 text-center">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-xs text-stone-600 hover:text-amber-900 transition-colors"
+          >
+            <Home className="w-3.5 h-3.5" />
+            <span>Return to Kichee's Customer Storefront</span>
+          </Link>
+          <p className="mt-3 text-[11px] text-stone-400">
+            Protected by Supabase Row-Level Security & Role-Based Access Control
+          </p>
         </div>
       </div>
     </div>

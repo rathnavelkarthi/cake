@@ -43,3 +43,7 @@ next-env.d.ts
 # scratch extractions
 menu_pages/
 menu_extracted.txt
+
+# supabase
+supabase/.temp/
+

@@ -16,6 +16,9 @@ import {
   BookOpen,
   Layout,
   Upload,
+  Mail,
+  RefreshCw,
+  Code,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,8 +53,19 @@ import {
 } from "@/lib/cms/cms-store";
 import { ContentBlock, BlockType, BlogPost } from "@/lib/cms/types";
 
+interface EmailTemplateItem {
+  id: string;
+  template_key: string;
+  name: string;
+  subject: string;
+  body_html: string;
+  body_text?: string;
+  variables: string[];
+  is_active: boolean;
+}
+
 export default function AdminCmsPage() {
-  const [activeTab, setActiveTab] = useState<"landing_editor" | "blogs">("landing_editor");
+  const [activeTab, setActiveTab] = useState<"landing_editor" | "blogs" | "email_templates">("landing_editor");
 
   // Landing Page Blocks State
   const [blocks, setBlocks] = useState<ContentBlock[]>([]);
@@ -71,6 +85,16 @@ export default function AdminCmsPage() {
   const [blogStatus, setBlogStatus] = useState<"Published" | "Draft">("Published");
   const [blogBlocks, setBlogBlocks] = useState<ContentBlock[]>([]);
 
+  // Email Templates State
+  const [emailTemplates, setEmailTemplates] = useState<EmailTemplateItem[]>([]);
+  const [selectedTemplateKey, setSelectedTemplateKey] = useState<string>("signup_confirmation");
+  const [templateSubject, setTemplateSubject] = useState("");
+  const [templateBodyHtml, setTemplateBodyHtml] = useState("");
+  const [templateIsActive, setTemplateIsActive] = useState(true);
+  const [emailSaveSuccess, setEmailSaveSuccess] = useState(false);
+  const [previewTimestamp, setPreviewTimestamp] = useState(Date.now());
+  const [showRawHtmlEditor, setShowRawHtmlEditor] = useState(false);
+
   // Load from store
   useEffect(() => {
     setBlocks(getLandingPageBlocks());
@@ -78,6 +102,21 @@ export default function AdminCmsPage() {
     if (getLandingPageBlocks().length > 0) {
       setSelectedBlockId(getLandingPageBlocks()[0].id);
     }
+
+    // Load email templates from Supabase API
+    fetch("/api/email/templates")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data.templates) && data.templates.length > 0) {
+          setEmailTemplates(data.templates);
+          const first = data.templates[0];
+          setSelectedTemplateKey(first.template_key);
+          setTemplateSubject(first.subject);
+          setTemplateBodyHtml(first.body_html);
+          setTemplateIsActive(first.is_active !== false);
+        }
+      })
+      .catch((err) => console.error("Error loading email templates:", err));
 
     return subscribeCms(() => {
       setBlocks(getLandingPageBlocks());
@@ -275,6 +314,47 @@ export default function AdminCmsPage() {
     deleteBlogPost(id);
   };
 
+  // Handlers for Email Templates
+  const handleSelectTemplate = (key: string) => {
+    setSelectedTemplateKey(key);
+    const found = emailTemplates.find((t) => t.template_key === key);
+    if (found) {
+      setTemplateSubject(found.subject);
+      setTemplateBodyHtml(found.body_html);
+      setTemplateIsActive(found.is_active !== false);
+    }
+    setPreviewTimestamp(Date.now());
+  };
+
+  const handleSaveTemplate = async () => {
+    try {
+      const res = await fetch("/api/email/templates", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          template_key: selectedTemplateKey,
+          subject: templateSubject,
+          body_html: templateBodyHtml,
+          is_active: templateIsActive,
+        }),
+      });
+      if (res.ok) {
+        setEmailSaveSuccess(true);
+        setPreviewTimestamp(Date.now());
+        setTimeout(() => setEmailSaveSuccess(false), 3000);
+        setEmailTemplates((prev) =>
+          prev.map((t) =>
+            t.template_key === selectedTemplateKey
+              ? { ...t, subject: templateSubject, body_html: templateBodyHtml, is_active: templateIsActive }
+              : t
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Failed to save email template:", err);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Header */}
@@ -284,7 +364,7 @@ export default function AdminCmsPage() {
             Website & Content Customizer
           </h1>
           <p className="text-sm text-stone-500">
-            Shopify-style block editor to customize the landing page, swap photos, and publish blogs per PRODUCT.md Sections 30-32.
+            Shopify-style block editor to customize the landing page, swap photos, publish blogs, and configure branded email templates.
           </p>
         </div>
 
@@ -303,6 +383,10 @@ export default function AdminCmsPage() {
               <TabsTrigger value="blogs" className="text-xs gap-1.5">
                 <BookOpen className="h-3.5 w-3.5" />
                 Blog & Content Pages ({blogs.length})
+              </TabsTrigger>
+              <TabsTrigger value="email_templates" className="text-xs gap-1.5">
+                <Mail className="h-3.5 w-3.5" />
+                Email Templates ({emailTemplates.length})
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -471,6 +555,219 @@ export default function AdminCmsPage() {
                 ))}
               </TableBody>
             </Table>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: BRANDED EMAIL TEMPLATES & NOTIFICATIONS */}
+      {activeTab === "email_templates" && (
+        <div className="space-y-4">
+          {/* Action Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-xl bg-white border border-stone-200 shadow-xs gap-3">
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-semibold text-stone-800">
+                Editing: <strong>{emailTemplates.find((t) => t.template_key === selectedTemplateKey)?.name || selectedTemplateKey}</strong>
+              </span>
+
+              {emailSaveSuccess && (
+                <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <span>Template Saved to Supabase!</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setPreviewTimestamp(Date.now())}
+                className="inline-flex items-center gap-1 text-xs text-stone-600 hover:text-stone-900 font-medium px-3 py-1.5 rounded-lg border border-stone-200 hover:bg-stone-50"
+                title="Reload preview iframe"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                <span>Refresh Preview</span>
+              </button>
+
+              <a
+                href={`/api/email/preview?key=${selectedTemplateKey}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-xs text-stone-600 hover:text-stone-900 font-medium px-3 py-1.5 rounded-lg border border-stone-200 hover:bg-stone-50"
+              >
+                <span>Full Screen</span>
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+
+              <Button
+                onClick={handleSaveTemplate}
+                className="bg-amber-900 hover:bg-amber-950 text-white text-xs h-8 shadow-sm gap-1.5 font-bold"
+              >
+                <Save className="h-3.5 w-3.5" />
+                Save Template
+              </Button>
+            </div>
+          </div>
+
+          {/* Main Layout: Templates Sidebar & Live Preview Editor */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 min-h-[700px]">
+            {/* Left Sidebar: Templates List & Variables */}
+            <div className="lg:col-span-4 flex flex-col gap-4">
+              <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-xs space-y-3">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700 flex items-center gap-1.5">
+                  <Mail className="h-3.5 w-3.5 text-amber-800" />
+                  Customer Email Notifications
+                </h3>
+
+                <div className="space-y-2">
+                  {emailTemplates.map((tmpl) => (
+                    <div
+                      key={tmpl.id || tmpl.template_key}
+                      onClick={() => handleSelectTemplate(tmpl.template_key)}
+                      className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${
+                        selectedTemplateKey === tmpl.template_key
+                          ? "border-amber-800 bg-amber-50/60 shadow-xs ring-1 ring-amber-800/30"
+                          : "border-stone-200 hover:border-amber-300 hover:bg-stone-50/70"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-stone-900">
+                          {tmpl.name}
+                        </span>
+                        <Badge
+                          variant={tmpl.is_active ? "success" : "secondary"}
+                          className="text-[9px] px-1.5 py-0.2"
+                        >
+                          {tmpl.is_active ? "Active" : "Disabled"}
+                        </Badge>
+                      </div>
+                      <p className="text-[11px] text-stone-500 font-mono mt-1 truncate">
+                        Key: {tmpl.template_key}
+                      </p>
+                      <p className="text-[11px] text-stone-600 mt-1 line-clamp-1 italic">
+                        &ldquo;{tmpl.subject}&rdquo;
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Dynamic Variables Cheat Sheet */}
+              <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-xs space-y-2.5">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-stone-600">
+                  Dynamic Placeholder Tags
+                </h4>
+                <p className="text-[11px] text-stone-500">
+                  These tags are automatically replaced with order and customer data:
+                </p>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {[
+                    "{{customer_name}}",
+                    "{{customer_email}}",
+                    "{{order_number}}",
+                    "{{total_amount}}",
+                    "{{items_table}}",
+                    "{{delivery_type}}",
+                    "{{delivery_date}}",
+                    "{{delivery_address}}",
+                    "{{discount_code}}",
+                    "{{track_url}}",
+                    "{{new_status}}",
+                    "{{status_message}}",
+                  ].map((tag) => (
+                    <span
+                      key={tag}
+                      className="bg-stone-100 hover:bg-amber-100 text-stone-700 hover:text-amber-900 border border-stone-200 rounded px-1.5 py-0.5 text-[10px] font-mono cursor-pointer transition-colors"
+                      title="Click to copy"
+                      onClick={() => {
+                        navigator.clipboard?.writeText(tag);
+                      }}
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Subject Editor & Live Frame */}
+            <div className="lg:col-span-8 flex flex-col gap-4">
+              {/* Subject Line & Controls */}
+              <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-xs space-y-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-stone-700">
+                    Email Subject Line (Supports Dynamic Variables)
+                  </label>
+                  <Input
+                    value={templateSubject}
+                    onChange={(e) => setTemplateSubject(e.target.value)}
+                    placeholder="Welcome to Kichee's Baked Delights, {{customer_name}}!"
+                    className="text-xs h-9 bg-white"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <label className="flex items-center gap-2 text-xs font-medium text-stone-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={templateIsActive}
+                      onChange={(e) => setTemplateIsActive(e.target.checked)}
+                      className="rounded border-stone-300 text-amber-900 focus:ring-amber-800"
+                    />
+                    <span>Enable Automated Sending for this Notification</span>
+                  </label>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowRawHtmlEditor(!showRawHtmlEditor)}
+                      className="h-7 text-[11px] gap-1"
+                    >
+                      <Code className="h-3 w-3" />
+                      <span>{showRawHtmlEditor ? "Switch to Live Preview" : "Edit Raw HTML"}</span>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Live Preview Frame OR Raw HTML Code View */}
+              <div className="rounded-xl border border-stone-200 bg-white shadow-xs overflow-hidden flex-1 flex flex-col min-h-[580px]">
+                <div className="px-4 py-2.5 bg-stone-100/70 border-b border-stone-200 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                    <span className="text-[11px] text-stone-500 font-mono ml-2">
+                      {showRawHtmlEditor ? "HTML Source Editor" : "Live Visual Rendering"}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-stone-400">
+                    Rendered with Kichee's Branding & Site Images
+                  </span>
+                </div>
+
+                <div className="flex-1 p-2">
+                  {showRawHtmlEditor ? (
+                    <textarea
+                      value={templateBodyHtml}
+                      onChange={(e) => {
+                        setTemplateBodyHtml(e.target.value);
+                      }}
+                      rows={25}
+                      className="w-full h-full font-mono text-xs p-3 rounded-lg border border-stone-300 bg-stone-900 text-amber-100 focus:outline-hidden"
+                    />
+                  ) : (
+                    <iframe
+                      key={`${selectedTemplateKey}-${previewTimestamp}`}
+                      src={`/api/email/preview?key=${selectedTemplateKey}&t=${previewTimestamp}`}
+                      title="Email Preview"
+                      className="w-full h-[580px] rounded-lg border-0 bg-[#faf7f2]"
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

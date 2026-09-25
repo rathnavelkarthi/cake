@@ -192,12 +192,13 @@ export default function Footer() {
           <div suppressHydrationWarning>
             © {new Date().getFullYear()} {BUSINESS_CONFIG.name}. Handcrafted in Nungambakkam, Chennai.
           </div>
-          <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: "20px", flexWrap: "wrap", alignItems: "center" }}>
             <a href="#signature-cakes" style={{ color: "#8E827A", textDecoration: "none" }}>Signature Bakes</a>
             <a href="#custom-studio" style={{ color: "#8E827A", textDecoration: "none" }}>Custom Cakes</a>
             <a href="#faqs" style={{ color: "#8E827A", textDecoration: "none" }}>Delivery Policy</a>
             <a href="#faqs" style={{ color: "#8E827A", textDecoration: "none" }}>Privacy Policy</a>
             <a href="#faqs" style={{ color: "#8E827A", textDecoration: "none" }}>Terms of Service</a>
+            <a href="/admin/login" style={{ color: "#544B45", textDecoration: "none", fontSize: "11px", opacity: 0.5 }} title="Bakery Staff Access">Staff</a>
           </div>
         </div>
       </div>

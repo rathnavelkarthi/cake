@@ -813,9 +813,66 @@ export let LIVE_CATEGORIES: Category[] = [...CATEGORIES];
 
 type ProductsChangeListener = () => void;
 const productChangeListeners: Set<ProductsChangeListener> = new Set();
+let hasSyncedStorefrontFromSupabase = false;
+
+export async function syncLiveProductsFromSupabase(): Promise<void> {
+  if (typeof window === "undefined") return;
+  try {
+    const res = await fetch("/api/products");
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.products) && data.products.length > 0) {
+        LIVE_PRODUCTS = data.products.map((p: any) => ({
+          id: p.id,
+          slug: p.slug,
+          sku: p.sku,
+          name: p.name,
+          categoryId: p.category_id || "cakes",
+          categoryName: p.category_name || "Signature Cakes",
+          shortDescription: p.short_description || "",
+          description: p.description || "",
+          image: p.image_url || "/images/hero-truffle.jpg",
+          isEggless: Boolean(p.is_eggless),
+          isBestSeller: Boolean(p.is_bestseller),
+          isFeatured: Boolean(p.is_featured),
+          preparationTime: p.prep_time || "2 hours",
+          ingredients: p.ingredients || [],
+          allergens: p.allergens || ["Dairy", "Gluten"],
+          variants: p.variants || [
+            {
+              id: `v-${p.id}-std`,
+              label: "Standard",
+              weight: "0.5 kg",
+              price: Number(p.price),
+              servings: "3-4 servings",
+              inStock: Number(p.stock_quantity ?? 10) > 0,
+            },
+          ],
+        }));
+        productChangeListeners.forEach((fn) => {
+          try {
+            fn();
+          } catch {}
+        });
+      }
+    }
+    hasSyncedStorefrontFromSupabase = true;
+  } catch (err) {
+    console.warn("Failed to sync storefront products from Supabase:", err);
+  }
+}
+
+if (typeof window !== "undefined" && !hasSyncedStorefrontFromSupabase) {
+  setTimeout(() => {
+    syncLiveProductsFromSupabase();
+  }, 10);
+}
 
 export function subscribeProducts(listener: ProductsChangeListener): () => void {
   productChangeListeners.add(listener);
+  if (typeof window !== "undefined" && !hasSyncedStorefrontFromSupabase) {
+    syncLiveProductsFromSupabase();
+  }
   return () => productChangeListeners.delete(listener);
 }
 

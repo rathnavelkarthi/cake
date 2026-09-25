@@ -121,7 +121,7 @@ export default function AdminInventoryPage() {
 
   // Manual Adjust Modal
   const [selectedAdjustItem, setSelectedAdjustItem] = useState<{
-    id: number;
+    id: number | string;
     name: string;
     stock: number;
     unit: string;

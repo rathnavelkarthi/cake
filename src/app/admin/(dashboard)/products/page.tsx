@@ -14,6 +14,11 @@ import {
   AlertTriangle,
   ArrowRight,
   ImageIcon,
+  Pencil,
+  Eye,
+  EyeOff,
+  Check,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,6 +76,18 @@ const MENU_CATEGORIES = [
   "Cheesecakes & Tarts",
   "Artisanal Breads",
   "Cookies & Macarons",
+];
+
+const QUICK_BAKERY_IMAGES = [
+  { label: "Belgian Truffle", url: "/images/hero-truffle.jpg" },
+  { label: "Fudge Brownies", url: "/images/fudge-brownies.jpg" },
+  { label: "Pistachio Rose", url: "/images/celebration-cake.jpg" },
+  { label: "Bakery Counter", url: "/images/bakery-counter.jpg" },
+  { label: "Red Velvet", url: "/custom-cakes/cake-2.jpg" },
+  { label: "Ferrero Rocher", url: "/custom-cakes/cake-3.jpg" },
+  { label: "Rasmalai Melts", url: "/custom-cakes/cake-4.jpg" },
+  { label: "Caramel Drip", url: "/custom-cakes/cake-5.jpg" },
+  { label: "Korean Garlic Bun", url: "/custom-cakes/cake-6.jpg" },
 ];
 
 export default function AdminProductsPage() {
@@ -270,15 +287,73 @@ export default function AdminProductsPage() {
     setNewProductStock("10");
   };
 
-  const handleToggleStatus = (id: number) => {
-    const prod = productsList.find((p) => p.id === id);
+  // Edit Product Modal State
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<AdminProductItem | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editCategory, setEditCategory] = useState("Cakes");
+  const [editPrice, setEditPrice] = useState("750");
+  const [editSalePrice, setEditSalePrice] = useState("");
+  const [editStock, setEditStock] = useState("10");
+  const [editLowStockThreshold, setEditLowStockThreshold] = useState("5");
+  const [editImageUrl, setEditImageUrl] = useState("/images/hero-truffle.jpg");
+  const [editStatus, setEditStatus] = useState<"active" | "inactive">("active");
+  const [editFeatured, setEditFeatured] = useState(false);
+  const [editBestSeller, setEditBestSeller] = useState(false);
+  const [editDescription, setEditDescription] = useState("");
+  const [editIsEggless, setEditIsEggless] = useState(true);
+
+  const handleOpenEditProduct = (prod: AdminProductItem) => {
+    setEditingProduct(prod);
+    setEditName(prod.name);
+    setEditCategory(prod.category || "Cakes");
+    setEditPrice(String(prod.price || 0));
+    setEditSalePrice(prod.salePrice ? String(prod.salePrice) : "");
+    setEditStock(String(prod.stock || 0));
+    setEditLowStockThreshold(String(prod.lowStockThreshold || 5));
+    setEditImageUrl(prod.imageUrl || "/images/hero-truffle.jpg");
+    setEditStatus(prod.status === "active" ? "active" : "inactive");
+    setEditFeatured(Boolean(prod.featured));
+    setEditBestSeller(Boolean(prod.bestSeller));
+    setEditDescription(prod.description || "");
+    setEditIsEggless(prod.isEggless !== false);
+    setIsEditOpen(true);
+  };
+
+  const handleSaveEditProduct = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+
+    updateInventoryProduct(editingProduct.id, {
+      name: editName.trim(),
+      category: editCategory,
+      price: parseFloat(editPrice) || 0,
+      salePrice: editSalePrice ? parseFloat(editSalePrice) : undefined,
+      stock: parseInt(editStock, 10) || 0,
+      lowStockThreshold: parseInt(editLowStockThreshold, 10) || 5,
+      imageUrl: editImageUrl,
+      status: editStatus,
+      featured: editFeatured,
+      bestSeller: editBestSeller,
+      description: editDescription,
+      isEggless: editIsEggless,
+    });
+
+    setIsEditOpen(false);
+    setEditingProduct(null);
+  };
+
+  const handleToggleStatus = (id: number | string) => {
+    const prod = productsList.find((p) => String(p.id) === String(id));
     if (!prod) return;
     const nextStatus = prod.status === "active" ? "inactive" : "active";
     updateInventoryProduct(id, { status: nextStatus });
   };
 
-  const handleDeleteProduct = (id: number) => {
-    deleteInventoryProduct(id);
+  const handleDeleteProduct = (id: number | string) => {
+    if (confirm("Are you sure you want to delete this product from the database?")) {
+      deleteInventoryProduct(id);
+    }
   };
 
   return (
@@ -756,20 +831,41 @@ export default function AdminProductsPage() {
                     </div>
                   </TableCell>
 
-                  {/* Status Badge */}
+                  {/* Status & Show/Hide Toggle */}
                   <TableCell>
-                    <Badge
-                      variant={
-                        product.status === "active"
-                          ? "success"
-                          : product.status === "inactive"
-                          ? "secondary"
-                          : "destructive"
-                      }
-                      className="text-[10px] capitalize font-medium"
+                    <button
+                      type="button"
+                      onClick={() => handleToggleStatus(product.id)}
+                      title={product.status === "active" ? "Click to hide from website" : "Click to show on website"}
+                      className="inline-flex items-center gap-1.5 cursor-pointer group"
                     >
-                      {product.status}
-                    </Badge>
+                      <Badge
+                        variant={
+                          product.status === "active"
+                            ? "success"
+                            : product.status === "inactive"
+                            ? "secondary"
+                            : "destructive"
+                        }
+                        className={`text-[10px] font-medium transition-all group-hover:scale-105 shadow-2xs ${
+                          product.status === "active"
+                            ? "bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200"
+                            : "bg-stone-100 text-stone-600 border-stone-300 hover:bg-stone-200"
+                        }`}
+                      >
+                        {product.status === "active" ? (
+                          <span className="flex items-center gap-1">
+                            <Eye className="w-3 h-3 text-emerald-600" />
+                            Live on Site
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1">
+                            <EyeOff className="w-3 h-3 text-stone-400" />
+                            Hidden from Site
+                          </span>
+                        )}
+                      </Badge>
+                    </button>
                   </TableCell>
 
                   {/* Price */}
@@ -796,37 +892,65 @@ export default function AdminProductsPage() {
 
                   {/* Actions Dropdown */}
                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-stone-500 hover:text-stone-900"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Actions</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-40 text-xs">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem
-                          onClick={() => handleToggleStatus(product.id)}
-                          className="cursor-pointer"
-                        >
-                          {product.status === "active"
-                            ? "Mark Inactive"
-                            : "Set Active"}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => handleDeleteProduct(product.id)}
-                          className="cursor-pointer text-red-600 focus:text-red-700"
-                        >
-                          <Trash2 className="mr-2 h-3.5 w-3.5" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleOpenEditProduct(product)}
+                        title="Edit Product"
+                        className="h-8 w-8 text-stone-600 hover:text-amber-900 hover:bg-amber-50"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        <span className="sr-only">Edit Product</span>
+                      </Button>
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-stone-500 hover:text-stone-900"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Actions</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48 text-xs">
+                          <DropdownMenuLabel>Product Controls</DropdownMenuLabel>
+                          <DropdownMenuItem
+                            onClick={() => handleOpenEditProduct(product)}
+                            className="cursor-pointer"
+                          >
+                            <Pencil className="mr-2 h-3.5 w-3.5 text-stone-600" />
+                            Edit Details & Price
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleToggleStatus(product.id)}
+                            className="cursor-pointer"
+                          >
+                            {product.status === "active" ? (
+                              <>
+                                <EyeOff className="mr-2 h-3.5 w-3.5 text-stone-500" />
+                                Hide from Website
+                              </>
+                            ) : (
+                              <>
+                                <Eye className="mr-2 h-3.5 w-3.5 text-emerald-600" />
+                                Show on Website
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteProduct(product.id)}
+                            className="cursor-pointer text-red-600 focus:text-red-700"
+                          >
+                            <Trash2 className="mr-2 h-3.5 w-3.5" />
+                            Delete Product
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -834,6 +958,277 @@ export default function AdminProductsPage() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Edit Product Modal */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-stone-900 flex items-center gap-2">
+              <Pencil className="w-4 h-4 text-amber-800" />
+              <span>Edit Product & Storefront Visibility</span>
+            </DialogTitle>
+            <DialogDescription>
+              Modify pricing, description, stock levels, and control whether this product is shown on the live website.
+            </DialogDescription>
+          </DialogHeader>
+
+          {editingProduct && (
+            <form onSubmit={handleSaveEditProduct} className="space-y-5 py-2">
+              {/* Product Basic Info */}
+              <div className="space-y-4 rounded-xl border border-stone-100 bg-stone-50/50 p-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-stone-700">
+                    Product Title
+                  </label>
+                  <Input
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    required
+                    className="bg-white"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-stone-700">
+                      Menu Category
+                    </label>
+                    <Select value={editCategory} onValueChange={setEditCategory}>
+                      <SelectTrigger className="bg-white text-xs h-9">
+                        <SelectValue placeholder="Category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MENU_CATEGORIES.map((cat) => (
+                          <SelectItem key={cat} value={cat} className="text-xs">
+                            {cat}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-stone-700">
+                      Standard Price (₹)
+                    </label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={editPrice}
+                      onChange={(e) => setEditPrice(e.target.value)}
+                      required
+                      className="bg-white"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-stone-700">
+                      Sale Price (₹, optional)
+                    </label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="any"
+                      placeholder="e.g. 699"
+                      value={editSalePrice}
+                      onChange={(e) => setEditSalePrice(e.target.value)}
+                      className="bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-stone-700">
+                      Current In-Stock Quantity
+                    </label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={editStock}
+                      onChange={(e) => setEditStock(e.target.value)}
+                      required
+                      className="bg-white"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-stone-700">
+                      Low Stock Threshold Alert
+                    </label>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={editLowStockThreshold}
+                      onChange={(e) => setEditLowStockThreshold(e.target.value)}
+                      className="bg-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Visibility and Flags */}
+              <div className="space-y-3 rounded-xl border border-stone-100 bg-stone-50/50 p-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-stone-600">
+                  Storefront Visibility & Merchandising
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-stone-700">
+                      Website Status (Show or Hide)
+                    </label>
+                    <Select
+                      value={editStatus}
+                      onValueChange={(v) => setEditStatus(v as "active" | "inactive")}
+                    >
+                      <SelectTrigger className="bg-white text-xs h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active" className="text-xs font-semibold text-emerald-700">
+                          ✓ Show on Website (Active)
+                        </SelectItem>
+                        <SelectItem value="inactive" className="text-xs font-semibold text-stone-500">
+                          ✕ Hide from Website (Hidden / Draft)
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex flex-col justify-center gap-2 pt-2">
+                    <label className="flex items-center gap-2 text-xs font-medium text-stone-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={editFeatured}
+                        onChange={(e) => setEditFeatured(e.target.checked)}
+                        className="rounded border-stone-300 text-amber-900 focus:ring-amber-800"
+                      />
+                      <span>Feature on Storefront Homepage</span>
+                    </label>
+
+                    <label className="flex items-center gap-2 text-xs font-medium text-stone-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={editBestSeller}
+                        onChange={(e) => setEditBestSeller(e.target.checked)}
+                        className="rounded border-stone-300 text-amber-900 focus:ring-amber-800"
+                      />
+                      <span>Mark as Best Seller Badge</span>
+                    </label>
+
+                    <label className="flex items-center gap-2 text-xs font-medium text-stone-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={editIsEggless}
+                        onChange={(e) => setEditIsEggless(e.target.checked)}
+                        className="rounded border-stone-300 text-amber-900 focus:ring-amber-800"
+                      />
+                      <span>100% Pure Eggless Bake</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Image Selection with Quick Gallery */}
+              <div className="space-y-3 rounded-xl border border-stone-100 bg-stone-50/50 p-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-stone-600 flex items-center gap-1.5">
+                    <ImageIcon className="h-3.5 w-3.5 text-amber-800" />
+                    Product Photography
+                  </h4>
+                  <span className="text-[11px] text-stone-400">Click any image to select</span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="relative h-16 w-16 rounded-xl border border-stone-300 overflow-hidden shrink-0 bg-stone-100">
+                    <Image
+                      src={editImageUrl || "/images/hero-truffle.jpg"}
+                      alt={editName || "Product"}
+                      fill
+                      sizes="64px"
+                      className="object-cover"
+                    />
+                  </div>
+
+                  <div className="flex-1 space-y-1">
+                    <label className="text-[11px] font-semibold text-stone-600">
+                      Image URL / Path
+                    </label>
+                    <Input
+                      value={editImageUrl}
+                      onChange={(e) => setEditImageUrl(e.target.value)}
+                      placeholder="/images/hero-truffle.jpg"
+                      className="bg-white text-xs h-8"
+                    />
+                  </div>
+                </div>
+
+                {/* Quick Picker Thumbnails */}
+                <div className="space-y-1.5 pt-1">
+                  <span className="text-[11px] text-stone-500 font-medium">Quick Bakery Photos:</span>
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                    {QUICK_BAKERY_IMAGES.map((img, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setEditImageUrl(img.url)}
+                        className={`group relative aspect-square rounded-lg overflow-hidden border transition-all ${
+                          editImageUrl === img.url
+                            ? "border-amber-800 ring-2 ring-amber-800/20"
+                            : "border-stone-200 hover:border-amber-600"
+                        }`}
+                        title={img.label}
+                      >
+                        <Image src={img.url} alt={img.label} fill sizes="48px" className="object-cover" />
+                        {editImageUrl === img.url && (
+                          <div className="absolute inset-0 bg-amber-900/30 flex items-center justify-center">
+                            <Check className="w-4 h-4 text-white drop-shadow-sm" />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-stone-700">
+                  Product Description
+                </label>
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  rows={3}
+                  placeholder="Artisanal recipe details, Belgian chocolate percentage, flavor notes..."
+                  className="w-full text-xs rounded-md border border-stone-200 bg-white p-2.5 focus:outline-hidden focus:ring-1 focus:ring-amber-900"
+                />
+              </div>
+
+              <DialogFooter className="pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  className="bg-amber-900 hover:bg-amber-950 text-white font-medium shadow-sm"
+                >
+                  Save Changes to Database
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+

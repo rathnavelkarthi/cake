@@ -100,16 +100,16 @@ export function AdminHeader() {
                   KO
                 </div>
                 <div className="hidden text-left sm:block">
-                  <p className="text-xs font-semibold text-stone-900">Operations</p>
-                  <p className="text-[10px] text-stone-500">Demo Active</p>
+                  <p className="text-xs font-semibold text-stone-900">Admin Account</p>
+                  <p className="text-[10px] text-stone-500">Super Admin</p>
                 </div>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64">
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-bold text-stone-900 leading-none">Bakery Candidate Switcher</p>
-                  <p className="text-[11px] text-stone-500">Quick-jump between active candidate views</p>
+                  <p className="text-sm font-bold text-stone-900 leading-none">Bakery Operations</p>
+                  <p className="text-[11px] text-stone-500">Station & role navigation</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
