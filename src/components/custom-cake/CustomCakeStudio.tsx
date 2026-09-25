@@ -205,16 +205,17 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
   return (
     <section
       id="custom-studio"
-      className="section-padding"
+      className="section-padding overflow-x-clip w-full max-w-full"
       style={{
         backgroundColor: "var(--bg-surface)",
         borderTop: "1px solid var(--border-subtle)",
         borderBottom: "1px solid var(--border-subtle)",
+        minWidth: 0,
       }}
     >
-      <div className="container">
+      <div className="container min-w-0 max-w-full px-4 sm:px-6">
         {/* Section Header */}
-        <div style={{ textAlign: "center", maxWidth: "720px", margin: "0 auto 48px" }}>
+        <div style={{ textAlign: "center", maxWidth: "720px", margin: "0 auto 40px" }} className="px-2">
           <div
             style={{
               display: "inline-flex",
@@ -235,18 +236,18 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
           <h2
             className="font-serif"
             style={{
-              fontSize: "clamp(28px, 4vw, 42px)",
+              fontSize: "clamp(26px, 4vw, 42px)",
               fontWeight: 700,
               color: "var(--accent-cocoa)",
               letterSpacing: "-0.02em",
               lineHeight: 1.18,
-              marginBottom: "14px",
+              marginBottom: "12px",
             }}
           >
             Custom Cake Studio
           </h2>
 
-          <p style={{ fontSize: "15px", color: "var(--text-secondary)", lineHeight: 1.6 }}>
+          <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.6 }} className="sm:text-base">
             Select an authentic reference style from our kitchen archives or upload your own inspiration.
             Your custom cake is directly routed to head chef <strong>Selva</strong> and confectionery specialist <strong>Anbu</strong>.
           </p>
@@ -258,7 +259,7 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
             style={{
               maxWidth: "600px",
               margin: "0 auto 36px auto",
-              padding: "24px",
+              padding: "20px",
               borderRadius: "var(--radius-lg)",
               backgroundColor: "#F0FDF4",
               border: "1.5px solid #86EFAC",
@@ -281,20 +282,20 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
             >
               <CheckCircle2 size={28} />
             </div>
-            <h3 style={{ fontSize: "20px", fontWeight: 700, color: "#166534", marginBottom: "6px" }}>
+            <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#166534", marginBottom: "6px" }}>
               Custom Cake Order Created!
             </h3>
-            <p style={{ fontSize: "14px", color: "#15803D", marginBottom: "16px" }}>
+            <p style={{ fontSize: "13px", color: "#15803D", marginBottom: "16px" }}>
               Ticket <strong>#{orderSuccess.orderNumber}</strong> has been transmitted live to Head Chef Selva and Confectionery Chef Anbu&apos;s kitchen display.
             </p>
-            <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
               <Link
                 href="/account/orders"
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "6px",
-                  padding: "10px 20px",
+                  padding: "9px 18px",
                   backgroundColor: "#15803D",
                   color: "#FFFFFF",
                   borderRadius: "var(--radius-full)",
@@ -310,7 +311,7 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
                 type="button"
                 onClick={() => setOrderSuccess(null)}
                 style={{
-                  padding: "10px 18px",
+                  padding: "9px 16px",
                   backgroundColor: "#FFFFFF",
                   border: "1px solid #BBF7D0",
                   color: "#166534",
@@ -327,23 +328,10 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
         )}
 
         {/* Studio Builder Grid */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr",
-            gap: "36px",
-            alignItems: "start",
-          }}
-          className="studio-grid"
-        >
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start w-full min-w-0 max-w-full">
           {/* Left Column: Interactive Form Controls */}
           <div
-            style={{
-              backgroundColor: "var(--bg-primary)",
-              padding: "clamp(20px, 4vw, 36px)",
-              borderRadius: "var(--radius-xl)",
-              border: "1px solid var(--border-subtle)",
-            }}
+            className="lg:col-span-7 col-span-1 w-full min-w-0 bg-[var(--bg-primary)] p-4 sm:p-7 md:p-8 rounded-[var(--radius-xl)] border border-[var(--border-subtle)] box-border"
           >
             {/* Step 1: Reference Photo Selection & Upload */}
             <div style={{ marginBottom: "32px" }}>
@@ -427,14 +415,7 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
                 <div>
                   {/* Category Pills */}
                   <div
-                    style={{
-                      display: "flex",
-                      gap: "6px",
-                      overflowX: "auto",
-                      paddingBottom: "8px",
-                      marginBottom: "12px",
-                      scrollbarWidth: "none",
-                    }}
+                    className="flex gap-1.5 overflow-x-auto no-scrollbar pb-2 mb-3 min-w-0"
                   >
                     {CATEGORIES.map((cat) => (
                       <button
@@ -445,7 +426,7 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
                           triggerHaptic("selection");
                         }}
                         style={{
-                          padding: "4px 10px",
+                          padding: "5px 12px",
                           borderRadius: "var(--radius-full)",
                           fontSize: "11px",
                           fontWeight: 600,
@@ -454,6 +435,7 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
                           color: selectedCategory === cat ? "var(--accent-cocoa)" : "var(--text-muted)",
                           border: selectedCategory === cat ? "1px solid var(--accent-caramel)" : "1px solid var(--border-subtle)",
                           cursor: "pointer",
+                          flexShrink: 0,
                         }}
                       >
                         {cat}
@@ -461,16 +443,9 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
                     ))}
                   </div>
 
-                  {/* Horizontal Scrollable Cake Thumbnail Cards */}
+                  {/* Responsive Cake Thumbnail Cards */}
                   <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))",
-                      gap: "10px",
-                      maxHeight: "260px",
-                      overflowY: "auto",
-                      padding: "6px 2px",
-                    }}
+                    className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-64 overflow-y-auto p-1 min-w-0"
                   >
                     {filteredSamples.map((sample) => {
                       const isSelected = selectedSample?.id === sample.id;
@@ -790,7 +765,7 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
               >
                 3. Weight & Expected Guests:
               </label>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "10px" }}>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 min-w-0">
                 {WEIGHTS.map((weight) => {
                   const isSelected = selectedWeight.label === weight.label;
                   return (
@@ -798,20 +773,16 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
                       key={weight.label}
                       type="button"
                       onClick={() => handleWeightChange(weight)}
-                      className="pressable"
+                      className="pressable p-3 text-left rounded-[var(--radius-md)] min-w-0 transition-all cursor-pointer"
                       style={{
-                        padding: "12px",
-                        textAlign: "left",
-                        borderRadius: "var(--radius-md)",
                         backgroundColor: isSelected ? "var(--accent-caramel-subtle)" : "var(--bg-surface)",
                         border: isSelected ? "1.5px solid var(--accent-caramel)" : "1px solid var(--border-subtle)",
-                        transition: "background-color 160ms var(--ease-out), border-color 160ms var(--ease-out)",
                       }}
                     >
-                      <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--accent-cocoa)" }}>
+                      <div className="text-xs sm:text-sm font-bold text-[var(--accent-cocoa)] truncate">
                         {weight.label}
                       </div>
-                      <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>
+                      <div className="text-[11px] sm:text-xs text-[var(--text-secondary)] mt-0.5 truncate">
                         {weight.servings}
                       </div>
                     </button>
@@ -910,19 +881,11 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
             </div>
 
             {/* Step 5: Required Date & Time */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "28px" }} className="date-time-grid">
-              <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-6 min-w-0">
+              <div className="min-w-0">
                 <label
                   htmlFor="custom-cake-date"
-                  style={{
-                    display: "block",
-                    fontSize: "13px",
-                    fontWeight: 700,
-                    color: "var(--accent-cocoa)",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                    marginBottom: "8px",
-                  }}
+                  className="block text-xs font-bold text-[var(--accent-cocoa)] uppercase tracking-wider mb-2"
                 >
                   5. Delivery Date:
                 </label>
@@ -931,31 +894,14 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
                   type="date"
                   value={preferredDate}
                   onChange={(e) => setPreferredDate(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "11px 14px",
-                    borderRadius: "var(--radius-md)",
-                    border: "1px solid var(--border-medium)",
-                    backgroundColor: "var(--bg-surface)",
-                    fontSize: "13px",
-                    color: "var(--text-primary)",
-                    outline: "none",
-                  }}
+                  className="w-full min-w-0 px-3.5 py-2.5 rounded-[var(--radius-md)] border border-[var(--border-medium)] bg-[var(--bg-surface)] text-xs sm:text-sm text-[var(--text-primary)] outline-none box-border"
                 />
               </div>
 
-              <div>
+              <div className="min-w-0">
                 <label
                   htmlFor="custom-cake-time-slot"
-                  style={{
-                    display: "block",
-                    fontSize: "13px",
-                    fontWeight: 700,
-                    color: "var(--accent-cocoa)",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                    marginBottom: "8px",
-                  }}
+                  className="block text-xs font-bold text-[var(--accent-cocoa)] uppercase tracking-wider mb-2"
                 >
                   Time Window:
                 </label>
@@ -963,16 +909,7 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
                   id="custom-cake-time-slot"
                   value={preferredTime}
                   onChange={(e) => setPreferredTime(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "11px 14px",
-                    borderRadius: "var(--radius-md)",
-                    border: "1px solid var(--border-medium)",
-                    backgroundColor: "var(--bg-surface)",
-                    fontSize: "13px",
-                    color: "var(--text-primary)",
-                    outline: "none",
-                  }}
+                  className="w-full min-w-0 px-3.5 py-2.5 rounded-[var(--radius-md)] border border-[var(--border-medium)] bg-[var(--bg-surface)] text-xs sm:text-sm text-[var(--text-primary)] outline-none box-border"
                 >
                   {TIME_SLOTS.map((slot) => (
                     <option key={slot} value={slot}>
@@ -984,18 +921,10 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
             </div>
 
             {/* Step 6: Theme & Design Notes */}
-            <div style={{ marginBottom: "28px" }}>
+            <div className="mb-6 min-w-0">
               <label
                 htmlFor="custom-cake-theme-notes"
-                style={{
-                  display: "block",
-                  fontSize: "13px",
-                  fontWeight: 700,
-                  color: "var(--accent-cocoa)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.06em",
-                  marginBottom: "8px",
-                }}
+                className="block text-xs font-bold text-[var(--accent-cocoa)] uppercase tracking-wider mb-2"
               >
                 6. Theme & Pastry Chef Instructions:
               </label>
@@ -1005,25 +934,14 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
                 value={themeNotes}
                 onChange={(e) => setThemeNotes(e.target.value)}
                 placeholder="Share your theme concept (e.g. vintage piping, pastel florals, gold foil, cartoon theme)..."
-                style={{
-                  width: "100%",
-                  padding: "12px 16px",
-                  borderRadius: "var(--radius-md)",
-                  border: "1px solid var(--border-medium)",
-                  backgroundColor: "var(--bg-surface)",
-                  fontSize: "14px",
-                  color: "var(--text-primary)",
-                  outline: "none",
-                  fontFamily: "var(--font-sans)",
-                  resize: "vertical",
-                }}
+                className="w-full min-w-0 px-3.5 py-2.5 rounded-[var(--radius-md)] border border-[var(--border-medium)] bg-[var(--bg-surface)] text-sm text-[var(--text-primary)] outline-none resize-y box-border font-sans"
               />
             </div>
 
             {/* Quick Contact info for direct ordering */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "20px" }}>
-              <div>
-                <label style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "4px" }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5 min-w-0">
+              <div className="min-w-0">
+                <label className="block text-[11px] font-bold text-[var(--text-muted)] uppercase mb-1">
                   Your Name
                 </label>
                 <input
@@ -1031,18 +949,11 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="e.g. Priya Sundaram"
-                  style={{
-                    width: "100%",
-                    padding: "9px 12px",
-                    borderRadius: "var(--radius-md)",
-                    border: "1px solid var(--border-medium)",
-                    backgroundColor: "var(--bg-surface)",
-                    fontSize: "13px",
-                  }}
+                  className="w-full min-w-0 px-3 py-2 rounded-[var(--radius-md)] border border-[var(--border-medium)] bg-[var(--bg-surface)] text-sm text-[var(--text-primary)] outline-none box-border"
                 />
               </div>
-              <div>
-                <label style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "4px" }}>
+              <div className="min-w-0">
+                <label className="block text-[11px] font-bold text-[var(--text-muted)] uppercase mb-1">
                   Phone Number
                 </label>
                 <input
@@ -1050,14 +961,7 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
                   value={customerMobile}
                   onChange={(e) => setCustomerMobile(e.target.value)}
                   placeholder="e.g. +91 98401 23456"
-                  style={{
-                    width: "100%",
-                    padding: "9px 12px",
-                    borderRadius: "var(--radius-md)",
-                    border: "1px solid var(--border-medium)",
-                    backgroundColor: "var(--bg-surface)",
-                    fontSize: "13px",
-                  }}
+                  className="w-full min-w-0 px-3 py-2 rounded-[var(--radius-md)] border border-[var(--border-medium)] bg-[var(--bg-surface)] text-sm text-[var(--text-primary)] outline-none box-border"
                 />
               </div>
             </div>
@@ -1074,136 +978,70 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
                 fontSize: "12px",
                 color: "#783B1E",
                 lineHeight: 1.5,
-                marginBottom: "24px",
+                marginBottom: "20px",
               }}
+              className="min-w-0"
             >
               <AlertCircle size={16} style={{ flexShrink: 0, marginTop: "1px" }} />
-              <div>
+              <div className="min-w-0 break-words">
                 <strong>Kitchen Protocol:</strong> Once placed, Head Chef Selva initiates sponge aeration while Confectionery Chef Anbu prepares bespoke colour-matching for your piping.
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            <div className="flex flex-col gap-2.5 w-full min-w-0">
               <button
                 type="button"
                 onClick={handlePlaceOrderDirect}
                 disabled={isSubmitting}
-                className="pressable"
-                style={{
-                  width: "100%",
-                  padding: "14px 24px",
-                  borderRadius: "var(--radius-full)",
-                  backgroundColor: "var(--accent-cocoa)",
-                  color: "#FFFFFF",
-                  fontSize: "15px",
-                  fontWeight: 700,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "8px",
-                  border: "none",
-                  cursor: "pointer",
-                  boxShadow: "0 4px 14px rgba(58, 32, 22, 0.24)",
-                }}
+                className="pressable w-full py-3.5 px-4 rounded-full bg-[var(--accent-cocoa)] text-white text-sm sm:text-base font-bold flex items-center justify-center gap-2 shadow-md min-w-0 border-none cursor-pointer transition-all"
               >
-                <Cake size={18} />
-                <span>{isSubmitting ? "Creating Kitchen Ticket..." : "Book Custom Cake & Dispatch to Kitchen"}</span>
+                <Cake size={18} className="shrink-0" />
+                <span className="text-center leading-snug break-words">
+                  {isSubmitting ? "Creating Kitchen Ticket..." : "Book Custom Cake & Dispatch to Kitchen"}
+                </span>
               </button>
 
               <button
                 type="button"
                 onClick={generateWhatsAppMessage}
-                className="pressable"
-                style={{
-                  width: "100%",
-                  padding: "12px 20px",
-                  borderRadius: "var(--radius-full)",
-                  backgroundColor: "#16A34A",
-                  color: "#FFFFFF",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "8px",
-                  border: "none",
-                  cursor: "pointer",
-                }}
+                className="pressable w-full py-3 px-4 rounded-full bg-[#16A34A] text-white text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 min-w-0 border-none cursor-pointer transition-all"
               >
-                <MessageCircle size={17} />
-                <span>Enquire & Share Reference via WhatsApp</span>
+                <MessageCircle size={17} className="shrink-0" />
+                <span className="text-center leading-snug break-words">
+                  Enquire & Share Reference via WhatsApp
+                </span>
               </button>
             </div>
           </div>
 
           {/* Right Column: Live Visual Inscription & Reference Preview */}
           <div
-            style={{
-              backgroundColor: "var(--bg-primary)",
-              borderRadius: "var(--radius-xl)",
-              padding: "clamp(24px, 4vw, 36px)",
-              border: "1px solid var(--border-subtle)",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              textAlign: "center",
-              position: "sticky",
-              top: "90px",
-            }}
+            className="lg:col-span-5 col-span-1 w-full min-w-0 bg-[var(--bg-primary)] rounded-[var(--radius-xl)] p-4 sm:p-6 md:p-8 border border-[var(--border-subtle)] flex flex-col items-center text-center lg:sticky lg:top-24 static box-border"
           >
-            <div style={{ fontSize: "12px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-muted)", marginBottom: "16px" }}>
+            <div className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-4">
               Live Cake Simulation
             </div>
 
             {/* Selected Reference Card Banner */}
             <div
-              style={{
-                width: "100%",
-                maxWidth: "340px",
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                backgroundColor: "var(--bg-surface)",
-                padding: "8px 12px",
-                borderRadius: "var(--radius-lg)",
-                border: "1px solid var(--border-subtle)",
-                marginBottom: "20px",
-                textAlign: "left",
-              }}
+              className="w-full max-w-full sm:max-w-sm flex items-center gap-3 bg-[var(--bg-surface)] p-2.5 rounded-lg border border-[var(--border-subtle)] mb-5 text-left min-w-0 box-border"
             >
               <div
-                style={{
-                  width: "48px",
-                  height: "48px",
-                  borderRadius: "var(--radius-sm)",
-                  overflow: "hidden",
-                  flexShrink: 0,
-                  backgroundColor: "#EAE5DF",
-                  border: "1px solid var(--border-subtle)",
-                }}
+                className="w-12 h-12 rounded-[var(--radius-sm)] overflow-hidden shrink-0 bg-[#EAE5DF] border border-[var(--border-subtle)]"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={activeReferenceImage}
                   alt="Reference Preview"
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  className="w-full h-full object-cover"
                 />
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", color: "var(--accent-caramel)", letterSpacing: "0.04em" }}>
+              <div className="flex-1 min-w-0">
+                <div className="text-[10px] font-bold uppercase text-[var(--accent-caramel)] tracking-wider">
                   {referenceMode === "upload" ? "Uploaded Reference" : "Archive Style"}
                 </div>
-                <div
-                  style={{
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    color: "var(--accent-cocoa)",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
+                <div className="text-xs font-bold text-[var(--accent-cocoa)] truncate">
                   {activeReferenceTitle}
                 </div>
               </div>
@@ -1214,18 +1052,19 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
               style={{
                 position: "relative",
                 width: "100%",
-                maxWidth: "320px",
+                maxWidth: "min(280px, 72vw)",
                 aspectRatio: "1 / 1",
                 borderRadius: "50%",
                 background: "radial-gradient(circle at 35% 35%, #FFFDF9 0%, #F5ECE1 55%, #E6D6C5 100%)",
-                boxShadow: "0 24px 56px rgba(58, 32, 22, 0.14), inset 0 2px 6px rgba(255, 255, 255, 0.95), inset 0 -6px 16px rgba(74, 46, 31, 0.08)",
-                border: "10px solid #FFFFFF",
+                boxShadow: "0 18px 42px rgba(58, 32, 22, 0.12), inset 0 2px 6px rgba(255, 255, 255, 0.95), inset 0 -6px 16px rgba(74, 46, 31, 0.08)",
+                border: "clamp(6px, 1.8vw, 10px) solid #FFFFFF",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                padding: "28px",
-                margin: "0 auto 24px",
+                padding: "clamp(12px, 3.5vw, 24px)",
+                margin: "0 auto 20px",
+                boxSizing: "border-box",
                 transform: previewPulse ? "scale(0.985)" : "scale(1)",
                 transition: "transform 180ms var(--ease-apple-spring)",
               }}
@@ -1234,14 +1073,28 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
               <div
                 style={{
                   position: "absolute",
-                  inset: "14px",
+                  inset: "10px",
                   borderRadius: "50%",
                   border: "2px dashed rgba(199, 109, 56, 0.35)",
                   boxShadow: "inset 0 1px 2px rgba(199, 109, 56, 0.15)",
                 }}
               />
 
-              <div style={{ fontSize: "11px", color: "var(--accent-caramel)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "8px" }}>
+              <div
+                style={{
+                  fontSize: "10px",
+                  color: "var(--accent-caramel)",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.12em",
+                  marginBottom: "6px",
+                  maxWidth: "90%",
+                  textAlign: "center",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 {selectedFlavour}
               </div>
 
@@ -1249,15 +1102,18 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
               <div
                 className="font-serif"
                 style={{
-                  fontSize: "clamp(17px, 3vw, 22px)",
+                  fontSize: "clamp(15px, 3.2vw, 20px)",
                   fontWeight: 600,
                   color: selectedPipingColor.color,
-                  lineHeight: 1.3,
-                  maxWidth: "230px",
-                  minHeight: "44px",
+                  lineHeight: 1.25,
+                  maxWidth: "min(200px, 55vw)",
+                  minHeight: "36px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  textAlign: "center",
+                  wordBreak: "break-word",
+                  overflowWrap: "anywhere",
                   textShadow: selectedPipingColor.textShadow,
                   transition: "color 200ms var(--ease-apple-spring), text-shadow 200ms var(--ease-apple-spring)",
                 }}
@@ -1265,7 +1121,7 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
                 {cakeMessage || "Your message here"}
               </div>
 
-              <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "12px", fontWeight: 500, display: "flex", alignItems: "center", gap: "6px" }}>
+              <div style={{ fontSize: "10px", color: "var(--text-secondary)", marginTop: "8px", fontWeight: 500, display: "flex", alignItems: "center", gap: "4px", flexWrap: "wrap", justifyContent: "center" }}>
                 <span>{selectedWeight.label}</span>
                 <span>•</span>
                 <span>{isEggless ? "100% Eggless" : "Traditional"}</span>
@@ -1278,40 +1134,33 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
 
             {/* Summary Specification Box */}
             <div
-              style={{
-                width: "100%",
-                backgroundColor: "var(--bg-surface)",
-                padding: "18px",
-                borderRadius: "var(--radius-lg)",
-                textAlign: "left",
-                border: "1px solid var(--border-subtle)",
-              }}
+              className="w-full max-w-full bg-[var(--bg-surface)] p-3.5 sm:p-4 rounded-[var(--radius-lg)] text-left border border-[var(--border-subtle)] min-w-0 box-border"
             >
               <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--accent-cocoa)", marginBottom: "10px" }}>
                 Pastry Ticket Specs:
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "12px", color: "var(--text-secondary)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
                   <span>Base Flavour:</span>
-                  <strong style={{ color: "var(--text-primary)" }}>{selectedFlavour}</strong>
+                  <strong style={{ color: "var(--text-primary)", textAlign: "right" }}>{selectedFlavour}</strong>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
                   <span>Weight / Servings:</span>
-                  <strong style={{ color: "var(--text-primary)" }}>{selectedWeight.label} ({selectedWeight.servings})</strong>
+                  <strong style={{ color: "var(--text-primary)", textAlign: "right" }}>{selectedWeight.label} ({selectedWeight.servings})</strong>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
                   <span>Eggless:</span>
-                  <strong style={{ color: "var(--accent-sage)" }}>{isEggless ? "Yes (Dedicated Counter)" : "No"}</strong>
+                  <strong style={{ color: "var(--accent-sage)", textAlign: "right" }}>{isEggless ? "Yes (Dedicated Counter)" : "No"}</strong>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
                   <span>Assigned Stations:</span>
-                  <strong style={{ color: "var(--accent-cocoa)" }}>Chef Selva & Anbu</strong>
+                  <strong style={{ color: "var(--accent-cocoa)", textAlign: "right" }}>Chef Selva & Anbu</strong>
                 </div>
                 {preferredDate && (
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
                     <span>Target Date:</span>
-                    <strong style={{ color: "var(--text-primary)" }}>{preferredDate} ({preferredTime.split(" ")[0]})</strong>
+                    <strong style={{ color: "var(--text-primary)", textAlign: "right" }}>{preferredDate} ({preferredTime.split(" ")[0]})</strong>
                   </div>
                 )}
               </div>
@@ -1380,18 +1229,6 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
         </div>
       )}
 
-      <style jsx>{`
-        @media (min-width: 960px) {
-          .studio-grid {
-            grid-template-columns: 1.25fr 1fr !important;
-          }
-        }
-        @media (max-width: 600px) {
-          .date-time-grid {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
     </section>
   );
 }

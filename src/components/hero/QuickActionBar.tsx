@@ -11,11 +11,7 @@ export default function QuickActionBar() {
     <section style={{ paddingBottom: "48px" }}>
       <div className="container">
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-            gap: "16px",
-          }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 min-w-0"
         >
           {/* 1. ORDER ONLINE */}
           <a

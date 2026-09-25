@@ -18,12 +18,7 @@ export default function Footer() {
     >
       <div className="container">
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-            gap: "48px",
-            marginBottom: "56px",
-          }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-14 min-w-0"
         >
           {/* Column 1: Brand & Philosophy */}
           <div>

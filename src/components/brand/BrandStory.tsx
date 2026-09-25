@@ -48,12 +48,7 @@ export default function BrandStory() {
 
         {/* 4 Pillars Grid */}
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-            gap: "24px",
-            marginBottom: "56px",
-          }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-14 min-w-0"
         >
           {/* Pillar 1 */}
           <div

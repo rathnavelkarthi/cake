@@ -296,11 +296,7 @@ export default function BlogPostPage() {
                         </div>
 
                         <div
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-                            gap: "16px",
-                          }}
+                          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 min-w-0"
                         >
                           {b.images.map((img) => (
                             <div
@@ -382,11 +378,7 @@ export default function BlogPostPage() {
                         </div>
 
                         <div
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-                            gap: "20px",
-                          }}
+                          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 min-w-0"
                         >
                           {liveProducts.slice(0, 3).map((product) => (
                             <ProductCard

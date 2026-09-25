@@ -115,11 +115,7 @@ export function BlockRenderer({ blocks }: BlockRendererProps) {
                   </div>
 
                   <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-                      gap: "24px",
-                    }}
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-w-0"
                   >
                     {b.images.map((img) => (
                       <div

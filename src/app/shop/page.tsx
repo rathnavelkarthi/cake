@@ -417,11 +417,7 @@ function ShopContent() {
             </div>
           ) : (
             <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))",
-                gap: "24px",
-              }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 min-w-0"
             >
               {filteredAndSortedProducts.map((product) => {
                 const minPrice = product.variants[0]?.price || 0;

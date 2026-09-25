@@ -91,11 +91,7 @@ export default function CustomerReviews() {
 
         {/* Reviews Grid */}
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: "24px",
-          }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 min-w-0"
         >
           {REVIEWS.map((review, idx) => (
             <div
