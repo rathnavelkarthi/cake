@@ -93,7 +93,7 @@ export default function HeroSection({
         showHeader={false}
         youtubeVideoId="gxC03Sm6cZs"
         enableInteractiveGlow={true}
-        className="min-h-0 pt-4 pb-8"
+        className="min-h-0 pt-20 sm:pt-24 pb-8"
         title={
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
             {/* Bakery Brand Badge with Official Emblem */}

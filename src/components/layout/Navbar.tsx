@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   ShoppingBag,
   Phone,
@@ -24,6 +24,8 @@ import { triggerHaptic } from "@/lib/utils/haptics";
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
+  const isHome = pathname === "/" || pathname === "";
   const { totalItems, setIsCartOpen } = useCart();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -110,7 +112,8 @@ export default function Navbar() {
       {/* Top Announcement Bar */}
       <div
         style={{
-          backgroundColor: "var(--accent-cocoa)",
+          backgroundColor: isHome ? "#140a05" : "var(--accent-cocoa)",
+          borderBottom: isHome ? "1px solid rgba(255, 255, 255, 0.08)" : "none",
           color: "var(--text-inverse)",
           fontSize: "12px",
           padding: "6px 16px",
@@ -119,7 +122,7 @@ export default function Navbar() {
           alignItems: "center",
           fontWeight: 500,
           letterSpacing: "-0.01em",
-          fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', Inter, sans-serif",
+          fontFamily: "var(--font-sans)",
           width: "100%",
           maxWidth: "100vw",
           overflow: "hidden",
@@ -152,23 +155,25 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Main Fluid Island Floating Glass Navigation Bar */}
+      {/* Main Fluid Island Floating Glass Navigation Bar (Seamless Overlay on Hero) */}
       <header
         style={{
           position: "sticky",
           top: "10px",
-          zIndex: 40,
+          zIndex: 50,
           maxWidth: "1120px",
-          margin: "8px auto 0 auto",
-          width: "calc(100% - 20px)",
+          margin: isHome ? "8px auto -66px auto" : "8px auto 16px auto",
+          width: "calc(100% - 24px)",
           borderRadius: "var(--radius-full)",
-          backgroundColor: isScrolled ? "rgba(255, 255, 255, 0.90)" : "rgba(255, 255, 255, 0.95)",
+          backgroundColor: isScrolled ? "rgba(255, 255, 255, 0.92)" : "rgba(255, 255, 255, 0.95)",
           backdropFilter: "blur(24px) saturate(180%)",
           WebkitBackdropFilter: "blur(24px) saturate(180%)",
           boxShadow: isScrolled
-            ? "0 12px 32px rgba(35, 23, 17, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9)"
-            : "0 4px 20px rgba(35, 23, 17, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9)",
-          border: "1px solid rgba(74, 46, 31, 0.12)",
+            ? "0 12px 32px rgba(35, 23, 17, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.9)"
+            : "0 8px 28px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.95)",
+          border: isScrolled
+            ? "1px solid rgba(74, 46, 31, 0.12)"
+            : "1px solid rgba(255, 255, 255, 0.4)",
           transition: "background-color 300ms ease, box-shadow 300ms ease",
         }}
       >
