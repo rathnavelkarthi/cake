@@ -1,7 +1,22 @@
 import type { Metadata, Viewport } from "next";
+import { Cormorant_Garamond, Manrope } from "next/font/google";
 import "./globals.css";
 import { generateBakerySchema, generateFAQSchema } from "@/lib/seo/structured-data";
 import { BUSINESS_CONFIG } from "@/lib/config/business";
+
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-cormorant",
+  display: "swap",
+});
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-manrope",
+  display: "swap",
+});
 
 export const viewport: Viewport = {
   themeColor: "#FAF7F2",
@@ -47,7 +62,7 @@ export default function RootLayout({
   const faqSchema = generateFAQSchema();
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={`${cormorant.variable} ${manrope.variable}`} suppressHydrationWarning>
       <head>
         {/* Structured Data for SEO & AEO Discovery */}
         <script

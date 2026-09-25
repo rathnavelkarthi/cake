@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Manrope:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -102,10 +102,10 @@
   --radius-xl: 28px;
   --radius-full: 9999px;
   
-  /* Typography - Apple SF Pro Stack (Apple Design Skill §15) */
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro", "Manrope", system-ui, sans-serif;
-  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro", system-ui, sans-serif;
-  --font-serif: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro", system-ui, sans-serif;
+  /* Typography System - Cormorant Garamond & Manrope */
+  --font-serif: var(--font-cormorant, 'Cormorant Garamond', Georgia, serif);
+  --font-display: var(--font-cormorant, 'Cormorant Garamond', Georgia, serif);
+  --font-sans: var(--font-manrope, 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif);
   --font-mono: 'Geist Mono', -apple-system, monospace;
 }
 
@@ -182,36 +182,97 @@ body {
   background: rgba(74, 46, 31, 0.4);
 }
 
-/* Apple Typography System - Optical Tracking & Pretty Line Breaks */
-h1, .display-headline {
+/* New Luxury Font System - Cormorant Garamond & Manrope */
+
+/* HERO: Cormorant Garamond, 72–96px desktop, 48–60px mobile, Weight 600 */
+h1, .hero-headline, .display-headline {
   font-family: var(--font-serif);
-  font-size: clamp(34px, 5.2vw, 56px);
-  line-height: 1.08;
-  letter-spacing: -0.03em;
+  font-weight: 600;
+  font-size: clamp(48px, 6.5vw, 96px);
+  line-height: 1.05;
+  letter-spacing: -0.025em;
   font-optical-sizing: auto;
   text-wrap: balance;
 }
 
-h2, .section-headline {
+@media (max-width: 640px) {
+  h1, .hero-headline, .display-headline {
+    font-size: clamp(48px, 9vw, 60px);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* SECTION HEADINGS: Cormorant Garamond, 48–64px, Weight 600 */
+h2, .section-headline, .section-heading, .section-title {
   font-family: var(--font-serif);
-  font-size: clamp(28px, 4vw, 42px);
-  line-height: 1.16;
-  letter-spacing: -0.022em;
+  font-weight: 600;
+  font-size: clamp(38px, 4.6vw, 64px);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
   font-optical-sizing: auto;
   text-wrap: balance;
+}
+
+@media (max-width: 640px) {
+  h2, .section-headline, .section-heading, .section-title {
+    font-size: clamp(34px, 7.5vw, 48px);
+    line-height: 1.15;
+  }
 }
 
 h3, .card-headline {
   font-family: var(--font-serif);
-  font-size: 18px;
+  font-weight: 600;
+  font-size: clamp(20px, 2.2vw, 28px);
   line-height: 1.25;
   letter-spacing: -0.015em;
   font-optical-sizing: auto;
   text-wrap: pretty;
 }
 
-p {
+/* CAKE NAME: Manrope, 18–22px, Weight 600/700 */
+.cake-name, .product-title, .cake-card-title {
+  font-family: var(--font-sans);
+  font-size: clamp(18px, 1.8vw, 22px);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+/* PRICE: Manrope, 20–28px, Weight 700 */
+.price-tag, .cake-price, .product-price {
+  font-family: var(--font-sans);
+  font-size: clamp(20px, 2vw, 28px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* BODY: Manrope, 15–18px, Weight 400/500 */
+body, p, .body-text {
+  font-family: var(--font-sans);
+  font-size: clamp(15px, 1.5vw, 18px);
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: -0.005em;
   text-wrap: pretty;
+}
+
+/* BUTTONS: Manrope, 14–16px, Weight 600/700 */
+button, .btn, .btn-primary, .btn-secondary, a.button-link, .btn-action {
+  font-family: var(--font-sans);
+  font-size: clamp(14px, 1.3vw, 16px);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* SMALL LABELS: Manrope, 11–13px, Weight 600, Letter spacing 0.06–0.1em */
+.small-label, .badge-label, .caption-label, .meta-label, .eyebrow {
+  font-family: var(--font-sans);
+  font-size: clamp(11px, 1.1vw, 13px);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 /* Touch & Pointer Down Feedback (Apple Principle 1 & 10: Kill Latency) */

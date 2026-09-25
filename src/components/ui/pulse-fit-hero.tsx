@@ -116,7 +116,7 @@ export function PulseFitHero({
       {/* 1. Cinematic Ambient YouTube Video Background */}
       {youtubeVideoId && (
         <div
-          className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0 hidden sm:block"
+          className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0 block"
           style={{
             backgroundColor: "#180d07",
             contain: "paint",
@@ -131,16 +131,16 @@ export function PulseFitHero({
               position: "absolute",
               top: "50%",
               left: "50%",
-              width: "100%",
-              height: "100%",
-              minWidth: "100%",
+              width: "100vw",
+              height: "56.25vw",
+              minWidth: "177.77vh",
               minHeight: "100%",
               maxWidth: "none",
-              transform: "translate(-50%, -50%) scale(1.3)",
+              transform: "translate(-50%, -50%) scale(1.2)",
               pointerEvents: "none",
               border: 0,
-              opacity: 0.72,
-              filter: "brightness(0.68) contrast(1.14) saturate(1.2)",
+              opacity: 0.76,
+              filter: "brightness(0.64) contrast(1.15) saturate(1.25)",
             }}
           />
         </div>
@@ -164,35 +164,35 @@ export function PulseFitHero({
             className="absolute inset-0 pointer-events-none z-[1]"
             style={{
               background:
-                "linear-gradient(180deg, rgba(15, 8, 4, 0.72) 0%, rgba(15, 8, 4, 0.38) 35%, rgba(15, 8, 4, 0.78) 85%, var(--bg-primary, #FAF7F2) 100%)",
+                "linear-gradient(180deg, rgba(15, 8, 4, 0.78) 0%, rgba(15, 8, 4, 0.45) 40%, rgba(15, 8, 4, 0.82) 85%, var(--bg-primary, #FAF7F2) 100%)",
             }}
           />
           {/* Interactive Live Ambience Capsule */}
           <div
-            className="absolute top-5 right-5 z-20 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full pointer-events-auto"
+            className="absolute top-4 sm:top-5 right-4 sm:right-5 z-20 flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full pointer-events-auto"
             style={{
-              backgroundColor: "rgba(20, 10, 5, 0.65)",
+              backgroundColor: "rgba(20, 10, 5, 0.7)",
               backdropFilter: "blur(20px)",
               WebkitBackdropFilter: "blur(20px)",
-              border: "1px solid rgba(255, 255, 255, 0.2)",
-              color: "rgba(255, 255, 255, 0.92)",
-              fontSize: "12px",
+              border: "1px solid rgba(255, 255, 255, 0.22)",
+              color: "rgba(255, 255, 255, 0.95)",
+              fontSize: "11px",
               fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', system-ui, sans-serif",
-              fontWeight: 500,
+              fontWeight: 600,
               letterSpacing: "-0.01em",
-              boxShadow: "0 4px 16px rgba(0, 0, 0, 0.3)",
+              boxShadow: "0 4px 16px rgba(0, 0, 0, 0.35)",
             }}
           >
             <span
               style={{
-                width: "7px",
-                height: "7px",
+                width: "6px",
+                height: "6px",
                 borderRadius: "50%",
                 backgroundColor: "#F59E0B",
                 boxShadow: "0 0 10px #F59E0B",
               }}
             />
-            <span>Kitchen Atmosphere</span>
+            <span>Kitchen Live</span>
           </div>
 
           {/* Subtle Floating Ambient Golden Dust Sparks */}
@@ -377,38 +377,40 @@ export function PulseFitHero({
             className="flex flex-col items-center text-center max-w-4xl"
             style={{ gap: "24px" }}
           >
-            {/* Title */}
-            <h1
+            {/* Title - Cormorant Garamond 72-96px desktop / 48-60px mobile, Weight 600 */}
+            <div
+              className="font-serif hero-headline"
               style={{
-                fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro', system-ui, sans-serif",
-                fontWeight: 800,
-                fontSize: "clamp(34px, 5.2vw, 60px)",
-                lineHeight: "1.08",
+                fontFamily: "var(--font-serif)",
+                fontWeight: 600,
+                fontSize: "clamp(48px, 6.5vw, 96px)",
+                lineHeight: "1.04",
                 color: hasVideo ? "#FFFFFF" : "#1a1a1a",
-                letterSpacing: "-0.03em",
-                textShadow: hasVideo ? "0 2px 20px rgba(0, 0, 0, 0.65)" : "none",
+                letterSpacing: "-0.025em",
+                textShadow: hasVideo ? "0 2px 24px rgba(0, 0, 0, 0.75)" : "none",
               }}
             >
               {title}
-            </h1>
+            </div>
 
-            {/* Subtitle */}
+            {/* Subtitle - Manrope 15-18px, Weight 400/500 */}
             <p
+              className="body-text"
               style={{
-                fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', system-ui, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 400,
-                fontSize: "clamp(15px, 1.8vw, 19px)",
-                lineHeight: "1.55",
-                color: hasVideo ? "rgba(255, 255, 255, 0.92)" : "#4a5568",
+                fontSize: "clamp(15px, 1.6vw, 18px)",
+                lineHeight: "1.6",
+                color: hasVideo ? "rgba(255, 255, 255, 0.94)" : "#4a5568",
                 maxWidth: "680px",
-                letterSpacing: "-0.01em",
+                letterSpacing: "-0.005em",
                 textShadow: hasVideo ? "0 1px 8px rgba(0, 0, 0, 0.5)" : "none",
               }}
             >
               {subtitle}
             </p>
 
-            {/* Action Buttons */}
+            {/* Action Buttons - Manrope 14-16px, Weight 600/700 */}
             {(primaryAction || secondaryAction) && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -422,10 +424,10 @@ export function PulseFitHero({
                       <a
                         href={primaryAction.href}
                         onClick={primaryAction.onClick}
-                        className="flex flex-row items-center gap-2 px-8 py-3.5 rounded-full transition-all hover:scale-105 active:scale-95"
+                        className="flex flex-row items-center gap-2 px-8 py-3.5 rounded-full transition-all hover:scale-105 active:scale-95 btn-action"
                         style={{
                           background: hasVideo ? "#FFFFFF" : "#1a1a1a",
-                          fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', system-ui, sans-serif",
+                          fontFamily: "var(--font-sans)",
                           fontSize: "15px",
                           fontWeight: 600,
                           letterSpacing: "-0.01em",
@@ -449,10 +451,10 @@ export function PulseFitHero({
                       <button
                         type="button"
                         onClick={primaryAction.onClick}
-                        className="flex flex-row items-center gap-2 px-8 py-3.5 rounded-full transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                        className="flex flex-row items-center gap-2 px-8 py-3.5 rounded-full transition-all hover:scale-105 active:scale-95 cursor-pointer btn-action"
                         style={{
                           background: hasVideo ? "#FFFFFF" : "#1a1a1a",
-                          fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', system-ui, sans-serif",
+                          fontFamily: "var(--font-sans)",
                           fontSize: "15px",
                           fontWeight: 600,
                           letterSpacing: "-0.01em",
@@ -481,13 +483,13 @@ export function PulseFitHero({
                       <a
                         href={secondaryAction.href}
                         onClick={secondaryAction.onClick}
-                        className="px-8 py-3.5 rounded-full transition-all hover:scale-105 active:scale-95 inline-block"
+                        className="px-8 py-3.5 rounded-full transition-all hover:scale-105 active:scale-95 inline-block btn-action"
                         style={{
                           background: hasVideo ? "rgba(255, 255, 255, 0.16)" : "rgba(255, 255, 255, 0.8)",
                           backdropFilter: "blur(20px)",
                           WebkitBackdropFilter: "blur(20px)",
                           border: hasVideo ? "1px solid rgba(255, 255, 255, 0.32)" : "1px solid #cbd5e0",
-                          fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', system-ui, sans-serif",
+                          fontFamily: "var(--font-sans)",
                           fontSize: "15px",
                           fontWeight: 600,
                           letterSpacing: "-0.01em",
@@ -502,13 +504,13 @@ export function PulseFitHero({
                       <button
                         type="button"
                         onClick={secondaryAction.onClick}
-                        className="px-8 py-3.5 rounded-full transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                        className="px-8 py-3.5 rounded-full transition-all hover:scale-105 active:scale-95 cursor-pointer btn-action"
                         style={{
                           background: hasVideo ? "rgba(255, 255, 255, 0.16)" : "rgba(255, 255, 255, 0.8)",
                           backdropFilter: "blur(20px)",
                           WebkitBackdropFilter: "blur(20px)",
                           border: hasVideo ? "1px solid rgba(255, 255, 255, 0.32)" : "1px solid #cbd5e0",
-                          fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', system-ui, sans-serif",
+                          fontFamily: "var(--font-sans)",
                           fontSize: "15px",
                           fontWeight: 600,
                           letterSpacing: "-0.01em",
@@ -531,7 +533,7 @@ export function PulseFitHero({
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.6 }}
                 style={{
-                  fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', system-ui, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontSize: "13px",
                   fontWeight: 500,
                   letterSpacing: "-0.005em",
@@ -568,7 +570,7 @@ export function PulseFitHero({
                 </div>
                 <span
                   style={{
-                    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', system-ui, sans-serif",
+                    fontFamily: "var(--font-sans)",
                     fontSize: "14px",
                     fontWeight: 600,
                     letterSpacing: "-0.01em",

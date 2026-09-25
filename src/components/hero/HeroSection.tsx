@@ -37,7 +37,7 @@ export default function HeroSection({
   const handleCustomCakes = () => {
     triggerHaptic("impact");
     trackEvent({ name: "begin_custom_cake" });
-    const el = document.querySelector("#custom-cakes");
+    const el = document.querySelector("#custom-studio") || document.querySelector("#custom-cakes");
     if (el) el.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -96,7 +96,7 @@ export default function HeroSection({
         className="min-h-0 pt-4 pb-8"
         title={
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
-            {/* Bakery Brand Badge with Official Emblem (Apple Frosted Glass) */}
+            {/* Bakery Brand Badge with Official Emblem */}
             <div
               style={{
                 display: "inline-flex",
@@ -108,10 +108,11 @@ export default function HeroSection({
                 color: "#FFFFFF",
                 padding: "6px 16px",
                 borderRadius: "9999px",
-                fontSize: "13px",
+                fontSize: "12px",
                 fontWeight: 600,
-                letterSpacing: "-0.01em",
-                fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', system-ui, sans-serif",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                fontFamily: "var(--font-sans)",
                 border: "1px solid rgba(255, 255, 255, 0.3)",
                 boxShadow: "0 4px 16px rgba(0, 0, 0, 0.25)",
               }}
@@ -119,29 +120,32 @@ export default function HeroSection({
               <img
                 src="https://kicheesbakeddelights.com/wp-content/uploads/2025/02/kichees-baked-delights-bakery-logo.png"
                 alt="Kichees Logo"
-                style={{ width: "22px", height: "22px", objectFit: "contain" }}
+                style={{ width: "20px", height: "20px", objectFit: "contain" }}
               />
               <span>
                 {badge || `Baking fresh today • ${BUSINESS_CONFIG.address.locality}, Chennai`}
               </span>
             </div>
 
-            {/* Main Headline with Apple SF Pro Display */}
-            <span
+            {/* Main Hero Headline: Cormorant Garamond, 72–96px desktop / 48–60px mobile, Weight 600 */}
+            <h1
+              className="hero-headline font-serif"
               style={{
                 color: "#FFFFFF",
-                fontSize: "clamp(34px, 5.2vw, 58px)",
-                fontWeight: 800,
-                lineHeight: 1.08,
-                letterSpacing: "-0.03em",
-                fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro', system-ui, sans-serif",
-                textShadow: "0 2px 24px rgba(0, 0, 0, 0.7)",
-                maxWidth: "780px",
+                fontSize: "clamp(48px, 6.8vw, 92px)",
+                fontWeight: 600,
+                lineHeight: 1.04,
+                letterSpacing: "-0.025em",
+                fontFamily: "var(--font-serif)",
+                textShadow: "0 2px 28px rgba(0, 0, 0, 0.75)",
+                maxWidth: "880px",
                 display: "block",
+                textAlign: "center",
+                margin: "0 auto",
               }}
             >
               {headline || "Real butter. Single origin chocolate. Cakes baked fresh in Nungambakkam."}
-            </span>
+            </h1>
           </div>
         }
         subtitle={
@@ -156,7 +160,7 @@ export default function HeroSection({
         secondaryAction={{
           label: "Custom Cake Studio",
           onClick: handleCustomCakes,
-          href: "#custom-cakes",
+          href: "#custom-studio",
         }}
         disclaimer="*100% pure butter guarantee • Dedicated eggless station • Doorstep delivery across Chennai"
         socialProof={{

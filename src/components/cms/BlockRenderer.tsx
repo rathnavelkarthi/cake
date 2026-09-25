@@ -23,6 +23,7 @@ import FinalCtaSection from "@/components/brand/FinalCtaSection";
 import TaglineReveal from "@/components/brand/TaglineReveal";
 import HowItWorks from "@/components/brand/HowItWorks";
 import CustomCakeStudio from "@/components/custom-cake/CustomCakeStudio";
+import ShopByOccasion from "@/components/brand/ShopByOccasion";
 import LocationSection from "@/components/location/LocationSection";
 import { ArrowRight, Sparkles, Quote, X, Camera } from "lucide-react";
 
@@ -52,6 +53,7 @@ export function BlockRenderer({ blocks }: BlockRendererProps) {
                   imageUrl={b.imageUrl}
                 />
                 <QuickActionBar />
+                <ShopByOccasion />
               </React.Fragment>
             );
           }

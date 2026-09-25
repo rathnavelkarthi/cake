@@ -69,15 +69,17 @@ export default function ProductSection() {
         {/* Section Header */}
         <div style={{ textAlign: "center", maxWidth: "640px", margin: "0 auto 40px" }}>
           <div
+            className="small-label"
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: "6px",
               fontSize: "12px",
-              fontWeight: 700,
+              fontWeight: 600,
               textTransform: "uppercase",
-              letterSpacing: "0.1em",
+              letterSpacing: "0.08em",
               color: "var(--accent-caramel)",
+              fontFamily: "var(--font-sans)",
               marginBottom: "8px",
             }}
           >
@@ -85,21 +87,32 @@ export default function ProductSection() {
             <span>Artisanal Daily Bakes</span>
           </div>
 
+          {/* SECTION HEADINGS: Cormorant Garamond, 48–64px, Weight 600 */}
           <h2
-            className="font-serif"
+            className="section-heading font-serif"
             style={{
-              fontSize: "clamp(28px, 4vw, 42px)",
-              fontWeight: 700,
+              fontSize: "clamp(38px, 4.6vw, 64px)",
+              fontWeight: 600,
               color: "var(--accent-cocoa)",
               letterSpacing: "-0.02em",
-              lineHeight: 1.18,
+              lineHeight: 1.12,
+              fontFamily: "var(--font-serif)",
               marginBottom: "14px",
             }}
           >
             Signature Cakes & Patisserie
           </h2>
 
-          <p style={{ fontSize: "15px", color: "var(--text-secondary)", lineHeight: 1.6 }}>
+          <p
+            className="body-text"
+            style={{
+              fontSize: "clamp(15px, 1.5vw, 18px)",
+              color: "var(--text-secondary)",
+              lineHeight: 1.6,
+              fontFamily: "var(--font-sans)",
+              fontWeight: 400,
+            }}
+          >
             Baked in small morning batches with Belgian chocolate, pure dairy butter, and fresh seasonal ingredients.
           </p>
         </div>

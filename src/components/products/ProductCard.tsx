@@ -180,14 +180,16 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "6px" }}>
+          {/* CAKE NAME: Manrope, 18–22px, Weight 600/700 */}
           <h3
-            className="font-serif card-headline"
+            className="cake-name"
             style={{
-              fontSize: "18px",
+              fontFamily: "var(--font-sans)",
+              fontSize: "19px",
               fontWeight: 700,
               color: "var(--accent-cocoa)",
               lineHeight: 1.25,
-              letterSpacing: "-0.015em",
+              letterSpacing: "-0.01em",
             }}
           >
             {product.name}
@@ -287,28 +289,50 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
           }}
         >
           <div>
-            <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+            <div
+              className="small-label"
+              style={{
+                fontSize: "11px",
+                color: "var(--text-muted)",
+                fontFamily: "var(--font-sans)",
+                fontWeight: 600,
+                letterSpacing: "0.06em",
+              }}
+            >
               {selectedVariant.servings}
             </div>
-            <div style={{ fontSize: "20px", fontWeight: 800, color: "var(--accent-caramel)" }}>
+            {/* PRICE: Manrope, 20–28px, Weight 700 */}
+            <div
+              className="price-tag"
+              style={{
+                fontSize: "22px",
+                fontWeight: 700,
+                color: "var(--accent-caramel)",
+                fontFamily: "var(--font-sans)",
+                letterSpacing: "-0.02em",
+              }}
+            >
               ₹{selectedVariant.price.toLocaleString("en-IN")}
             </div>
           </div>
 
+          {/* BUTTONS: Manrope, 14–16px, Weight 600/700 */}
           <button
             type="button"
             onClick={handleAddToCart}
-            className="pressable"
+            className="pressable btn-action"
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: "6px",
-              padding: "9px 16px",
+              padding: "10px 18px",
               borderRadius: "var(--radius-full)",
               backgroundColor: justAdded ? "var(--accent-sage)" : "var(--accent-caramel)",
               color: "#FFFFFF",
-              fontSize: "13px",
-              fontWeight: 700,
+              fontSize: "14px",
+              fontWeight: 600,
+              fontFamily: "var(--font-sans)",
+              letterSpacing: "-0.01em",
               boxShadow: "0 2px 8px rgba(199, 109, 56, 0.2)",
               transition: "background-color 160ms var(--ease-out), transform 140ms var(--ease-out)",
             }}

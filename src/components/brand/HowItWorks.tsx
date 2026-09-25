@@ -43,15 +43,17 @@ export default function HowItWorks() {
         {/* Section Header */}
         <div style={{ maxWidth: "640px", margin: "0 auto 48px", textAlign: "center" }}>
           <div
+            className="small-label"
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: "6px",
               fontSize: "12px",
-              fontWeight: 700,
+              fontWeight: 600,
               textTransform: "uppercase",
-              letterSpacing: "0.1em",
+              letterSpacing: "0.08em",
               color: "var(--accent-caramel)",
+              fontFamily: "var(--font-sans)",
               marginBottom: "10px",
             }}
           >
@@ -59,12 +61,14 @@ export default function HowItWorks() {
           </div>
 
           <h2
+            className="section-heading font-serif"
             style={{
-              fontSize: "clamp(26px, 3.8vw, 40px)",
-              fontWeight: 800,
+              fontSize: "clamp(38px, 4.6vw, 64px)",
+              fontWeight: 600,
               color: "var(--accent-cocoa)",
-              letterSpacing: "-0.025em",
-              lineHeight: 1.2,
+              letterSpacing: "-0.02em",
+              lineHeight: 1.12,
+              fontFamily: "var(--font-serif)",
               marginBottom: "14px",
             }}
           >

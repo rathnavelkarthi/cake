@@ -11,15 +11,17 @@ export default function BrandStory() {
         {/* Editorial Introduction */}
         <div style={{ maxWidth: "760px", margin: "0 auto 56px", textAlign: "center" }}>
           <div
+            className="small-label"
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: "6px",
               fontSize: "12px",
-              fontWeight: 700,
+              fontWeight: 600,
               textTransform: "uppercase",
-              letterSpacing: "0.1em",
+              letterSpacing: "0.08em",
               color: "var(--accent-caramel)",
+              fontFamily: "var(--font-sans)",
               marginBottom: "8px",
             }}
           >
@@ -28,13 +30,14 @@ export default function BrandStory() {
           </div>
 
           <h2
-            className="font-serif"
+            className="section-heading font-serif"
             style={{
-              fontSize: "clamp(28px, 4vw, 42px)",
-              fontWeight: 700,
+              fontSize: "clamp(38px, 4.6vw, 64px)",
+              fontWeight: 600,
               color: "var(--accent-cocoa)",
               letterSpacing: "-0.02em",
-              lineHeight: 1.18,
+              lineHeight: 1.12,
+              fontFamily: "var(--font-serif)",
               marginBottom: "16px",
             }}
           >
