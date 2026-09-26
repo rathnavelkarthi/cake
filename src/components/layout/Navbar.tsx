@@ -16,11 +16,14 @@ import {
   Package,
   HelpCircle,
   Sparkles,
+  Search,
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { BUSINESS_CONFIG } from "@/lib/config/business";
 import { trackEvent } from "@/lib/analytics/events";
 import { triggerHaptic } from "@/lib/utils/haptics";
+import DarkModeToggle from "@/components/ui/DarkModeToggle";
+import SiteSearchModal from "@/components/ui/SiteSearchModal";
 
 export default function Navbar() {
   const router = useRouter();
@@ -30,6 +33,7 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isBadgePopping, setIsBadgePopping] = useState(false);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
 
   // Hidden admin gesture: 5 quick taps on bakery logo opens admin login
   const logoTapCountRef = useRef(0);
@@ -57,6 +61,10 @@ export default function Navbar() {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "a") {
         e.preventDefault();
         router.push("/admin/login");
+      }
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchModalOpen((prev) => !prev);
       }
       if (e.key === "Escape" && mobileMenuOpen) {
         setMobileMenuOpen(false);
@@ -266,6 +274,33 @@ export default function Navbar() {
               <MessageCircle size={17} style={{ color: "#16A34A" }} />
             </a>
 
+            {/* Site Search Button */}
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic("selection");
+                setSearchModalOpen(true);
+              }}
+              className="pressable flex items-center justify-center rounded-full"
+              title="Search Cakes (Ctrl + K / Cmd + K)"
+              aria-label="Search Cakes"
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "50%",
+                backgroundColor: "var(--bg-muted)",
+                color: "var(--text-primary)",
+                border: "1px solid var(--border-subtle)",
+                cursor: "pointer",
+                transition: "all 140ms var(--ease-out)",
+              }}
+            >
+              <Search size={16} />
+            </button>
+
+            {/* Dark Mode Toggle */}
+            <DarkModeToggle />
+
             {/* Quick Call - Hidden on very small mobile */}
             <a
               href={`tel:${BUSINESS_CONFIG.phone}`}
@@ -459,6 +494,44 @@ export default function Navbar() {
                 <X size={18} />
               </button>
             </div>
+
+            {/* Quick Search Action Bar for Mobile */}
+            <button
+              type="button"
+              onClick={() => {
+                handleCloseMenu();
+                setSearchModalOpen(true);
+              }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                padding: "12px 16px",
+                borderRadius: "16px",
+                backgroundColor: "rgba(255, 255, 255, 0.08)",
+                border: "1px solid rgba(255, 255, 255, 0.16)",
+                color: "rgba(255, 255, 255, 0.75)",
+                fontSize: "13px",
+                cursor: "pointer",
+                width: "100%",
+                textAlign: "left",
+              }}
+            >
+              <Search size={16} style={{ color: "var(--accent-gold)" }} />
+              <span>Search cakes, brownies, patisserie...</span>
+              <span
+                style={{
+                  marginLeft: "auto",
+                  fontSize: "10px",
+                  color: "rgba(255, 255, 255, 0.4)",
+                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                  padding: "2px 6px",
+                  borderRadius: "4px",
+                }}
+              >
+                Ctrl+K
+              </span>
+            </button>
 
             {/* Featured Hero Bento Card: Complete Menu & Patisserie */}
             <a
@@ -845,21 +918,33 @@ export default function Navbar() {
                 </a>
               </div>
 
-              {/* Hours Pill */}
+              {/* Hours & Policies Tray */}
               <div
                 style={{
                   textAlign: "center",
                   fontSize: "11px",
                   color: "rgba(255, 255, 255, 0.55)",
                   padding: "4px 0",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px",
                 }}
               >
-                142 Nungambakkam High Rd • Open Daily 9:00 AM – 10:30 PM
+                <div>142 Nungambakkam High Rd • Open Daily 9:00 AM – 10:30 PM</div>
+                <div style={{ display: "flex", justifyContent: "center", gap: "14px", flexWrap: "wrap", fontSize: "11px" }}>
+                  <a href="/privacy" onClick={handleCloseMenu} style={{ color: "rgba(255, 255, 255, 0.6)", textDecoration: "none" }}>Privacy</a>
+                  <a href="/terms" onClick={handleCloseMenu} style={{ color: "rgba(255, 255, 255, 0.6)", textDecoration: "none" }}>Terms</a>
+                  <a href="/refund-policy" onClick={handleCloseMenu} style={{ color: "rgba(255, 255, 255, 0.6)", textDecoration: "none" }}>Refunds</a>
+                  <a href="/cookie-policy" onClick={handleCloseMenu} style={{ color: "rgba(255, 255, 255, 0.6)", textDecoration: "none" }}>Cookies</a>
+                </div>
               </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* Global Site Search Modal */}
+      <SiteSearchModal isOpen={searchModalOpen} onClose={() => setSearchModalOpen(false)} />
 
       <style jsx>{`
         @keyframes mobileNavFadeIn {

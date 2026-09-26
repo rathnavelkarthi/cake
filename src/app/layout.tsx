@@ -3,6 +3,7 @@ import { Cormorant_Garamond, Manrope } from "next/font/google";
 import "./globals.css";
 import { generateBakerySchema, generateFAQSchema } from "@/lib/seo/structured-data";
 import { BUSINESS_CONFIG } from "@/lib/config/business";
+import ClientShell from "@/components/layout/ClientShell";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -64,6 +65,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${cormorant.variable} ${manrope.variable}`} suppressHydrationWarning>
       <head>
+        {/* Anti-FOUC Dark Mode Theme Initializer */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('kichees_theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark');}}catch(e){}})();`,
+          }}
+        />
         {/* Structured Data for SEO & AEO Discovery */}
         <script
           type="application/ld+json"
@@ -75,8 +82,9 @@ export default function RootLayout({
         />
       </head>
       <body className="paper-texture" suppressHydrationWarning>
-        {children}
+        <ClientShell>{children}</ClientShell>
       </body>
     </html>
   );
 }
+

@@ -163,10 +163,80 @@ export default function Footer() {
                 <span>{BUSINESS_CONFIG.whatsappDisplay} (WhatsApp)</span>
               </a>
 
+              <a
+                href={`mailto:${BUSINESS_CONFIG.email}`}
+                onClick={() => trackEvent({ name: "click_email", source: "footer" })}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  color: "#C5BCB6",
+                  textDecoration: "none",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                }}
+              >
+                <span>✉️ {BUSINESS_CONFIG.email}</span>
+              </a>
+
               <div style={{ fontSize: "12px", color: "#8E827A", marginTop: "4px" }}>
                 Delivery across {BUSINESS_CONFIG.deliveryZones.primary}
               </div>
             </div>
+          </div>
+
+          {/* Column 4: Customer Care & Policies */}
+          <div>
+            <h4
+              className="font-serif"
+              style={{
+                fontSize: "16px",
+                fontWeight: 700,
+                color: "#FFFFFF",
+                marginBottom: "16px",
+                letterSpacing: "-0.01em",
+              }}
+            >
+              Customer Care & Legal
+            </h4>
+
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "10px", fontSize: "13px" }}>
+              <li>
+                <a href="/shop" style={{ color: "#C5BCB6", textDecoration: "none" }} className="hover:text-amber-300">
+                  Daily Cake Menu
+                </a>
+              </li>
+              <li>
+                <a href="/custom-cakes" style={{ color: "#C5BCB6", textDecoration: "none" }} className="hover:text-amber-300">
+                  Custom Celebration Gateaux
+                </a>
+              </li>
+              <li>
+                <a href="/account/orders" style={{ color: "#C5BCB6", textDecoration: "none" }} className="hover:text-amber-300">
+                  Track Past Orders
+                </a>
+              </li>
+              <li>
+                <a href="/privacy" style={{ color: "#C5BCB6", textDecoration: "none" }} className="hover:text-amber-300">
+                  Privacy Policy
+                </a>
+              </li>
+              <li>
+                <a href="/terms" style={{ color: "#C5BCB6", textDecoration: "none" }} className="hover:text-amber-300">
+                  Terms of Service
+                </a>
+              </li>
+              <li>
+                <a href="/refund-policy" style={{ color: "#C5BCB6", textDecoration: "none" }} className="hover:text-amber-300">
+                  Refund & Cancellation Policy
+                </a>
+              </li>
+              <li>
+                <a href="/cookie-policy" style={{ color: "#C5BCB6", textDecoration: "none" }} className="hover:text-amber-300">
+                  Cookie Preferences & Policy
+                </a>
+              </li>
+            </ul>
           </div>
         </div>
 
@@ -188,11 +258,12 @@ export default function Footer() {
             © {new Date().getFullYear()} {BUSINESS_CONFIG.name}. Handcrafted in Nungambakkam, Chennai.
           </div>
           <div style={{ display: "flex", gap: "20px", flexWrap: "wrap", alignItems: "center" }}>
-            <a href="#signature-cakes" style={{ color: "#8E827A", textDecoration: "none" }}>Signature Bakes</a>
-            <a href="#custom-studio" style={{ color: "#8E827A", textDecoration: "none" }}>Custom Cakes</a>
-            <a href="#faqs" style={{ color: "#8E827A", textDecoration: "none" }}>Delivery Policy</a>
-            <a href="#faqs" style={{ color: "#8E827A", textDecoration: "none" }}>Privacy Policy</a>
-            <a href="#faqs" style={{ color: "#8E827A", textDecoration: "none" }}>Terms of Service</a>
+            <a href="/shop" style={{ color: "#8E827A", textDecoration: "none" }}>Signature Bakes</a>
+            <a href="/custom-cakes" style={{ color: "#8E827A", textDecoration: "none" }}>Custom Cakes</a>
+            <a href="/privacy" style={{ color: "#8E827A", textDecoration: "none" }}>Privacy Policy</a>
+            <a href="/terms" style={{ color: "#8E827A", textDecoration: "none" }}>Terms of Service</a>
+            <a href="/refund-policy" style={{ color: "#8E827A", textDecoration: "none" }}>Refund Policy</a>
+            <a href="/cookie-policy" style={{ color: "#8E827A", textDecoration: "none" }}>Cookie Policy</a>
             <a href="/admin/login" style={{ color: "#544B45", textDecoration: "none", fontSize: "11px", opacity: 0.5 }} title="Bakery Staff Access">Staff</a>
           </div>
         </div>
@@ -200,3 +271,4 @@ export default function Footer() {
     </footer>
   );
 }
+

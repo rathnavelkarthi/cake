@@ -9,7 +9,9 @@ export type AnalyticsEvent =
   | { name: "select_delivery_method"; method: "delivery" | "pickup" }
   | { name: "click_whatsapp"; source: string; context?: string }
   | { name: "click_phone"; source: string }
+  | { name: "click_email"; source: string }
   | { name: "click_directions"; source: string }
+  | { name: "search"; query: string }
   | { name: "begin_custom_cake" }
   | { name: "submit_custom_cake"; flavour: string; weight: string; date: string }
   | { name: "purchase"; orderId: string; total: number };
