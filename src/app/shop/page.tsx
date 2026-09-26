@@ -30,6 +30,40 @@ function ShopContent() {
     });
   }, []);
 
+  // Handle direct product URL link (e.g. /shop?product=slug or /shop?search=cake)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const prodParam = params.get("product") || params.get("id");
+    const searchParam = params.get("search");
+
+    if (searchParam) {
+      setSearchQuery(searchParam);
+    }
+
+    if (prodParam && productList.length > 0) {
+      const decodedParam = decodeURIComponent(prodParam).toLowerCase();
+      const match = productList.find(
+        (p) =>
+          p.id.toLowerCase() === decodedParam ||
+          p.slug.toLowerCase() === decodedParam ||
+          p.name.toLowerCase() === decodedParam
+      );
+      if (match) {
+        setQuickViewProduct(match);
+        if (match.categoryId && match.categoryId !== "all") {
+          setActiveCategory(match.categoryId);
+        }
+        setTimeout(() => {
+          const el = document.getElementById(`product-${match.slug || match.id}`);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }, 300);
+      }
+    }
+  }, [productList]);
+
   const filteredAndSortedProducts = useMemo(() => {
     let result = productList.filter((product) => {
       // Category check
@@ -442,6 +476,7 @@ function ShopContent() {
                 return (
                   <div
                     key={product.id}
+                    id={`product-${product.slug || product.id}`}
                     onClick={() => setQuickViewProduct(product)}
                     style={{
                       backgroundColor: "#fff",

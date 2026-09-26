@@ -24,6 +24,28 @@ export default function ProductSection() {
     });
   }, []);
 
+  // Auto-open product modal if URL has ?product=...
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const prodParam = params.get("product") || params.get("id");
+    if (prodParam && productList.length > 0) {
+      const decoded = decodeURIComponent(prodParam).toLowerCase();
+      const match = productList.find(
+        (p) =>
+          p.id.toLowerCase() === decoded ||
+          p.slug.toLowerCase() === decoded ||
+          p.name.toLowerCase() === decoded
+      );
+      if (match) {
+        setQuickViewProduct(match);
+        if (match.categoryId && match.categoryId !== "all") {
+          setActiveCategory(match.categoryId);
+        }
+      }
+    }
+  }, [productList]);
+
   const handleCategorySelect = (catId: string) => {
     triggerHaptic("selection");
     setActiveCategory(catId);

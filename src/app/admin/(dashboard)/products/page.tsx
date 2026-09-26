@@ -20,6 +20,8 @@ import {
   Check,
   Sparkles,
   MapPin,
+  Copy,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -112,6 +114,43 @@ export default function AdminProductsPage() {
   const [newProductPrice, setNewProductPrice] = useState("750");
   const [newProductStock, setNewProductStock] = useState("10");
   const [newProductBranch, setNewProductBranch] = useState("all");
+
+  // Post-Creation Success Modal & Copy URL state
+  const [copiedProductId, setCopiedProductId] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [createdSuccessProduct, setCreatedSuccessProduct] = useState<AdminProductItem | null>(null);
+  const [isCreatedSuccessOpen, setIsCreatedSuccessOpen] = useState(false);
+
+  const getProductUrl = (prod: AdminProductItem | { slug?: string; id: string | number; name: string }) => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const identifier = prod.slug || String(prod.id);
+    return `${origin}/shop?product=${encodeURIComponent(identifier)}`;
+  };
+
+  const handleCopyProductUrl = async (prod: AdminProductItem | { slug?: string; id: string | number; name: string }) => {
+    const url = getProductUrl(prod);
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else if (typeof document !== "undefined") {
+        const textArea = document.createElement("textarea");
+        textArea.value = url;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand("copy");
+        textArea.remove();
+      }
+      setCopiedProductId(String(prod.id));
+      setToastMessage(url);
+      setTimeout(() => setCopiedProductId(null), 2500);
+      setTimeout(() => setToastMessage(null), 4000);
+    } catch (err) {
+      console.error("Failed to copy URL:", err);
+    }
+  };
 
   // Image upload state
   const [imagePreview, setImagePreview] = useState<string>("/images/hero-truffle.jpg");
@@ -298,7 +337,7 @@ export default function AdminProductsPage() {
 
     // Call unified inventory store: adds product, calculates & deducts raw materials,
     // and immediately syncs to storefront landing page
-    addInventoryProduct({
+    const created = addInventoryProduct({
       name: newProductName.trim(),
       category: newProductCategory,
       price: parseFloat(newProductPrice) || 0,
@@ -317,6 +356,10 @@ export default function AdminProductsPage() {
     setNewProductPrice("750");
     setNewProductStock("10");
     setNewProductBranch("all");
+
+    // Open post-creation success modal with prominent Copy Product URL button
+    setCreatedSuccessProduct(created);
+    setIsCreatedSuccessOpen(true);
   };
 
   // Edit Product Modal State
@@ -966,9 +1009,25 @@ export default function AdminProductsPage() {
                     </div>
                   </TableCell>
 
-                  {/* Actions Dropdown */}
+                  {/* Actions */}
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
+                      {/* Quick Copy Product URL Button */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleCopyProductUrl(product)}
+                        title="Copy Product URL"
+                        className="h-8 w-8 text-stone-500 hover:text-amber-900 hover:bg-amber-50"
+                      >
+                        {copiedProductId === product.id ? (
+                          <Check className="h-3.5 w-3.5 text-emerald-600" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
+                        <span className="sr-only">Copy Product URL</span>
+                      </Button>
+
                       <Button
                         variant="ghost"
                         size="icon"
@@ -991,8 +1050,32 @@ export default function AdminProductsPage() {
                             <span className="sr-only">Actions</span>
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48 text-xs">
+                        <DropdownMenuContent align="end" className="w-52 text-xs">
                           <DropdownMenuLabel>Product Controls</DropdownMenuLabel>
+                          <DropdownMenuItem
+                            onClick={() => handleCopyProductUrl(product)}
+                            className="cursor-pointer"
+                          >
+                            {copiedProductId === product.id ? (
+                              <>
+                                <Check className="mr-2 h-3.5 w-3.5 text-emerald-600" />
+                                <span className="text-emerald-700 font-semibold">URL Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="mr-2 h-3.5 w-3.5 text-stone-600" />
+                                <span>Copy Product URL</span>
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => window.open(getProductUrl(product), "_blank")}
+                            className="cursor-pointer"
+                          >
+                            <ExternalLink className="mr-2 h-3.5 w-3.5 text-stone-500" />
+                            View on Website
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => handleOpenEditProduct(product)}
                             className="cursor-pointer"
@@ -1038,14 +1121,49 @@ export default function AdminProductsPage() {
       {/* Edit Product Modal */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-stone-900 flex items-center gap-2">
-              <Pencil className="w-4 h-4 text-amber-800" />
-              <span>Edit Product & Storefront Visibility</span>
-            </DialogTitle>
-            <DialogDescription>
-              Modify pricing, description, stock levels, and control whether this product is shown on the live website.
-            </DialogDescription>
+          <DialogHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2">
+            <div>
+              <DialogTitle className="text-lg font-bold text-stone-900 flex items-center gap-2">
+                <Pencil className="w-4 h-4 text-amber-800" />
+                <span>Edit Product & Storefront Visibility</span>
+              </DialogTitle>
+              <DialogDescription>
+                Modify pricing, description, stock levels, and control whether this product is shown on the live website.
+              </DialogDescription>
+            </div>
+            {editingProduct && (
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleCopyProductUrl(editingProduct)}
+                  className="h-8 text-xs gap-1.5 bg-stone-50 hover:bg-stone-100"
+                >
+                  {copiedProductId === editingProduct.id ? (
+                    <>
+                      <Check className="h-3.5 w-3.5 text-emerald-600" />
+                      <span className="text-emerald-700 font-medium">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3.5 w-3.5 text-stone-600" />
+                      <span>Copy URL</span>
+                    </>
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => window.open(getProductUrl(editingProduct), "_blank")}
+                  className="h-8 text-xs gap-1 text-stone-600 hover:text-stone-900"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  <span>Preview</span>
+                </Button>
+              </div>
+            )}
           </DialogHeader>
 
           {editingProduct && (
@@ -1328,6 +1446,112 @@ export default function AdminProductsPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Product Created Success Dialog with Direct Copy URL Action */}
+      <Dialog open={isCreatedSuccessOpen} onOpenChange={setIsCreatedSuccessOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 mb-2">
+              <Check className="h-6 w-6 text-emerald-600" />
+            </div>
+            <DialogTitle className="text-center text-lg font-bold text-stone-900">
+              Product Created Successfully!
+            </DialogTitle>
+            <DialogDescription className="text-center text-stone-600 text-xs">
+              Your new product is live in the inventory and on the public storefront. You can now copy and share its direct product URL.
+            </DialogDescription>
+          </DialogHeader>
+
+          {createdSuccessProduct && (
+            <div className="space-y-4 py-2">
+              <div className="flex items-center gap-3 p-3 rounded-xl border border-stone-200 bg-stone-50">
+                <img
+                  src={createdSuccessProduct.imageUrl || "/images/hero-truffle.jpg"}
+                  alt={createdSuccessProduct.name}
+                  className="w-14 h-14 rounded-lg object-cover border border-stone-200"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-stone-900 truncate">
+                    {createdSuccessProduct.name}
+                  </p>
+                  <p className="text-[11px] text-stone-500">
+                    {createdSuccessProduct.category} • ₹{createdSuccessProduct.price} • {createdSuccessProduct.stock} units
+                  </p>
+                  <Badge variant="outline" className="mt-1 text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200">
+                    Live on Website
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold text-stone-700 uppercase tracking-wider">
+                  Storefront Product URL
+                </label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    readOnly
+                    value={getProductUrl(createdSuccessProduct)}
+                    className="text-xs bg-stone-50 font-mono text-stone-700 select-all"
+                  />
+                  <Button
+                    type="button"
+                    onClick={() => handleCopyProductUrl(createdSuccessProduct)}
+                    className="shrink-0 gap-1.5 bg-amber-900 hover:bg-amber-950 text-white font-medium text-xs px-3"
+                  >
+                    {copiedProductId === createdSuccessProduct.id ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copy URL</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="flex flex-row items-center justify-between sm:justify-between gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (createdSuccessProduct) {
+                  window.open(getProductUrl(createdSuccessProduct), "_blank");
+                }
+              }}
+              className="text-xs gap-1.5"
+            >
+              <ExternalLink className="w-3.5 h-3.5 text-stone-500" />
+              Open Storefront
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => setIsCreatedSuccessOpen(false)}
+              className="text-xs bg-stone-900 hover:bg-stone-800 text-white"
+            >
+              Done
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Instant Floating Toast Feedback */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-stone-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-stone-700 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+          <div className="text-xs">
+            <p className="font-semibold text-white">Product URL Copied to Clipboard!</p>
+            <p className="text-stone-300 font-mono text-[11px] truncate max-w-xs">{toastMessage}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
