@@ -190,6 +190,70 @@ export default function AdminLoginPage() {
                 )}
               </Button>
             </form>
+
+            {/* Quick Role Selection for Bakery Staff */}
+            <div className="mt-5 pt-4 border-t border-stone-100">
+              <p className="text-[10px] font-bold text-stone-500 mb-2 uppercase tracking-wider text-center">
+                Quick Role Credentials
+              </p>
+              <div className="grid grid-cols-2 gap-2 text-left">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail("bakery.chef@kicheesbakeddelights.in");
+                    setPassword("BakeryChef@Kichees2026");
+                  }}
+                  className="p-2 rounded-lg border border-stone-200 hover:border-amber-700 bg-stone-50/70 hover:bg-amber-50/60 transition-colors text-left group"
+                >
+                  <p className="text-xs font-bold text-stone-800 flex items-center gap-1 group-hover:text-amber-900">
+                    <span>👨‍🍳</span> Bakery Chef
+                  </p>
+                  <p className="text-[10px] text-stone-500 truncate">Hot Kitchen & Breads</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail("confectionery.chef@kicheesbakeddelights.in");
+                    setPassword("Confectionery@Kichees2026");
+                  }}
+                  className="p-2 rounded-lg border border-stone-200 hover:border-amber-700 bg-stone-50/70 hover:bg-amber-50/60 transition-colors text-left group"
+                >
+                  <p className="text-xs font-bold text-stone-800 flex items-center gap-1 group-hover:text-amber-900">
+                    <span>🎂</span> Confectionery Chef
+                  </p>
+                  <p className="text-[10px] text-stone-500 truncate">Patisserie & Cakes</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail("cafe.staff@kicheesbakeddelights.in");
+                    setPassword("CafeStaff@Kichees2026");
+                  }}
+                  className="p-2 rounded-lg border border-stone-200 hover:border-amber-700 bg-stone-50/70 hover:bg-amber-50/60 transition-colors text-left group"
+                >
+                  <p className="text-xs font-bold text-stone-800 flex items-center gap-1 group-hover:text-amber-900">
+                    <span>☕</span> Cafe Staff
+                  </p>
+                  <p className="text-[10px] text-stone-500 truncate">POS & Dispatch</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail("admin@kicheesbakeddelights.in");
+                    setPassword("Admin@Kichees2026");
+                  }}
+                  className="p-2 rounded-lg border border-stone-200 hover:border-amber-700 bg-stone-50/70 hover:bg-amber-50/60 transition-colors text-left group"
+                >
+                  <p className="text-xs font-bold text-stone-800 flex items-center gap-1 group-hover:text-amber-900">
+                    <span>🛡️</span> Super Admin
+                  </p>
+                  <p className="text-[10px] text-stone-500 truncate">Full Management</p>
+                </button>
+              </div>
+            </div>
           </CardContent>
         </Card>
 

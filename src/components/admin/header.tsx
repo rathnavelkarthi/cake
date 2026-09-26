@@ -115,26 +115,26 @@ export function AdminHeader() {
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href="/admin/kitchen" className="cursor-pointer flex items-center justify-between text-xs py-2">
-                  <span className="font-semibold text-amber-900">👨‍🍳 Selva (Head Chef)</span>
+                  <span className="font-semibold text-amber-900">👨‍🍳 Bakery Head Chef</span>
                   <span className="text-[10px] text-stone-400">Kitchen KDS</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/admin/kitchen" className="cursor-pointer flex items-center justify-between text-xs py-2">
-                  <span className="font-semibold text-purple-900">🎂 Anbu (Confectionery Chef)</span>
-                  <span className="text-[10px] text-stone-400">Deco Station</span>
+                  <span className="font-semibold text-purple-900">🎂 Confectionery Head Chef</span>
+                  <span className="text-[10px] text-stone-400">Deco & Custom</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/admin/orders" className="cursor-pointer flex items-center justify-between text-xs py-2">
-                  <span className="font-semibold text-emerald-900">📋 Sara Harrisons (Manager)</span>
-                  <span className="text-[10px] text-stone-400">Orders & Dispatch</span>
+                <Link href="/admin/billing" className="cursor-pointer flex items-center justify-between text-xs py-2">
+                  <span className="font-semibold text-emerald-900">☕ Kichees Cafe Staff</span>
+                  <span className="text-[10px] text-stone-400">POS & Billing</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/admin" className="cursor-pointer flex items-center justify-between text-xs py-2">
                   <span className="font-semibold text-stone-900">🛡️ Super Admin</span>
-                  <span className="text-[10px] text-stone-400">Main Ops</span>
+                  <span className="text-[10px] text-stone-400">Full Dashboard</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
