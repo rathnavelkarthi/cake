@@ -1,6 +1,5 @@
 import { db, schema } from "./index";
 import { eq, ilike, desc, and, sql } from "drizzle-orm";
-import { PRODUCTS } from "@/data/products";
 import { addLiveProduct } from "@/lib/data/products";
 
 export interface RecipeIngredient {
@@ -27,6 +26,8 @@ export interface AdminProductItem {
   description?: string;
   isEggless?: boolean;
   recipe?: RecipeIngredient[];
+  branchIds?: string[];
+  availableBranches?: string; // 'all' | 'harrisons' | 'nungambakkam'
 }
 
 export interface RawMaterialItem {
@@ -205,50 +206,8 @@ const sampleRecipes: Record<string, RecipeIngredient[]> = {
   ],
 };
 
-// 2. Initial Product Inventory
-export let localProducts: AdminProductItem[] = [
-  ...PRODUCTS.map((p, idx) => ({
-    id: idx + 1,
-    name: p.name,
-    slug: p.slug || p.id,
-    sku: `KCH-${1000 + idx}`,
-    category: p.category.charAt(0).toUpperCase() + p.category.slice(1),
-    price: p.variants?.[0]?.price ?? 650,
-    stock: [12, 4, 18, 2, 8, 25, 0, 15][idx % 8],
-    lowStockThreshold: 5,
-    status: [12, 4, 18, 2, 8, 25, 0, 15][idx % 8] === 0 ? ("archived" as const) : ("active" as const),
-    imageUrl: p.image,
-    featured: p.isFeatured,
-    bestSeller: p.isBestSeller,
-    recipe: sampleRecipes[p.id] || [
-      { rawMaterialId: 1, rawMaterialName: "Refined Wheat Flour (Maida)", amount: 250, unit: "g" },
-      { rawMaterialId: 4, rawMaterialName: "Unsalted Dairy Butter", amount: 120, unit: "g" },
-      { rawMaterialId: 5, rawMaterialName: "Granulated White Sugar", amount: 150, unit: "g" },
-    ],
-  })),
-  // Add a Bagel product to demonstrate the bakery requirement!
-  {
-    id: PRODUCTS.length + 1,
-    name: "Artisanal Toasted Sesame Bagel (Pack of 4)",
-    slug: "toasted-sesame-bagel",
-    sku: "KCH-2001",
-    category: "Bagels",
-    price: 380,
-    stock: 14,
-    lowStockThreshold: 6,
-    status: "active",
-    imageUrl: "/images/hero-truffle.jpg",
-    featured: true,
-    bestSeller: true,
-    recipe: [
-      { rawMaterialId: 2, rawMaterialName: "High-Gluten Bread Flour (for Bagels)", amount: 450, unit: "g" },
-      { rawMaterialId: 6, rawMaterialName: "Active Dry Yeast", amount: 12, unit: "g" },
-      { rawMaterialId: 5, rawMaterialName: "Granulated White Sugar", amount: 25, unit: "g" },
-      { rawMaterialId: 4, rawMaterialName: "Unsalted Dairy Butter", amount: 30, unit: "g" },
-      { rawMaterialId: 10, rawMaterialName: "Toasted White Sesame Seeds", amount: 40, unit: "g" },
-    ],
-  },
-];
+// 2. Initial Product Inventory - Populated live from Supabase
+export let localProducts: AdminProductItem[] = [];
 
 let localOrders: AdminOrderItem[] = [
   {
@@ -500,6 +459,8 @@ export function addInventoryProduct(item: {
   description?: string;
   isEggless?: boolean;
   recipe?: RecipeIngredient[];
+  availableBranches?: string;
+  branchIds?: string[];
 }): AdminProductItem {
   const newId = `kch-prod-${Date.now()}`;
   const initialStock = item.stock || 0;
@@ -534,6 +495,8 @@ export function addInventoryProduct(item: {
     description: item.description,
     isEggless: item.isEggless ?? true,
     recipe,
+    availableBranches: item.availableBranches || "all",
+    branchIds: item.branchIds || ["harrisons", "nungambakkam"],
   };
 
   localProducts.unshift(newProd);
@@ -568,6 +531,8 @@ export function addInventoryProduct(item: {
         isEggless: item.isEggless,
         isActive: newProd.status === "active",
         recipe,
+        availableBranches: newProd.availableBranches,
+        branchIds: newProd.branchIds,
       }),
     }).catch((err) => console.error("Failed to persist product to Supabase:", err));
   }
@@ -607,6 +572,8 @@ export function updateInventoryProduct(
           isBestSeller: updates.bestSeller,
           isEggless: updates.isEggless,
           recipe: updates.recipe,
+          availableBranches: updates.availableBranches,
+          branchIds: updates.branchIds,
         }),
       }).catch((err) => console.error("Failed to update product in Supabase:", err));
     }

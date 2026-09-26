@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Receipt,
   Plus,
@@ -21,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PRODUCTS } from "@/data/products";
+import { getInventoryProducts, subscribeInventory, AdminProductItem } from "@/lib/db/admin-data";
 
 interface BillItem {
   id: string;
@@ -36,16 +36,17 @@ export default function AdminBillingPage() {
   const [paymentMethod, setPaymentMethod] = useState<
     "UPI" | "CASH" | "CARD" | "ONLINE"
   >("UPI");
-  const [billItems, setBillItems] = useState<BillItem[]>([
-    {
-      id: "1",
-      name: PRODUCTS[0].name,
-      price: PRODUCTS[0].variants?.[0]?.price ?? 650,
-      quantity: 1,
-    },
-  ]);
+  const [products, setProducts] = useState<AdminProductItem[]>(getInventoryProducts);
+  const [billItems, setBillItems] = useState<BillItem[]>([]);
   const [discount, setDiscount] = useState<number>(0);
   const [invoiceSuccess, setInvoiceSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    return subscribeInventory(() => {
+      const live = getInventoryProducts();
+      setProducts(live);
+    });
+  }, []);
 
   const subtotal = billItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -54,20 +55,20 @@ export default function AdminBillingPage() {
   const tax = Math.round(subtotal * 0.05); // 5% bakery GST
   const grandTotal = Math.max(0, subtotal + tax - discount);
 
-  const handleAddItem = (productId: string) => {
-    const prod = PRODUCTS.find((p) => p.id === productId);
+  const handleAddItem = (productId: string | number) => {
+    const prod = products.find((p) => String(p.id) === String(productId));
     if (!prod) return;
 
-    const price = prod.variants?.[0]?.price ?? 650;
+    const price = prod.price ?? 650;
 
     setBillItems((prev) => {
-      const existing = prev.find((i) => i.id === prod.id);
+      const existing = prev.find((i) => String(i.id) === String(prod.id));
       if (existing) {
         return prev.map((i) =>
-          i.id === prod.id ? { ...i, quantity: i.quantity + 1 } : i
+          String(i.id) === String(prod.id) ? { ...i, quantity: i.quantity + 1 } : i
         );
       }
-      return [...prev, { id: prod.id, name: prod.name, price, quantity: 1 }];
+      return [...prev, { id: String(prod.id), name: prod.name, price, quantity: 1 }];
     });
   };
 
@@ -127,30 +128,34 @@ export default function AdminBillingPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {PRODUCTS.slice(0, 6).map((prod) => (
-                <div
-                  key={prod.id}
-                  className="flex items-center justify-between p-2 rounded-lg border border-stone-100 hover:bg-stone-50 transition-colors"
-                >
-                  <div className="space-y-0.5">
-                    <p className="text-xs font-semibold text-stone-900">
-                      {prod.name}
-                    </p>
-                    <p className="text-[11px] text-stone-500">
-                      ₹{(prod.variants?.[0]?.price ?? 650).toLocaleString("en-IN")}
-                    </p>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleAddItem(prod.id)}
-                    className="h-7 px-2.5 text-xs"
+              {products.length === 0 ? (
+                <p className="text-xs text-stone-400 py-3 text-center">Loading items from Supabase...</p>
+              ) : (
+                products.slice(0, 8).map((prod) => (
+                  <div
+                    key={prod.id}
+                    className="flex items-center justify-between p-2 rounded-lg border border-stone-100 hover:bg-stone-50 transition-colors"
                   >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Add
-                  </Button>
-                </div>
-              ))}
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-semibold text-stone-900 line-clamp-1">
+                        {prod.name}
+                      </p>
+                      <p className="text-[11px] text-stone-500">
+                        ₹{(prod.price ?? 650).toLocaleString("en-IN")}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleAddItem(prod.id)}
+                      className="h-7 px-2.5 text-xs shrink-0 ml-2"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add
+                    </Button>
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
         </div>

@@ -5,6 +5,7 @@ import { CartItem } from "@/lib/data/types";
 import { BUSINESS_CONFIG } from "@/lib/config/business";
 import { trackEvent } from "@/lib/analytics/events";
 import { useToast } from "@/components/ui/Toast";
+import { calculateDeliveryFee } from "@/lib/config/branches";
 
 interface CartContextType {
   items: CartItem[];
@@ -18,6 +19,12 @@ interface CartContextType {
   setIsCartOpen: (open: boolean) => void;
   fulfilmentType: "delivery" | "pickup";
   setFulfilmentType: (type: "delivery" | "pickup") => void;
+  selectedBranchId: string;
+  setSelectedBranchId: (id: string) => void;
+  deliveryDistanceKm: number;
+  setDeliveryDistanceKm: (km: number) => void;
+  deliveryAddress: string;
+  setDeliveryAddress: (addr: string) => void;
   deliveryFee: number;
   total: number;
 }
@@ -28,6 +35,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [fulfilmentType, setFulfilmentType] = useState<"delivery" | "pickup">("delivery");
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("harrisons");
+  const [deliveryDistanceKm, setDeliveryDistanceKm] = useState<number>(3);
+  const [deliveryAddress, setDeliveryAddress] = useState<string>("");
   const { toast } = useToast();
 
   // Load cart from localStorage
@@ -36,6 +46,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const saved = localStorage.getItem("kichees_cart");
       if (saved) {
         setItems(JSON.parse(saved));
+      }
+      const savedBranch = localStorage.getItem("kichees_branch");
+      if (savedBranch) {
+        setSelectedBranchId(savedBranch);
       }
     } catch (e) {
       // ignore
@@ -51,10 +65,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [items]);
 
+  const handleSetBranch = (id: string) => {
+    setSelectedBranchId(id);
+    try {
+      localStorage.setItem("kichees_branch", id);
+    } catch {}
+  };
+
   const addItem = (newItem: Omit<CartItem, "cartItemId">) => {
     setItems((prev) => {
       const existingIndex = prev.findIndex(
-        (i) => i.productId === newItem.productId && i.variantId === newItem.variantId && i.customMessage === newItem.customMessage
+        (i) =>
+          i.productId === newItem.productId &&
+          i.variantId === newItem.variantId &&
+          i.customMessage === newItem.customMessage
       );
       if (existingIndex > -1) {
         const updated = [...prev];
@@ -118,14 +142,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
   const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  
-  // Free delivery above minOrderFreeDelivery (₹1,000)
-  const deliveryFee = fulfilmentType === "pickup" 
-    ? 0 
-    : subtotal >= BUSINESS_CONFIG.deliveryZones.minOrderFreeDelivery 
-    ? 0 
-    : BUSINESS_CONFIG.deliveryZones.standardDeliveryFee;
 
+  // Dynamic delivery fee calculation:
+  // Pickup: ₹0
+  // Delivery: Base ₹60 (up to 3km) + ₹15/km beyond 3km. Free over ₹1,500
+  const deliveryCalculation = calculateDeliveryFee(deliveryDistanceKm, subtotal);
+  const deliveryFee = fulfilmentType === "pickup" ? 0 : deliveryCalculation.fee;
   const total = subtotal + deliveryFee;
 
   return (
@@ -142,6 +164,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         setIsCartOpen,
         fulfilmentType,
         setFulfilmentType: handleSetFulfilment,
+        selectedBranchId,
+        setSelectedBranchId: handleSetBranch,
+        deliveryDistanceKm,
+        setDeliveryDistanceKm,
+        deliveryAddress,
+        setDeliveryAddress,
         deliveryFee,
         total,
       }}

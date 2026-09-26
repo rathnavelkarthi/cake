@@ -273,7 +273,24 @@ export default function ProductSection() {
         </div>
 
         {/* Product Grid with Stagger Entrance */}
-        {filteredProducts.length > 0 ? (
+        {productList.length === 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 min-w-0">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+              <div
+                key={n}
+                className="rounded-2xl border border-stone-200/80 bg-white/60 p-4 animate-pulse space-y-3"
+              >
+                <div className="aspect-square w-full rounded-xl bg-stone-200/70" />
+                <div className="h-4 w-3/4 rounded bg-stone-200/70" />
+                <div className="h-3 w-1/2 rounded bg-stone-100" />
+                <div className="flex justify-between items-center pt-2">
+                  <div className="h-5 w-16 rounded bg-stone-200/70" />
+                  <div className="h-8 w-20 rounded-full bg-stone-200/70" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredProducts.length > 0 ? (
           <>
             <div
               key={`${activeCategory}-${egglessOnly}-${searchQuery}`}

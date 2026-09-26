@@ -19,6 +19,7 @@ import {
   EyeOff,
   Check,
   Sparkles,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,16 +79,19 @@ const MENU_CATEGORIES = [
   "Cookies & Macarons",
 ];
 
+const SUPABASE_CDN = "https://uiftoqlzlarfkfzqnedk.supabase.co/storage/v1/object/public/custom-cakes";
+
 const QUICK_BAKERY_IMAGES = [
-  { label: "Belgian Truffle", url: "/images/hero-truffle.jpg" },
-  { label: "Fudge Brownies", url: "/images/fudge-brownies.jpg" },
-  { label: "Pistachio Rose", url: "/images/celebration-cake.jpg" },
-  { label: "Bakery Counter", url: "/images/bakery-counter.jpg" },
-  { label: "Red Velvet", url: "/custom-cakes/cake-2.jpg" },
-  { label: "Ferrero Rocher", url: "/custom-cakes/cake-3.jpg" },
-  { label: "Rasmalai Melts", url: "/custom-cakes/cake-4.jpg" },
-  { label: "Caramel Drip", url: "/custom-cakes/cake-5.jpg" },
-  { label: "Korean Garlic Bun", url: "/custom-cakes/cake-6.jpg" },
+  { label: "Belgian Truffle", url: `${SUPABASE_CDN}/cake-1.jpg` },
+  { label: "Red Velvet", url: `${SUPABASE_CDN}/cake-2.jpg` },
+  { label: "Ferrero Rocher", url: `${SUPABASE_CDN}/cake-3.jpg` },
+  { label: "Rasmalai Melts", url: `${SUPABASE_CDN}/cake-4.jpg` },
+  { label: "Rosemilk Cake", url: `${SUPABASE_CDN}/cake-5.jpg` },
+  { label: "Korean Garlic Bun", url: `${SUPABASE_CDN}/cake-6.jpg` },
+  { label: "Pineapple Bliss", url: `${SUPABASE_CDN}/cake-7.jpg` },
+  { label: "Choco Lava", url: `${SUPABASE_CDN}/cake-8.jpg` },
+  { label: "Fruit Tart", url: `${SUPABASE_CDN}/cake-9.jpg` },
+  { label: "Madras Ghee Cake", url: `${SUPABASE_CDN}/cake-10.jpg` },
 ];
 
 export default function AdminProductsPage() {
@@ -107,6 +111,7 @@ export default function AdminProductsPage() {
   const [newProductCategory, setNewProductCategory] = useState("Cakes");
   const [newProductPrice, setNewProductPrice] = useState("750");
   const [newProductStock, setNewProductStock] = useState("10");
+  const [newProductBranch, setNewProductBranch] = useState("all");
 
   // Image upload state
   const [imagePreview, setImagePreview] = useState<string>("/images/hero-truffle.jpg");
@@ -146,10 +151,13 @@ export default function AdminProductsPage() {
     });
   }, [productsList, search, selectedTab]);
 
-  // Handle local image selection
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  // Handle local image selection and auto-upload to Supabase Storage
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Immediate local preview
       const reader = new FileReader();
       reader.onloadend = () => {
         if (typeof reader.result === "string") {
@@ -157,6 +165,27 @@ export default function AdminProductsPage() {
         }
       };
       reader.readAsDataURL(file);
+
+      // Upload to Supabase Storage bucket
+      try {
+        setIsUploadingImage(true);
+        const form = new FormData();
+        form.append("file", file);
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: form,
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.url) {
+            setImagePreview(data.url);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to upload image to Supabase:", err);
+      } finally {
+        setIsUploadingImage(false);
+      }
     }
   };
 
@@ -277,6 +306,8 @@ export default function AdminProductsPage() {
       lowStockThreshold: 5,
       imageUrl: imagePreview,
       recipe: recipeIngredients,
+      availableBranches: newProductBranch,
+      branchIds: newProductBranch === "all" ? ["harrisons", "nungambakkam"] : [newProductBranch],
     });
 
     setIsAddOpen(false);
@@ -285,6 +316,7 @@ export default function AdminProductsPage() {
     setNewProductName("");
     setNewProductPrice("750");
     setNewProductStock("10");
+    setNewProductBranch("all");
   };
 
   // Edit Product Modal State
@@ -302,6 +334,7 @@ export default function AdminProductsPage() {
   const [editBestSeller, setEditBestSeller] = useState(false);
   const [editDescription, setEditDescription] = useState("");
   const [editIsEggless, setEditIsEggless] = useState(true);
+  const [editBranch, setEditBranch] = useState("all");
 
   const handleOpenEditProduct = (prod: AdminProductItem) => {
     setEditingProduct(prod);
@@ -317,6 +350,7 @@ export default function AdminProductsPage() {
     setEditBestSeller(Boolean(prod.bestSeller));
     setEditDescription(prod.description || "");
     setEditIsEggless(prod.isEggless !== false);
+    setEditBranch(prod.availableBranches || "all");
     setIsEditOpen(true);
   };
 
@@ -337,6 +371,8 @@ export default function AdminProductsPage() {
       bestSeller: editBestSeller,
       description: editDescription,
       isEggless: editIsEggless,
+      availableBranches: editBranch,
+      branchIds: editBranch === "all" ? ["harrisons", "nungambakkam"] : [editBranch],
     });
 
     setIsEditOpen(false);
@@ -460,6 +496,36 @@ export default function AdminProductsPage() {
                       className="bg-white"
                     />
                   </div>
+                </div>
+
+                {/* Bakery Outlet / Location Selection */}
+                <div className="space-y-1.5 pt-1">
+                  <label className="text-xs font-semibold text-stone-700 flex items-center justify-between">
+                    <span>Bakery Outlet / Inventory Location</span>
+                    <span className="text-[10px] text-amber-800 font-medium">Harrisons & Nungambakkam</span>
+                  </label>
+                  <Select
+                    value={newProductBranch}
+                    onValueChange={setNewProductBranch}
+                  >
+                    <SelectTrigger className="bg-white text-xs h-9 border-stone-200">
+                      <SelectValue placeholder="Select Outlet Availability" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all" className="text-xs font-semibold">
+                        📍 Available at Both Outlets (Harrisons Hotel & Casablanca Studio)
+                      </SelectItem>
+                      <SelectItem value="harrisons" className="text-xs">
+                        📍 Kichee's @ Harrisons Hotel (Valluvar Kottam High Rd)
+                      </SelectItem>
+                      <SelectItem value="nungambakkam" className="text-xs">
+                        📍 Kichee's @ Casablanca Studio (Dr. Thirumoorthy Nagar)
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[10px] text-stone-400">
+                    Determines which outlet will show pickup stock when customers order.
+                  </p>
                 </div>
               </div>
 
@@ -802,6 +868,16 @@ export default function AdminProductsPage() {
                     <div className="text-[10px] font-mono text-stone-400">
                       {product.sku}
                     </div>
+                    <div className="text-[10px] text-amber-800 font-medium flex items-center gap-1 mt-0.5">
+                      <MapPin className="h-2.5 w-2.5 shrink-0" />
+                      <span>
+                        {product.availableBranches === "harrisons"
+                          ? "Harrisons Hotel"
+                          : product.availableBranches === "nungambakkam"
+                          ? "Casablanca Studio"
+                          : "Both Outlets"}
+                      </span>
+                    </div>
                   </TableCell>
 
                   {/* Menu Category */}
@@ -1065,6 +1141,30 @@ export default function AdminProductsPage() {
                       className="bg-white"
                     />
                   </div>
+                </div>
+
+                {/* Bakery Outlet / Location Selection for Edit */}
+                <div className="space-y-1.5 pt-1">
+                  <label className="text-xs font-semibold text-stone-700 flex items-center justify-between">
+                    <span>Bakery Outlet / Inventory Location</span>
+                    <span className="text-[10px] text-amber-800 font-medium">Harrisons Hotel & Casablanca Studio</span>
+                  </label>
+                  <Select value={editBranch} onValueChange={setEditBranch}>
+                    <SelectTrigger className="bg-white text-xs h-9 border-stone-200">
+                      <SelectValue placeholder="Select Outlet Availability" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all" className="text-xs font-semibold">
+                        📍 Available at Both Outlets (Harrisons & Casablanca)
+                      </SelectItem>
+                      <SelectItem value="harrisons" className="text-xs">
+                        📍 Kichee's @ Harrisons Hotel (Valluvar Kottam High Rd)
+                      </SelectItem>
+                      <SelectItem value="nungambakkam" className="text-xs">
+                        📍 Kichee's @ Casablanca Studio (Dr. Thirumoorthy Nagar)
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

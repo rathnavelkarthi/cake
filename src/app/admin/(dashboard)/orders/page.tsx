@@ -43,9 +43,11 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   subscribeOrders,
   updateOrderStatus,
+  confirmPaymentAndPushToKitchen,
   OrderItem,
 } from "@/lib/orders/order-store";
 import { ManualOrderModal } from "@/components/admin/ManualOrderModal";
+import { Phone, MessageSquare, Check, AlertCircle as AlertIcon } from "lucide-react";
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<OrderItem[]>([]);
@@ -53,12 +55,36 @@ export default function AdminOrdersPage() {
   const [activeTab, setActiveTab] = useState<string>("all");
   const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     return subscribeOrders((allOrders) => {
       setOrders(allOrders);
     });
   }, []);
+
+  const handleConfirmPaymentAndPush = async (order: OrderItem) => {
+    try {
+      confirmPaymentAndPushToKitchen(order.id, order.assignedChef || "Selva (Head Chef)");
+      
+      const res = await fetch("/api/orders/confirm-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          customerMobile: order.customerMobile,
+          customerName: order.customerName,
+          assignedChef: order.assignedChef || "Selva (Head Chef)",
+        }),
+      });
+
+      setActionSuccess(`Payment verified! Order #${order.orderNumber} dispatched to kitchen station.`);
+      setTimeout(() => setActionSuccess(null), 4000);
+    } catch (err) {
+      console.error("Payment confirmation failed:", err);
+    }
+  };
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -68,16 +94,18 @@ export default function AdminOrdersPage() {
       order.flavour?.toLowerCase().includes(search.toLowerCase());
 
     if (activeTab === "all") return matchesSearch;
+    if (activeTab === "unpaid")
+      return matchesSearch && (order.paymentStatus !== "PAID" || order.orderStatus === "PENDING_PAYMENT");
     if (activeTab === "rush") return matchesSearch && order.isInstantOrder;
     if (activeTab === "pending")
       return (
         matchesSearch &&
-        (order.orderStatus === "PENDING_PAYMENT" ||
-          order.orderStatus === "CONFIRMED" ||
+        (order.orderStatus === "CONFIRMED" ||
           order.orderStatus === "IN_OVEN" ||
           order.orderStatus === "COOLING" ||
           order.orderStatus === "DECORATING" ||
-          order.orderStatus === "PREPARING")
+          order.orderStatus === "PREPARING" ||
+          order.orderStatus === "PENDING_PAYMENT")
       );
     if (activeTab === "ready")
       return (
@@ -140,6 +168,9 @@ export default function AdminOrdersPage() {
             <TabsTrigger value="all" className="text-xs">
               All ({orders.length})
             </TabsTrigger>
+            <TabsTrigger value="unpaid" className="text-xs text-rose-800 font-semibold">
+              ⏳ Verify Payment ({orders.filter((o) => o.paymentStatus !== "PAID").length})
+            </TabsTrigger>
             <TabsTrigger value="rush" className="text-xs text-amber-800 font-semibold">
               ⚡ Rush Orders ({orders.filter((o) => o.isInstantOrder).length})
             </TabsTrigger>
@@ -152,8 +183,7 @@ export default function AdminOrdersPage() {
                     o.orderStatus === "IN_OVEN" ||
                     o.orderStatus === "COOLING" ||
                     o.orderStatus === "DECORATING" ||
-                    o.orderStatus === "PREPARING" ||
-                    o.orderStatus === "PENDING_PAYMENT"
+                    o.orderStatus === "PREPARING"
                 ).length
               }
               )
@@ -189,6 +219,18 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
+      {actionSuccess && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-emerald-600" />
+            <span>{actionSuccess}</span>
+          </div>
+          <button onClick={() => setActionSuccess(null)} className="text-stone-400 hover:text-stone-700">
+            ×
+          </button>
+        </div>
+      )}
+
       {/* Orders Table */}
       <div className="rounded-xl border border-stone-200 bg-white shadow-xs overflow-hidden">
         <Table>
@@ -197,10 +239,10 @@ export default function AdminOrdersPage() {
               <TableHead className="text-xs font-semibold">Order #</TableHead>
               <TableHead className="text-xs font-semibold">Customer</TableHead>
               <TableHead className="text-xs font-semibold">Cake Details</TableHead>
-              <TableHead className="text-xs font-semibold">Fulfillment</TableHead>
+              <TableHead className="text-xs font-semibold">Outlet / Delivery</TableHead>
               <TableHead className="text-xs font-semibold">Assigned Station</TableHead>
               <TableHead className="text-xs font-semibold">Status & Stage</TableHead>
-              <TableHead className="text-right text-xs font-semibold">Actions</TableHead>
+              <TableHead className="text-right text-xs font-semibold">Payment & Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -249,17 +291,24 @@ export default function AdminOrdersPage() {
 
                   {/* Fulfillment Type & Scheduled Date */}
                   <TableCell className="text-xs">
-                    <div className="flex items-center gap-1.5 font-medium text-stone-700">
+                    <div className="flex items-center gap-1.5 font-medium text-stone-800">
                       {order.fulfilmentType === "DELIVERY" ? (
-                        <Truck className="h-3.5 w-3.5 text-amber-800" />
+                        <Truck className="h-3.5 w-3.5 text-amber-800 shrink-0" />
                       ) : (
-                        <MapPin className="h-3.5 w-3.5 text-stone-600" />
+                        <MapPin className="h-3.5 w-3.5 text-amber-700 shrink-0" />
                       )}
-                      <span>{order.fulfilmentType}</span>
+                      <span className="font-semibold line-clamp-1">
+                        {order.fulfilmentType === "PICKUP"
+                          ? (order.branchName || "Harrisons Hotel (Valluvar Kottam)")
+                          : `Delivery (${order.deliveryDistanceKm || "3"} km)`}
+                      </span>
                     </div>
                     <div className="text-[10px] text-stone-500 flex items-center gap-1 mt-0.5">
                       <Calendar className="h-2.5 w-2.5 text-stone-400" />
                       <span>{order.deliveryDate || "Today"}</span>
+                      {order.deliveryFee ? (
+                        <span>• Fee: ₹{order.deliveryFee}</span>
+                      ) : null}
                     </div>
                   </TableCell>
 
@@ -270,7 +319,10 @@ export default function AdminOrdersPage() {
                       <span>{order.assignedChef?.split(" ")[0] || "Kitchen"}</span>
                     </div>
                     <div className="text-[10px] text-stone-400 font-normal">
-                      ₹{order.total.toLocaleString("en-IN")} • {order.paymentStatus}
+                      ₹{order.total.toLocaleString("en-IN")} •{" "}
+                      <span className={order.paymentStatus === "PAID" ? "text-emerald-700 font-bold" : "text-amber-700 font-bold"}>
+                        {order.paymentStatus}
+                      </span>
                     </div>
                   </TableCell>
 
@@ -345,16 +397,38 @@ export default function AdminOrdersPage() {
                     </DropdownMenu>
                   </TableCell>
 
-                  {/* Actions: View Details Dialog */}
+                  {/* Actions: Quick verify & View Details Dialog */}
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedOrder(order)}
-                      className="h-8 w-8 p-0 hover:bg-stone-100"
-                    >
-                      <Eye className="h-4 w-4 text-stone-500" />
-                    </Button>
+                    <div className="flex items-center justify-end gap-1.5">
+                      {order.paymentStatus !== "PAID" && (
+                        <Button
+                          size="sm"
+                          onClick={() => handleConfirmPaymentAndPush(order)}
+                          className="h-7 px-2 text-[10px] font-bold bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs flex items-center gap-1"
+                          title="Confirm UPI payment & push to Kitchen chefs"
+                        >
+                          <Check className="h-3 w-3" />
+                          <span>Push to Kitchen</span>
+                        </Button>
+                      )}
+
+                      <a
+                        href={`tel:${order.customerMobile}`}
+                        className="h-7 w-7 rounded-md border border-stone-200 flex items-center justify-center text-stone-500 hover:text-stone-900 hover:bg-stone-50"
+                        title={`Call customer at ${order.customerMobile}`}
+                      >
+                        <Phone className="h-3 w-3" />
+                      </a>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedOrder(order)}
+                        className="h-7 w-7 p-0 hover:bg-stone-100"
+                      >
+                        <Eye className="h-3.5 w-3.5 text-stone-500" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -457,6 +531,35 @@ export default function AdminOrdersPage() {
                 <span>Total Amount:</span>
                 <span>₹{selectedOrder.total.toLocaleString("en-IN")} ({selectedOrder.paymentStatus})</span>
               </div>
+
+              {/* Payment verification action */}
+              {selectedOrder.paymentStatus !== "PAID" && (
+                <div className="pt-3 border-t border-stone-200 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={() => {
+                        handleConfirmPaymentAndPush(selectedOrder);
+                        setSelectedOrder((prev) =>
+                          prev ? { ...prev, paymentStatus: "PAID", orderStatus: "PREPARING" } : null
+                        );
+                      }}
+                      className="flex-1 h-9 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs flex items-center justify-center gap-1.5"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Confirm Payment & Push to Kitchen</span>
+                    </Button>
+                    <a href={`tel:${selectedOrder.customerMobile}`} className="shrink-0">
+                      <Button variant="outline" className="h-9 px-3 text-xs border-stone-300 flex items-center gap-1">
+                        <Phone className="w-3.5 h-3.5" />
+                        <span>Call Guest</span>
+                      </Button>
+                    </a>
+                  </div>
+                  <p className="text-[10px] text-stone-400 text-center">
+                    Triggers Evolution WhatsApp confirmation to {selectedOrder.customerMobile} and alerts kitchen queue.
+                  </p>
+                </div>
+              )}
             </div>
           </DialogContent>
         </Dialog>

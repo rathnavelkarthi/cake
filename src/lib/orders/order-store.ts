@@ -22,6 +22,11 @@ export interface OrderItem {
     | "COMPLETED"
     | "CANCELLED";
   fulfilmentType: "PICKUP" | "DELIVERY";
+  branchId?: string;
+  branchName?: string;
+  deliveryDistanceKm?: number;
+  deliveryAddress?: string;
+  deliveryFee?: number;
   itemsCount: number;
   date: string;
   deliveryDate: string;
@@ -321,6 +326,25 @@ export function updateOrderChef(orderId: string, chef: OrderItem["assignedChef"]
   if (index !== -1) {
     orders[index] = {
       ...orders[index],
+      assignedChef: chef,
+    };
+    saveOrders(orders);
+    return orders[index];
+  }
+  return null;
+}
+
+export function confirmPaymentAndPushToKitchen(
+  orderId: string,
+  chef: OrderItem["assignedChef"] = "Selva (Head Chef)"
+): OrderItem | null {
+  const orders = getOrders();
+  const index = orders.findIndex((o) => o.id === orderId);
+  if (index !== -1) {
+    orders[index] = {
+      ...orders[index],
+      paymentStatus: "PAID",
+      orderStatus: "PREPARING",
       assignedChef: chef,
     };
     saveOrders(orders);

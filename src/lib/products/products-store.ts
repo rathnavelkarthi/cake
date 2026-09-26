@@ -1,28 +1,8 @@
-import { PRODUCTS, Product, ProductVariant } from "@/data/products";
+import { Product, ProductVariant } from "@/data/products";
 import { localProducts, AdminProductItem } from "@/lib/db/admin-data";
 
-// In-memory store initialized with storefront products and admin inventory items
-let productsStore: Product[] = [
-  ...PRODUCTS,
-  {
-    id: "prod-bagel-1",
-    slug: "toasted-sesame-bagel",
-    name: "Artisanal Toasted Sesame Bagel (Pack of 4)",
-    category: "bagels" as any,
-    shortDescription: "Slow-fermented high-gluten bagels boiled in barley malt and coated in toasted sesame.",
-    description: "Authentic kettle-boiled New York style bagels slow-fermented for 24 hours. Crusty exterior with an airy, chewy crumb, generously coated with fragrant white sesame seeds.",
-    image: "/images/hero-truffle.jpg",
-    isEggless: true,
-    isBestSeller: true,
-    isFeatured: true,
-    prepTime: "1 hour",
-    ingredients: ["High-Gluten Bread Flour", "Active Dry Yeast", "Barley Malt", "Dairy Butter", "White Sesame"],
-    variants: [
-      { id: "vb-1", label: "Pack of 4", weight: "450 g", price: 380, servings: "4 servings" },
-      { id: "vb-2", label: "Pack of 8", weight: "900 g", price: 720, servings: "8 servings" },
-    ],
-  },
-];
+// In-memory store populated dynamically from live Supabase products
+let productsStore: Product[] = [];
 
 type Listener = () => void;
 const listeners: Set<Listener> = new Set();

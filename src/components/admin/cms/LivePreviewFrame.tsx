@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ContentBlock } from "@/lib/cms/types";
-import { LIVE_PRODUCTS } from "@/lib/data/products";
+import { getLiveProducts, subscribeProducts } from "@/lib/data/products";
 import { cn } from "@/lib/utils";
 
 interface LivePreviewFrameProps {
@@ -24,6 +24,13 @@ interface LivePreviewFrameProps {
 
 export function LivePreviewFrame({ blocks }: LivePreviewFrameProps) {
   const [device, setDevice] = useState<"desktop" | "tablet" | "mobile">("desktop");
+  const [liveProducts, setLiveProducts] = useState(getLiveProducts);
+
+  React.useEffect(() => {
+    return subscribeProducts(() => {
+      setLiveProducts(getLiveProducts());
+    });
+  }, []);
 
   const visibleBlocks = blocks.filter((b) => b.isVisible);
 
@@ -157,8 +164,8 @@ export function LivePreviewFrame({ blocks }: LivePreviewFrameProps) {
               if (block.type === "product_showcase") {
                 const displayProducts =
                   block.categoryFilter === "all"
-                    ? LIVE_PRODUCTS
-                    : LIVE_PRODUCTS.filter(
+                    ? liveProducts
+                    : liveProducts.filter(
                         (p) => p.categoryId === block.categoryFilter
                       );
 

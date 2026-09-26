@@ -27,14 +27,17 @@ export async function GET(req: NextRequest) {
       query = query.ilike("name", `%${search}%`);
     }
 
-    const { data, error } = await query;
+    const [{ data: products, error: pError }, { data: categories }] = await Promise.all([
+      query,
+      supabaseAdmin.from("categories").select("*").eq("is_active", true).order("sort_order", { ascending: true }),
+    ]);
 
-    if (error) {
-      console.error("Error fetching products from Supabase:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (pError) {
+      console.error("Error fetching products from Supabase:", pError);
+      return NextResponse.json({ error: pError.message }, { status: 500 });
     }
 
-    return NextResponse.json({ products: data || [] });
+    return NextResponse.json({ products: products || [], categories: categories || [] });
   } catch (err: any) {
     console.error("API error in GET /api/products:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
