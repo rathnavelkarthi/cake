@@ -16,6 +16,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Check if order was already confirmed
+    let checkQuery = supabaseAdmin
+      .from("orders")
+      .select("id, order_number, payment_status, customer_mobile, customer_name, fulfilment_type");
+    if (orderId) checkQuery = checkQuery.eq("id", orderId);
+    else checkQuery = checkQuery.eq("order_number", orderNumber);
+    const { data: existing } = await checkQuery.maybeSingle();
+
+    const isAlreadyPaid = existing?.payment_status === "PAID";
+
     // Update in Supabase
     let query = supabaseAdmin
       .from("orders")
@@ -38,12 +48,12 @@ export async function POST(req: NextRequest) {
       console.warn("Supabase update error:", error.message);
     }
 
-    // Send WhatsApp payment confirmed update
-    const targetMobile = updated?.customer_mobile || body.customerMobile;
-    const customerName = updated?.customer_name || body.customerName || "Valued Customer";
-    const ordNum = updated?.order_number || orderNumber;
+    // Send WhatsApp payment confirmed update only once if not previously paid
+    const targetMobile = updated?.customer_mobile || existing?.customer_mobile || body.customerMobile;
+    const customerName = updated?.customer_name || existing?.customer_name || body.customerName || "Valued Customer";
+    const ordNum = updated?.order_number || existing?.order_number || orderNumber;
 
-    if (targetMobile) {
+    if (!isAlreadyPaid && targetMobile) {
       try {
         await sendPaymentConfirmedWhatsApp({
           orderNumber: ordNum,

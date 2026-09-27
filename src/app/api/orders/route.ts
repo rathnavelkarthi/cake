@@ -175,7 +175,7 @@ export async function POST(req: NextRequest) {
         deliveryFee: Number(deliveryFee || 0),
         items: formattedItemStrings,
       });
-      whatsappSent = Boolean(waResult.textResult.success || waResult.mediaResult.success);
+      whatsappSent = Boolean(waResult?.textResult?.success || waResult?.mediaResult?.success);
     } catch (waErr) {
       console.error("Evolution WhatsApp send failed:", waErr);
     }
@@ -228,10 +228,10 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Fetch existing order to merge notes
+    // Fetch existing order to merge notes and detect duplicates
     let fetchQuery = supabaseAdmin
       .from("orders")
-      .select("id, order_number, admin_notes, order_status, payment_status");
+      .select("id, order_number, admin_notes, order_status, payment_status, customer_mobile, customer_name, fulfilment_type, branch_name, delivery_address");
     if (orderId) {
       fetchQuery = fetchQuery.eq("id", orderId);
     } else {
@@ -254,12 +254,22 @@ export async function PATCH(req: NextRequest) {
       dbOrderStatus = "PREPARING";
     }
 
+    // Check if the order was already transitioned to this stage (prevents double WhatsApp messages)
+    const existingNotes = existing?.admin_notes || "";
+    const isAlreadyAtStage = Boolean(
+      (isKitchenSubStage && existingNotes.includes(`[STAGE:${orderStatus}]`)) ||
+      (!isKitchenSubStage && existing?.order_status === dbOrderStatus && existingNotes.includes(`[WA:${orderStatus}]`))
+    );
+
     let mergedNotes = (existing?.admin_notes || adminNotes || "").trim();
     // Clean any prior stage tag
     mergedNotes = mergedNotes.replace(/\[STAGE:[A-Z_]+\]\s*/g, "").trim();
 
     if (isKitchenSubStage) {
       mergedNotes = `[STAGE:${orderStatus}] ${mergedNotes}`.trim();
+    }
+    if (orderStatus && !mergedNotes.includes(`[WA:${orderStatus}]`)) {
+      mergedNotes = `${mergedNotes} [WA:${orderStatus}]`.trim();
     }
 
     if (assignedChef) {
@@ -298,8 +308,8 @@ export async function PATCH(req: NextRequest) {
 
     const returnedStatus = orderStatus || (isKitchenSubStage ? orderStatus : updated?.order_status);
 
-    // Send customer WhatsApp status update asynchronously (non-blocking)
-    if (orderStatus && updated?.customer_mobile) {
+    // Send customer WhatsApp status update asynchronously ONLY if stage changed (prevents double sends)
+    if (orderStatus && !isAlreadyAtStage && updated?.customer_mobile) {
       sendKitchenStatusUpdateWhatsApp({
         orderNumber: updated.order_number || orderNumber,
         customerName: updated.customer_name || "Valued Customer",

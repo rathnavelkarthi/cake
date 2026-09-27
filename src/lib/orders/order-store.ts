@@ -318,19 +318,6 @@ export function updateOrderStatus(orderId: string, status: OrderItem["orderStatu
     saveOrders(orders);
     updated = orders[index];
   }
-
-  // Also persist to Supabase if running in browser
-  if (typeof window !== "undefined") {
-    fetch("/api/orders", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        orderId,
-        orderStatus: status,
-      }),
-    }).catch((err) => console.warn("Supabase order status sync warning:", err));
-  }
-
   return updated;
 }
 
@@ -346,18 +333,6 @@ export function updateOrderChef(orderId: string, chef: OrderItem["assignedChef"]
     saveOrders(orders);
     updated = orders[index];
   }
-
-  if (typeof window !== "undefined") {
-    fetch("/api/orders", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        orderId,
-        assignedChef: chef,
-      }),
-    }).catch((err) => console.warn("Chef assignment sync warning:", err));
-  }
-
   return updated;
 }
 

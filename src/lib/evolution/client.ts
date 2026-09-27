@@ -96,8 +96,7 @@ export async function sendWhatsAppMedia(
     const data = await res.json();
     if (!res.ok) {
       console.error("Evolution API sendMedia failed:", res.status, data);
-      // Fallback: send text if media fails
-      return await sendWhatsAppMessage(phone, `${caption}\n\nPay here: ${mediaUrl}`);
+      return { success: false, error: data?.response?.message || "Failed to send media" };
     }
 
     return {
@@ -186,19 +185,26 @@ Track your orders anytime:
 👉 ${siteUrl}/orders
 ━━━━━━━━━━━━━━━━━━━━`;
 
-  // First send the QR Code image with caption
-  const mediaResult = await sendWhatsAppMedia(
-    order.customerMobile,
-    qrImageUrl,
-    `🎂 *Kichee's Baked Delights - UPI QR Code for Order ${order.orderNumber}*\nAmount: ₹${order.total.toLocaleString(
-      "en-IN"
-    )}\n\nScan using GPay, PhonePe, Paytm, or BHIM. After paying, reply with your screenshot!`
-  );
+  // Send ONE complete confirmation message (with QR image if supported, otherwise text)
+  if (messageText.length <= 1024) {
+    try {
+      const mediaResult = await sendWhatsAppMedia(
+        order.customerMobile,
+        qrImageUrl,
+        messageText,
+        `order-${order.orderNumber}-upi.png`
+      );
+      if (mediaResult.success) {
+        return { mediaResult, textResult: mediaResult };
+      }
+    } catch (err) {
+      console.warn("Media WhatsApp send failed, falling back to text:", err);
+    }
+  }
 
-  // Then send the detailed invoice message
+  // Fallback or long message: send single text invoice with direct UPI link
   const textResult = await sendWhatsAppMessage(order.customerMobile, messageText);
-
-  return { mediaResult, textResult };
+  return { textResult };
 }
 
 export async function sendPaymentConfirmedWhatsApp(order: {
