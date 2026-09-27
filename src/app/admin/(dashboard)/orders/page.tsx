@@ -60,46 +60,55 @@ export default function AdminOrdersPage() {
   const [isSyncing, setIsSyncing] = useState(false);
 
   // Map a raw Supabase row to our OrderItem shape
-  const mapDbRow = (row: any): OrderItem => ({
-    id: row.id,
-    orderNumber: row.order_number,
-    customerName: row.customer_name,
-    customerMobile: row.customer_mobile,
-    customerEmail: row.customer_email || undefined,
-    total: Number(row.total),
-    paymentStatus: (row.payment_status as OrderItem["paymentStatus"]) || "PENDING",
-    orderStatus: (row.order_status as OrderItem["orderStatus"]) || "PENDING_PAYMENT",
-    fulfilmentType: (row.fulfilment_type as "PICKUP" | "DELIVERY") || "PICKUP",
-    branchId: row.branch_id || undefined,
-    branchName: row.branch_name || undefined,
-    deliveryDistanceKm: row.delivery_distance_km || undefined,
-    deliveryAddress: row.delivery_address || undefined,
-    deliveryFee: row.delivery_fee || undefined,
-    itemsCount: Array.isArray(row.items) ? row.items.length : 1,
-    date: new Date(row.created_at).toLocaleString("en-IN", {
-      day: "numeric",
-      month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
-    deliveryDate: row.requested_date || "Today",
-    deliveryTimeSlot: row.requested_time || "ASAP",
-    flavour: Array.isArray(row.items) && row.items[0]
-      ? (typeof row.items[0] === "string" ? row.items[0] : row.items[0].name || "Custom Cake")
-      : "Custom Cake",
-    weightKg: Array.isArray(row.items) && row.items[0]?.variantLabel
-      ? row.items[0].variantLabel
-      : "1 kg",
-    isEggless: false,
-    cakeMessage: row.customer_notes || undefined,
-    assignedChef: row.assigned_chef || "Selva (Head Chef)",
-    isInstantOrder: false,
-    notes: row.admin_notes || undefined,
-    items: Array.isArray(row.items)
-      ? row.items.map((i: any) => (typeof i === "string" ? i : `${i.quantity || 1}x ${i.name || "Item"}`))
-      : [],
-    createdAt: row.created_at,
-  });
+  const mapDbRow = (row: any): OrderItem => {
+    let effectiveStatus = (row.order_status as OrderItem["orderStatus"]) || "PENDING_PAYMENT";
+    if (effectiveStatus === "PREPARING" && row.admin_notes) {
+      const match = row.admin_notes.match(/\[STAGE:([A-Z_]+)\]/);
+      if (match && match[1]) {
+        effectiveStatus = match[1] as OrderItem["orderStatus"];
+      }
+    }
+    return {
+      id: row.id,
+      orderNumber: row.order_number,
+      customerName: row.customer_name,
+      customerMobile: row.customer_mobile,
+      customerEmail: row.customer_email || undefined,
+      total: Number(row.total),
+      paymentStatus: (row.payment_status as OrderItem["paymentStatus"]) || "PENDING",
+      orderStatus: effectiveStatus,
+      fulfilmentType: (row.fulfilment_type as "PICKUP" | "DELIVERY") || "PICKUP",
+      branchId: row.branch_id || undefined,
+      branchName: row.branch_name || undefined,
+      deliveryDistanceKm: row.delivery_distance_km || undefined,
+      deliveryAddress: row.delivery_address || undefined,
+      deliveryFee: row.delivery_fee || undefined,
+      itemsCount: Array.isArray(row.items) ? row.items.length : 1,
+      date: new Date(row.created_at).toLocaleString("en-IN", {
+        day: "numeric",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      deliveryDate: row.requested_date || "Today",
+      deliveryTimeSlot: row.requested_time || "ASAP",
+      flavour: Array.isArray(row.items) && row.items[0]
+        ? (typeof row.items[0] === "string" ? row.items[0] : row.items[0].name || "Custom Cake")
+        : "Custom Cake",
+      weightKg: Array.isArray(row.items) && row.items[0]?.variantLabel
+        ? row.items[0].variantLabel
+        : "1 kg",
+      isEggless: false,
+      cakeMessage: row.customer_notes || undefined,
+      assignedChef: row.assigned_chef || "Selva (Head Chef)",
+      isInstantOrder: false,
+      notes: row.admin_notes || undefined,
+      items: Array.isArray(row.items)
+        ? row.items.map((i: any) => (typeof i === "string" ? i : `${i.quantity || 1}x ${i.name || "Item"}`))
+        : [],
+      createdAt: row.created_at,
+    };
+  };
 
   const fetchFromDb = async (quiet = false) => {
     if (!quiet) setIsSyncing(true);
@@ -142,6 +151,20 @@ export default function AdminOrdersPage() {
 
   const handleConfirmPaymentAndPush = async (order: OrderItem) => {
     try {
+      // Optimistically update React state immediately
+      setDbOrders((prev) =>
+        prev.map((o) =>
+          o.id === order.id || o.orderNumber === order.orderNumber
+            ? {
+                ...o,
+                paymentStatus: "PAID",
+                orderStatus: "PREPARING",
+                assignedChef: order.assignedChef || "Selva (Head Chef)",
+              }
+            : o
+        )
+      );
+
       // Update local store immediately for instant UI feedback
       confirmPaymentAndPushToKitchen(order.id, order.assignedChef || "Selva (Head Chef)");
 
@@ -204,11 +227,36 @@ export default function AdminOrdersPage() {
     return matchesSearch;
   });
 
-  const handleUpdateStatus = (
+  const handleUpdateStatus = async (
     orderId: string,
     newStatus: OrderItem["orderStatus"]
   ) => {
+    // 1. Optimistically update local react state
+    setDbOrders((prev) =>
+      prev.map((o) =>
+        o.id === orderId || o.orderNumber === orderId
+          ? { ...o, orderStatus: newStatus }
+          : o
+      )
+    );
+
+    // 2. Update local order store
     updateOrderStatus(orderId, newStatus);
+
+    // 3. Persist to API
+    try {
+      await fetch("/api/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId,
+          orderStatus: newStatus,
+        }),
+      });
+      fetchFromDb(true);
+    } catch (e) {
+      console.error("Failed to update status:", e);
+    }
   };
 
   return (

@@ -308,30 +308,57 @@ export function addInstantOrder(input: InstantOrderInput): OrderItem {
 
 export function updateOrderStatus(orderId: string, status: OrderItem["orderStatus"]): OrderItem | null {
   const orders = getOrders();
-  const index = orders.findIndex((o) => o.id === orderId);
+  const index = orders.findIndex((o) => o.id === orderId || o.orderNumber === orderId);
+  let updated: OrderItem | null = null;
   if (index !== -1) {
     orders[index] = {
       ...orders[index],
       orderStatus: status,
     };
     saveOrders(orders);
-    return orders[index];
+    updated = orders[index];
   }
-  return null;
+
+  // Also persist to Supabase if running in browser
+  if (typeof window !== "undefined") {
+    fetch("/api/orders", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orderId,
+        orderStatus: status,
+      }),
+    }).catch((err) => console.warn("Supabase order status sync warning:", err));
+  }
+
+  return updated;
 }
 
 export function updateOrderChef(orderId: string, chef: OrderItem["assignedChef"]): OrderItem | null {
   const orders = getOrders();
-  const index = orders.findIndex((o) => o.id === orderId);
+  const index = orders.findIndex((o) => o.id === orderId || o.orderNumber === orderId);
+  let updated: OrderItem | null = null;
   if (index !== -1) {
     orders[index] = {
       ...orders[index],
       assignedChef: chef,
     };
     saveOrders(orders);
-    return orders[index];
+    updated = orders[index];
   }
-  return null;
+
+  if (typeof window !== "undefined") {
+    fetch("/api/orders", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orderId,
+        assignedChef: chef,
+      }),
+    }).catch((err) => console.warn("Chef assignment sync warning:", err));
+  }
+
+  return updated;
 }
 
 export function confirmPaymentAndPushToKitchen(
@@ -339,7 +366,8 @@ export function confirmPaymentAndPushToKitchen(
   chef: OrderItem["assignedChef"] = "Selva (Head Chef)"
 ): OrderItem | null {
   const orders = getOrders();
-  const index = orders.findIndex((o) => o.id === orderId);
+  const index = orders.findIndex((o) => o.id === orderId || o.orderNumber === orderId);
+  let updated: OrderItem | null = null;
   if (index !== -1) {
     orders[index] = {
       ...orders[index],
@@ -348,9 +376,10 @@ export function confirmPaymentAndPushToKitchen(
       assignedChef: chef,
     };
     saveOrders(orders);
-    return orders[index];
+    updated = orders[index];
   }
-  return null;
+
+  return updated;
 }
 
 export function resetDemoOrders() {

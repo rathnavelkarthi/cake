@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       query = query.eq("order_number", orderNumber);
     }
 
-    const { data: updated, error } = await query.select().single();
+    const { data: updated, error } = await query.select().maybeSingle();
 
     if (error) {
       console.warn("Supabase update error:", error.message);

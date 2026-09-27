@@ -37,7 +37,21 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ orders: [] });
     }
 
-    return NextResponse.json({ orders: data || [] });
+    const enriched = (data || []).map((row: any) => {
+      let effectiveStatus = row.order_status;
+      if (row.order_status === "PREPARING" && row.admin_notes) {
+        const stageMatch = row.admin_notes.match(/\[STAGE:([A-Z_]+)\]/);
+        if (stageMatch && stageMatch[1]) {
+          effectiveStatus = stageMatch[1];
+        }
+      }
+      return {
+        ...row,
+        order_status: effectiveStatus,
+      };
+    });
+
+    return NextResponse.json({ orders: enriched });
   } catch (err: any) {
     console.error("GET /api/orders error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
@@ -188,6 +202,110 @@ export async function POST(req: NextRequest) {
     });
   } catch (err: any) {
     console.error("POST /api/orders error:", err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
+// PATCH /api/orders
+// Update order status, payment status, chef assignment, or notes
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const {
+      orderId,
+      orderNumber,
+      orderStatus,
+      paymentStatus,
+      assignedChef,
+      adminNotes,
+    } = body;
+
+    if (!orderId && !orderNumber) {
+      return NextResponse.json(
+        { error: "orderId or orderNumber is required." },
+        { status: 400 }
+      );
+    }
+
+    // Fetch existing order to merge notes
+    let fetchQuery = supabaseAdmin
+      .from("orders")
+      .select("id, order_number, admin_notes, order_status, payment_status");
+    if (orderId) {
+      fetchQuery = fetchQuery.eq("id", orderId);
+    } else {
+      fetchQuery = fetchQuery.eq("order_number", orderNumber);
+    }
+    const { data: existing, error: fetchErr } = await fetchQuery.maybeSingle();
+
+    if (fetchErr) {
+      console.warn("Could not find order to patch in Supabase:", fetchErr.message);
+    }
+
+    // Determine DB-compatible order_status and stage tag
+    const isKitchenSubStage =
+      orderStatus === "IN_OVEN" ||
+      orderStatus === "COOLING" ||
+      orderStatus === "DECORATING";
+
+    let dbOrderStatus = orderStatus;
+    if (isKitchenSubStage) {
+      dbOrderStatus = "PREPARING";
+    }
+
+    let mergedNotes = (existing?.admin_notes || adminNotes || "").trim();
+    // Clean any prior stage tag
+    mergedNotes = mergedNotes.replace(/\[STAGE:[A-Z_]+\]\s*/g, "").trim();
+
+    if (isKitchenSubStage) {
+      mergedNotes = `[STAGE:${orderStatus}] ${mergedNotes}`.trim();
+    }
+
+    if (assignedChef) {
+      if (!mergedNotes.includes(`Assigned to: ${assignedChef}`)) {
+        mergedNotes = `${mergedNotes} | Assigned to: ${assignedChef}`.trim();
+      }
+    }
+
+    const updatePayload: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (dbOrderStatus) {
+      updatePayload.order_status = dbOrderStatus;
+    }
+    if (paymentStatus) {
+      updatePayload.payment_status = paymentStatus;
+    }
+    if (mergedNotes) {
+      updatePayload.admin_notes = mergedNotes;
+    }
+
+    let updateQuery = supabaseAdmin.from("orders").update(updatePayload);
+    if (orderId) {
+      updateQuery = updateQuery.eq("id", orderId);
+    } else {
+      updateQuery = updateQuery.eq("order_number", orderNumber);
+    }
+
+    const { data: updated, error: updateErr } = await updateQuery.select().maybeSingle();
+
+    if (updateErr) {
+      console.error("PATCH /api/orders update error:", updateErr.message);
+      return NextResponse.json({ error: updateErr.message }, { status: 500 });
+    }
+
+    const returnedStatus = orderStatus || (isKitchenSubStage ? orderStatus : updated?.order_status);
+
+    return NextResponse.json({
+      success: true,
+      order: {
+        ...(updated || {}),
+        order_status: returnedStatus,
+      },
+    });
+  } catch (err: any) {
+    console.error("PATCH /api/orders exception:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
