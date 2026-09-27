@@ -83,7 +83,7 @@ export default function ProductSection() {
 
       return true;
     });
-  }, [activeCategory, searchQuery, egglessOnly]);
+  }, [productList, activeCategory, searchQuery, egglessOnly]);
 
   return (
     <section id="signature-cakes" className="section-padding" style={{ backgroundColor: "var(--bg-primary)" }}>
