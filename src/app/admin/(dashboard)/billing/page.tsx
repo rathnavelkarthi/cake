@@ -75,6 +75,7 @@ interface InvoicePrintData {
   subtotal: number;
   tax: number;
   includeGst: boolean;
+  gstRate: number;
   deliveryFee: number;
   discount: number;
   grandTotal: number;
@@ -245,17 +246,17 @@ function generateInvoiceHtml(data: InvoicePrintData): string {
       <td class="text-right">₹${data.subtotal.toLocaleString("en-IN")}</td>
     </tr>
     ${
-      data.includeGst
+      data.includeGst && data.gstRate > 0
         ? `
       <tr>
-        <td>CGST (2.5%):</td>
+        <td>CGST (${(data.gstRate / 2).toFixed(1)}%):</td>
         <td class="text-right">₹${(data.tax / 2).toFixed(2)}</td>
       </tr>
       <tr>
-        <td>SGST (2.5%):</td>
+        <td>SGST (${(data.gstRate / 2).toFixed(1)}%):</td>
         <td class="text-right">₹${(data.tax / 2).toFixed(2)}</td>
       </tr>`
-        : `<tr><td>GST:</td><td class="text-right">Included</td></tr>`
+        : `<tr><td>GST:</td><td class="text-right">${data.includeGst ? "0% (Exempt)" : "Included"}</td></tr>`
     }
     ${
       data.deliveryFee > 0
@@ -525,17 +526,17 @@ function generateInvoiceHtml(data: InvoicePrintData): string {
               <td class="text-right" style="font-weight: 600;">₹${data.subtotal.toLocaleString("en-IN")}</td>
             </tr>
             ${
-              data.includeGst
+              data.includeGst && data.gstRate > 0
                 ? `
               <tr>
-                <td style="color: #555;">Central GST (CGST 2.5%):</td>
+                <td style="color: #555;">Central GST (CGST ${(data.gstRate / 2).toFixed(1)}%):</td>
                 <td class="text-right">₹${(data.tax / 2).toFixed(2)}</td>
               </tr>
               <tr>
-                <td style="color: #555;">State GST (SGST 2.5%):</td>
+                <td style="color: #555;">State GST (SGST ${(data.gstRate / 2).toFixed(1)}%):</td>
                 <td class="text-right">₹${(data.tax / 2).toFixed(2)}</td>
               </tr>`
-                : `<tr><td style="color: #555;">Bakery GST:</td><td class="text-right">Included in Unit Rate</td></tr>`
+                : `<tr><td style="color: #555;">Bakery GST:</td><td class="text-right">${data.includeGst ? "0% (Exempt)" : "Included in Unit Rate"}</td></tr>`
             }
             ${
               data.deliveryFee > 0
@@ -620,6 +621,7 @@ export default function AdminBillingPage() {
   const [discount, setDiscount] = useState<number>(0);
   const [deliveryFee, setDeliveryFee] = useState<number>(0);
   const [includeGst, setIncludeGst] = useState<boolean>(true);
+  const [gstRate, setGstRate] = useState<number>(5);
   const [invoiceSuccess, setInvoiceSuccess] = useState<string | null>(null);
   const [invoiceDate, setInvoiceDate] = useState<string>("");
 
@@ -672,7 +674,8 @@ export default function AdminBillingPage() {
     (sum, item) => sum + item.price * item.quantity,
     0
   );
-  const tax = includeGst ? Math.round(subtotal * 0.05) : 0; // 5% bakery GST
+  const effectiveGstRate = includeGst ? Math.max(0, gstRate || 0) : 0;
+  const tax = includeGst ? Math.round((subtotal * effectiveGstRate) / 100) : 0;
   const grandTotal = Math.max(0, subtotal + tax + deliveryFee - discount);
 
   // Add existing product from catalog
@@ -822,6 +825,7 @@ export default function AdminBillingPage() {
       subtotal,
       tax,
       includeGst,
+      gstRate: effectiveGstRate,
       deliveryFee,
       discount,
       grandTotal,
@@ -849,7 +853,9 @@ export default function AdminBillingPage() {
       ),
       `--------------------------------`,
       `Subtotal: ₹${subtotal.toLocaleString("en-IN")}`,
-      includeGst ? `GST (5%): ₹${tax.toLocaleString("en-IN")}` : `GST: Included`,
+      includeGst && effectiveGstRate > 0
+        ? `GST (${effectiveGstRate}%): ₹${tax.toLocaleString("en-IN")}`
+        : `GST: ${includeGst ? "0% (Exempt)" : "Included in price"}`,
       deliveryFee > 0 ? `Delivery / Packaging: ₹${deliveryFee}` : null,
       discount > 0 ? `Special Discount: -₹${discount}` : null,
       `*GRAND TOTAL: ₹${grandTotal.toLocaleString("en-IN")}*`,
@@ -1331,20 +1337,76 @@ export default function AdminBillingPage() {
                   <span className="font-bold text-stone-900">₹{subtotal.toLocaleString("en-IN")}</span>
                 </div>
 
-                {/* GST Toggle and Calculation */}
-                <div className="flex items-center justify-between text-stone-600">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={includeGst}
-                      onChange={(e) => setIncludeGst(e.target.checked)}
-                      className="rounded border-stone-300 text-amber-900 focus:ring-amber-800"
-                    />
-                    <span>Add 5% Bakery GST (CGST 2.5% + SGST 2.5%)</span>
-                  </label>
-                  <span className="font-semibold text-stone-800">
-                    {includeGst ? `₹${tax.toLocaleString("en-IN")}` : "Exempt / Included"}
-                  </span>
+                {/* GST Controls: Toggle & Percentage Selector */}
+                <div className="space-y-2 p-2.5 rounded-lg bg-white border border-stone-200">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-stone-700">
+                    <label className="flex items-center gap-2 cursor-pointer font-semibold text-xs text-stone-800">
+                      <input
+                        type="checkbox"
+                        checked={includeGst}
+                        onChange={(e) => setIncludeGst(e.target.checked)}
+                        className="rounded border-stone-300 text-amber-900 focus:ring-amber-800 accent-amber-900"
+                      />
+                      <span>Apply GST Tax</span>
+                    </label>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-stone-500 font-medium text-xs">GST Rate:</span>
+                      <div className="relative flex items-center">
+                        <Input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.5"
+                          disabled={!includeGst}
+                          value={gstRate === 0 && !includeGst ? "" : gstRate}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value);
+                            setGstRate(isNaN(val) ? 0 : Math.max(0, Math.min(100, val)));
+                          }}
+                          className="h-7 w-20 text-right text-xs font-bold bg-white border-stone-300 text-stone-900 pr-5 disabled:opacity-50"
+                        />
+                        <span className="absolute right-1.5 text-stone-400 text-xs font-bold pointer-events-none">%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {includeGst ? (
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pt-1.5 border-t border-stone-100">
+                      {/* Quick preset chips */}
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <span className="text-[10px] text-stone-400 font-medium mr-0.5">Presets:</span>
+                        {[0, 5, 12, 18].map((rate) => (
+                          <button
+                            key={rate}
+                            type="button"
+                            onClick={() => setGstRate(rate)}
+                            className={`text-[10px] px-2 py-0.5 rounded border transition-colors cursor-pointer ${
+                              gstRate === rate
+                                ? "bg-amber-900 text-white border-amber-900 font-bold shadow-2xs"
+                                : "bg-stone-50 text-stone-700 border-stone-200 hover:border-amber-700"
+                            }`}
+                          >
+                            {rate}%
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Calculated GST display with CGST + SGST split */}
+                      <div className="text-left sm:text-right">
+                        <span className="font-bold text-stone-900 text-xs">
+                          ₹{tax.toLocaleString("en-IN")}
+                        </span>
+                        <span className="text-[10px] text-stone-500 block">
+                          CGST {(effectiveGstRate / 2).toFixed(1)}% (₹{(tax / 2).toFixed(1)}) + SGST {(effectiveGstRate / 2).toFixed(1)}% (₹{(tax / 2).toFixed(1)})
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-[10px] text-stone-400 pt-1 border-t border-stone-100">
+                      GST tax exempt / included in product prices.
+                    </div>
+                  )}
                 </div>
 
                 {/* Custom Discount Input */}
@@ -1616,11 +1678,11 @@ export default function AdminBillingPage() {
                     {includeGst ? (
                       <>
                         <div className="flex justify-between text-stone-500 text-[11px]">
-                          <span>CGST (2.5%):</span>
+                          <span>CGST ({(effectiveGstRate / 2).toFixed(1)}%):</span>
                           <span>₹{(tax / 2).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between text-stone-500 text-[11px]">
-                          <span>SGST (2.5%):</span>
+                          <span>SGST ({(effectiveGstRate / 2).toFixed(1)}%):</span>
                           <span>₹{(tax / 2).toFixed(2)}</span>
                         </div>
                       </>
