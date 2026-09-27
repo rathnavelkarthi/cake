@@ -887,10 +887,10 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
                   width: "100%",
                   padding: "12px 16px",
                   borderRadius: "var(--radius-md)",
-                  border: "1px solid var(--border-medium)",
-                  backgroundColor: "var(--bg-surface)",
+                  border: "1px solid #D1C7BD",
+                  backgroundColor: "#FFFFFF",
                   fontSize: "14px",
-                  color: "var(--text-primary)",
+                  color: "#1F1714",
                   outline: "none",
                   fontFamily: "var(--font-sans)",
                 }}
@@ -911,7 +911,7 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
                   type="date"
                   value={preferredDate}
                   onChange={(e) => setPreferredDate(e.target.value)}
-                  className="w-full min-w-0 px-3.5 py-2.5 rounded-[var(--radius-md)] border border-[var(--border-medium)] bg-[var(--bg-surface)] text-xs sm:text-sm text-[var(--text-primary)] outline-none box-border"
+                  className="w-full min-w-0 px-3.5 py-2.5 rounded-[var(--radius-md)] border border-stone-300 bg-white text-xs sm:text-sm text-stone-900 outline-none box-border shadow-2xs focus:border-amber-800"
                 />
               </div>
 
@@ -926,7 +926,7 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
                   id="custom-cake-time-slot"
                   value={preferredTime}
                   onChange={(e) => setPreferredTime(e.target.value)}
-                  className="w-full min-w-0 px-3.5 py-2.5 rounded-[var(--radius-md)] border border-[var(--border-medium)] bg-[var(--bg-surface)] text-xs sm:text-sm text-[var(--text-primary)] outline-none box-border"
+                  className="w-full min-w-0 px-3.5 py-2.5 rounded-[var(--radius-md)] border border-stone-300 bg-white text-xs sm:text-sm text-stone-900 outline-none box-border shadow-2xs focus:border-amber-800"
                 >
                   {TIME_SLOTS.map((slot) => (
                     <option key={slot} value={slot}>
@@ -951,7 +951,7 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
                 value={themeNotes}
                 onChange={(e) => setThemeNotes(e.target.value)}
                 placeholder="Share your theme concept (e.g. vintage piping, pastel florals, gold foil, cartoon theme)..."
-                className="w-full min-w-0 px-3.5 py-2.5 rounded-[var(--radius-md)] border border-[var(--border-medium)] bg-[var(--bg-surface)] text-sm text-[var(--text-primary)] outline-none resize-y box-border font-sans"
+                className="w-full min-w-0 px-3.5 py-2.5 rounded-[var(--radius-md)] border border-stone-300 bg-white text-sm text-stone-900 placeholder:text-stone-500 font-sans outline-none focus:border-amber-800 focus:ring-2 focus:ring-amber-800/20 resize-y box-border shadow-2xs"
               />
             </div>
 
@@ -966,7 +966,7 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="Enter your name"
-                  className="w-full min-w-0 px-3 py-2 rounded-[var(--radius-md)] border border-[var(--border-medium)] bg-[var(--bg-surface)] text-sm text-[var(--text-primary)] outline-none box-border"
+                  className="w-full min-w-0 px-3 py-2 rounded-[var(--radius-md)] border border-stone-300 bg-white text-sm text-stone-900 placeholder:text-stone-500 outline-none box-border shadow-2xs focus:border-amber-800 focus:ring-1 focus:ring-amber-800/20"
                 />
               </div>
               <div className="min-w-0">
@@ -978,7 +978,7 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
                   value={customerMobile}
                   onChange={(e) => setCustomerMobile(e.target.value)}
                   placeholder="e.g. +91 98765 43210"
-                  className="w-full min-w-0 px-3 py-2 rounded-[var(--radius-md)] border border-[var(--border-medium)] bg-[var(--bg-surface)] text-sm text-[var(--text-primary)] outline-none box-border"
+                  className="w-full min-w-0 px-3 py-2 rounded-[var(--radius-md)] border border-stone-300 bg-white text-sm text-stone-900 placeholder:text-stone-500 outline-none box-border shadow-2xs focus:border-amber-800 focus:ring-1 focus:ring-amber-800/20"
                 />
               </div>
             </div>

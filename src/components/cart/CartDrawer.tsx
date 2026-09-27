@@ -788,7 +788,7 @@ Please confirm kitchen availability and UPI payment QR code. Thank you!`;
                       placeholder="Your Name"
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      className="h-8 text-xs border-stone-200"
+                      className="h-8 text-xs bg-white border-stone-300 text-stone-900 placeholder:text-stone-500 font-medium"
                       required
                     />
                     <Input
@@ -796,7 +796,7 @@ Please confirm kitchen availability and UPI payment QR code. Thank you!`;
                       placeholder="WhatsApp Mobile"
                       value={customerMobile}
                       onChange={(e) => setCustomerMobile(e.target.value)}
-                      className="h-8 text-xs border-stone-200"
+                      className="h-8 text-xs bg-white border-stone-300 text-stone-900 placeholder:text-stone-500 font-medium"
                       required
                     />
                   </div>
@@ -807,17 +807,17 @@ Please confirm kitchen availability and UPI payment QR code. Thank you!`;
                       placeholder="Complete Delivery Address & Landmark in Chennai"
                       value={deliveryAddress}
                       onChange={(e) => setDeliveryAddress(e.target.value)}
-                      className="h-8 text-xs border-stone-200"
+                      className="h-8 text-xs bg-white border-stone-300 text-stone-900 placeholder:text-stone-500 font-medium"
                       required
                     />
                   )}
 
-                  <Input
-                    type="text"
-                    placeholder="Cake message / Chef special notes..."
+                  <textarea
+                    rows={2}
+                    placeholder="Cake message or Chef special instructions..."
                     value={customerNotes}
                     onChange={(e) => setCustomerNotes(e.target.value)}
-                    className="h-8 text-xs border-stone-200"
+                    className="w-full rounded-md border border-stone-300 bg-white p-2 text-xs text-stone-900 placeholder:text-stone-500 outline-none focus:border-amber-800 focus:ring-1 focus:ring-amber-800/20 resize-none font-medium"
                   />
 
                   {/* NRI / Long-Distance Gifting Experience */}
@@ -841,7 +841,7 @@ Please confirm kitchen availability and UPI payment QR code. Thank you!`;
                             placeholder="Recipient's Name"
                             value={recipientName}
                             onChange={(e) => setRecipientName(e.target.value)}
-                            className="h-8 text-xs bg-white border-stone-200"
+                            className="h-8 text-xs bg-white border-stone-300 text-stone-900 placeholder:text-stone-500 font-medium"
                             required={isGift}
                           />
                           <Input
@@ -849,16 +849,16 @@ Please confirm kitchen availability and UPI payment QR code. Thank you!`;
                             placeholder="Recipient's Phone"
                             value={recipientPhone}
                             onChange={(e) => setRecipientPhone(e.target.value)}
-                            className="h-8 text-xs bg-white border-stone-200"
+                            className="h-8 text-xs bg-white border-stone-300 text-stone-900 placeholder:text-stone-500 font-medium"
                             required={isGift}
                           />
                         </div>
-                        <Input
-                          type="text"
+                        <textarea
+                          rows={2}
                           placeholder="Personalized greeting note on handwritten card..."
                           value={giftCardMessage}
                           onChange={(e) => setGiftCardMessage(e.target.value)}
-                          className="h-8 text-xs bg-white border-stone-200"
+                          className="w-full rounded-md border border-stone-300 bg-white p-2 text-xs text-stone-900 placeholder:text-stone-500 outline-none focus:border-amber-800 focus:ring-1 focus:ring-amber-800/20 resize-none font-medium"
                         />
                         <label className="flex items-center gap-1.5 text-[11px] text-stone-600 cursor-pointer">
                           <input

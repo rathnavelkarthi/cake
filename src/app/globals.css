@@ -167,6 +167,83 @@ body {
   border-radius: var(--radius-sm);
 }
 
+/* Universal High Contrast Form Controls (Inputs, Textareas, Selects) */
+textarea,
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="password"],
+input[type="date"],
+input[type="time"],
+input[type="url"],
+select {
+  color: #1F1714 !important;
+  background-color: #FFFFFF !important;
+  border-color: #D1C7BD !important;
+  caret-color: #C76D38 !important;
+  -webkit-text-fill-color: #1F1714 !important;
+}
+
+textarea::placeholder,
+input::placeholder {
+  color: #786558 !important;
+  -webkit-text-fill-color: #786558 !important;
+  opacity: 1 !important;
+}
+
+textarea:focus,
+input[type="text"]:focus,
+input[type="search"]:focus,
+input[type="email"]:focus,
+input[type="tel"]:focus,
+input[type="number"]:focus,
+input[type="password"]:focus,
+input[type="date"]:focus,
+input[type="time"]:focus,
+input[type="url"]:focus,
+select:focus {
+  color: #1F1714 !important;
+  -webkit-text-fill-color: #1F1714 !important;
+  background-color: #FFFFFF !important;
+  border-color: #C76D38 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(199, 109, 56, 0.22) !important;
+}
+
+/* Ensure any light/white input keeps high-contrast dark text even in dark mode */
+.bg-white, input.bg-white, textarea.bg-white {
+  color: #1F1714 !important;
+  -webkit-text-fill-color: #1F1714 !important;
+}
+
+/* Dark Mode Form Inputs */
+html.dark textarea:not(.bg-white),
+html.dark input[type="text"]:not(.bg-white),
+html.dark input[type="search"]:not(.bg-white),
+html.dark input[type="email"]:not(.bg-white),
+html.dark input[type="tel"]:not(.bg-white),
+html.dark input[type="number"]:not(.bg-white),
+html.dark input[type="password"]:not(.bg-white),
+html.dark input[type="date"]:not(.bg-white),
+html.dark input[type="time"]:not(.bg-white),
+html.dark select:not(.bg-white) {
+  color: #FAF7F2 !important;
+  -webkit-text-fill-color: #FAF7F2 !important;
+  background-color: #241A14 !important;
+  border-color: rgba(243, 236, 226, 0.24) !important;
+  caret-color: #F3C474 !important;
+}
+
+html.dark textarea:not(.bg-white)::placeholder,
+html.dark input:not(.bg-white)::placeholder {
+  color: #A39185 !important;
+  -webkit-text-fill-color: #A39185 !important;
+  opacity: 1 !important;
+}
+
+
 /* Custom Luxury Warm Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
