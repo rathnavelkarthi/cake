@@ -24,6 +24,8 @@ import {
   ExternalLink,
   ChefHat,
   BookOpen,
+  Camera,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -295,41 +297,112 @@ export default function AdminProductsPage() {
     });
   }, [productsList, search, selectedTab]);
 
+  // Image upload states & references
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isUploadingEditImage, setIsUploadingEditImage] = useState(false);
+  const [uploadingRowProductId, setUploadingRowProductId] = useState<string | number | null>(null);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
+  const rowFileInputRef = useRef<HTMLInputElement>(null);
+  const [rowTargetProduct, setRowTargetProduct] = useState<AdminProductItem | null>(null);
 
-  // Handle local image selection and auto-upload to Supabase Storage
+  // Common helper to upload any image file to /api/upload (Supabase storage)
+  const uploadImageFile = async (file: File): Promise<string | null> => {
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: form,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.url) {
+          return data.url;
+        }
+      } else {
+        const errData = await res.json().catch(() => null);
+        console.error("Upload error:", errData?.error || res.statusText);
+      }
+    } catch (err) {
+      console.error("Failed to upload image:", err);
+    }
+    return null;
+  };
+
+  // Handle local image selection and auto-upload for Add Product modal
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      // Immediate local preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (typeof reader.result === "string") {
-          setImagePreview(reader.result);
-        }
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
 
-      // Upload to Supabase Storage bucket
-      try {
-        setIsUploadingImage(true);
-        const form = new FormData();
-        form.append("file", file);
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          body: form,
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.url) {
-            setImagePreview(data.url);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to upload image to Supabase:", err);
-      } finally {
-        setIsUploadingImage(false);
+    // Immediate local preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === "string") {
+        setImagePreview(reader.result);
       }
+    };
+    reader.readAsDataURL(file);
+
+    try {
+      setIsUploadingImage(true);
+      const uploadedUrl = await uploadImageFile(file);
+      if (uploadedUrl) {
+        setImagePreview(uploadedUrl);
+      }
+    } finally {
+      setIsUploadingImage(false);
+      e.target.value = "";
+    }
+  };
+
+  // Handle local image selection and auto-upload for Edit Product modal
+  const handleEditImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Immediate local preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === "string") {
+        setEditImageUrl(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+
+    try {
+      setIsUploadingEditImage(true);
+      const uploadedUrl = await uploadImageFile(file);
+      if (uploadedUrl) {
+        setEditImageUrl(uploadedUrl);
+      }
+    } finally {
+      setIsUploadingEditImage(false);
+      e.target.value = "";
+    }
+  };
+
+  // Handle 1-click photo upload directly from products table row
+  const handleRowUploadClick = (product: AdminProductItem) => {
+    setRowTargetProduct(product);
+    rowFileInputRef.current?.click();
+  };
+
+  const handleRowFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !rowTargetProduct) return;
+
+    try {
+      setUploadingRowProductId(rowTargetProduct.id);
+      const uploadedUrl = await uploadImageFile(file);
+      if (uploadedUrl) {
+        updateInventoryProduct(rowTargetProduct.id, {
+          imageUrl: uploadedUrl,
+        });
+      }
+    } finally {
+      setUploadingRowProductId(null);
+      setRowTargetProduct(null);
+      e.target.value = "";
     }
   };
 
@@ -746,10 +819,19 @@ export default function AdminProductsPage() {
 
               {/* Section 2: Image Upload & Preview */}
               <div className="space-y-3 rounded-xl border border-stone-100 bg-stone-50/50 p-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-stone-600 flex items-center gap-1.5">
-                  <ImageIcon className="h-3.5 w-3.5 text-amber-800" />
-                  Product Image
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-stone-600 flex items-center gap-1.5">
+                    <ImageIcon className="h-3.5 w-3.5 text-amber-800" />
+                    Product Photography & Upload
+                  </h3>
+                  {isUploadingImage ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800">
+                      <Loader2 className="h-3 w-3 animate-spin" /> Uploading to Cloud...
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-stone-400">Upload file or pick preset</span>
+                  )}
+                </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-4">
                   <div className="relative h-24 w-24 rounded-xl overflow-hidden border-2 border-stone-200 bg-white shadow-xs shrink-0">
@@ -759,6 +841,11 @@ export default function AdminProductsPage() {
                       fill
                       className="object-cover"
                     />
+                    {isUploadingImage && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <Loader2 className="h-5 w-5 text-white animate-spin" />
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex-1 space-y-2 text-center sm:text-left w-full">
@@ -769,19 +856,71 @@ export default function AdminProductsPage() {
                       accept="image/*"
                       className="hidden"
                     />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="h-8 text-xs gap-1.5 bg-white border-stone-300"
-                    >
-                      <Upload className="h-3.5 w-3.5" />
-                      Upload Photo
-                    </Button>
-                    <p className="text-[11px] text-stone-500">
-                      Supports PNG, JPG, WebP up to 5MB. Photo will appear on customer menu and POS bill.
+                    <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={isUploadingImage}
+                        onClick={() => fileInputRef.current?.click()}
+                        className="h-8 text-xs gap-1.5 bg-amber-900 text-white hover:bg-amber-950 hover:text-white border-amber-900 font-semibold"
+                      >
+                        {isUploadingImage ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="h-3.5 w-3.5" />
+                            Upload Photo
+                          </>
+                        )}
+                      </Button>
+                      <span className="text-[11px] text-stone-400">or enter image URL</span>
+                    </div>
+
+                    <Input
+                      value={imagePreview}
+                      onChange={(e) => setImagePreview(e.target.value)}
+                      placeholder="/images/hero-truffle.jpg or https://..."
+                      className="bg-white text-xs h-8 text-stone-900 border-stone-300"
+                    />
+
+                    <p className="text-[10px] text-stone-500">
+                      Uploads directly to cloud storage. Supports PNG, JPG, WebP up to 5MB.
                     </p>
+                  </div>
+                </div>
+
+                {/* Quick Picker Thumbnails for Add Product */}
+                <div className="space-y-1.5 pt-1">
+                  <span className="text-[11px] text-stone-500 font-medium">Quick Bakery Photos:</span>
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                    {QUICK_BAKERY_IMAGES.map((img, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setImagePreview(img.url)}
+                        className={`group relative aspect-square rounded-lg overflow-hidden border transition-all ${
+                          imagePreview === img.url
+                            ? "border-amber-800 ring-2 ring-amber-800/20"
+                            : "border-stone-200 hover:border-amber-600"
+                        }`}
+                        title={img.label}
+                      >
+                        <Image
+                          src={img.url}
+                          alt={img.label}
+                          fill
+                          sizes="64px"
+                          className="object-cover group-hover:scale-105 transition-transform"
+                        />
+                        <div className="absolute inset-x-0 bottom-0 bg-black/60 px-1 py-0.5 text-[9px] text-white truncate text-center">
+                          {img.label}
+                        </div>
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -1114,8 +1253,17 @@ export default function AdminProductsPage() {
         </div>
       </div>
 
-      {/* Products Table */}
+      {/* Products Table with Quick Photo Upload */}
       <div className="rounded-xl border border-stone-200 bg-white shadow-xs overflow-hidden">
+        {/* Hidden Row File Input for 1-Click Photo Upload */}
+        <input
+          type="file"
+          ref={rowFileInputRef}
+          onChange={handleRowFileChange}
+          accept="image/*"
+          className="hidden"
+        />
+
         <Table>
           <TableHeader className="bg-stone-50/70">
             <TableRow>
@@ -1139,16 +1287,29 @@ export default function AdminProductsPage() {
             ) : (
               filteredProducts.map((product) => (
                 <TableRow key={product.id} className="hover:bg-stone-50/50">
-                  {/* Thumbnail */}
+                  {/* Thumbnail with 1-Click Camera Upload Overlay */}
                   <TableCell>
-                    <div className="relative h-11 w-11 rounded-lg overflow-hidden border border-stone-200 bg-stone-100">
+                    <div
+                      className="group relative h-11 w-11 rounded-lg overflow-hidden border border-stone-200 bg-stone-100 cursor-pointer shadow-2xs"
+                      onClick={() => handleRowUploadClick(product)}
+                      title="Click to upload new photo for this product"
+                    >
                       <Image
                         src={product.imageUrl || "/images/hero-truffle.jpg"}
                         alt={product.name}
                         fill
                         sizes="44px"
-                        className="object-cover"
+                        className="object-cover group-hover:opacity-75 transition-opacity"
                       />
+                      {uploadingRowProductId === product.id ? (
+                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                          <Loader2 className="h-4 w-4 text-white animate-spin" />
+                        </div>
+                      ) : (
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <Camera className="h-4 w-4 text-white" />
+                        </div>
+                      )}
                     </div>
                   </TableCell>
 
@@ -1331,6 +1492,13 @@ export default function AdminProductsPage() {
                           >
                             <Pencil className="mr-2 h-3.5 w-3.5 text-stone-600" />
                             Edit Details & Price
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleRowUploadClick(product)}
+                            className="cursor-pointer"
+                          >
+                            <Camera className="mr-2 h-3.5 w-3.5 text-stone-600" />
+                            Upload New Photo
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => handleToggleStatus(product.id)}
@@ -1598,37 +1766,79 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              {/* Image Selection with Quick Gallery */}
+              {/* Image Selection with Upload & Quick Gallery */}
               <div className="space-y-3 rounded-xl border border-stone-100 bg-stone-50/50 p-4">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-stone-600 flex items-center gap-1.5">
                     <ImageIcon className="h-3.5 w-3.5 text-amber-800" />
-                    Product Photography
+                    Product Photography & Upload
                   </h4>
-                  <span className="text-[11px] text-stone-400">Click any image to select</span>
+                  {isUploadingEditImage ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800">
+                      <Loader2 className="h-3 w-3 animate-spin" /> Uploading to Cloud...
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-stone-400">Upload new photo or pick preset</span>
+                  )}
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="relative h-16 w-16 rounded-xl border border-stone-300 overflow-hidden shrink-0 bg-stone-100">
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <div className="relative h-20 w-20 rounded-xl border-2 border-stone-200 overflow-hidden shrink-0 bg-stone-100 shadow-xs">
                     <Image
                       src={editImageUrl || "/images/hero-truffle.jpg"}
                       alt={editName || "Product"}
                       fill
-                      sizes="64px"
+                      sizes="80px"
                       className="object-cover"
                     />
+                    {isUploadingEditImage && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <Loader2 className="h-5 w-5 text-white animate-spin" />
+                      </div>
+                    )}
                   </div>
 
-                  <div className="flex-1 space-y-1">
-                    <label className="text-[11px] font-semibold text-stone-600">
-                      Image URL / Path
-                    </label>
+                  <div className="flex-1 space-y-2 w-full text-center sm:text-left">
+                    <input
+                      type="file"
+                      ref={editFileInputRef}
+                      onChange={handleEditImageFileChange}
+                      accept="image/*"
+                      className="hidden"
+                    />
+                    <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={isUploadingEditImage}
+                        onClick={() => editFileInputRef.current?.click()}
+                        className="h-8 text-xs gap-1.5 bg-amber-900 text-white hover:bg-amber-950 hover:text-white border-amber-900 font-semibold"
+                      >
+                        {isUploadingEditImage ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="h-3.5 w-3.5" />
+                            Upload New Photo
+                          </>
+                        )}
+                      </Button>
+                      <span className="text-[11px] text-stone-400">or enter image URL</span>
+                    </div>
+
                     <Input
                       value={editImageUrl}
                       onChange={(e) => setEditImageUrl(e.target.value)}
-                      placeholder="/images/hero-truffle.jpg"
-                      className="bg-white text-xs h-8"
+                      placeholder="/images/hero-truffle.jpg or https://..."
+                      className="bg-white text-xs h-8 text-stone-900 border-stone-300"
                     />
+                    <p className="text-[10px] text-stone-500">
+                      Uploads directly to cloud storage. Supports PNG, JPG, WebP up to 5MB.
+                    </p>
                   </div>
                 </div>
 
