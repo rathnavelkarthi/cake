@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import {
   sendOrderConfirmationWhatsApp,
+  sendKitchenStatusUpdateWhatsApp,
   generateUpiDetails,
   formatWhatsAppNumber,
 } from "@/lib/evolution/client";
@@ -296,6 +297,22 @@ export async function PATCH(req: NextRequest) {
     }
 
     const returnedStatus = orderStatus || (isKitchenSubStage ? orderStatus : updated?.order_status);
+
+    // Send customer WhatsApp status update asynchronously (non-blocking)
+    if (orderStatus && updated?.customer_mobile) {
+      sendKitchenStatusUpdateWhatsApp({
+        orderNumber: updated.order_number || orderNumber,
+        customerName: updated.customer_name || "Valued Customer",
+        customerMobile: updated.customer_mobile,
+        stage: orderStatus,
+        assignedChef,
+        fulfilmentType: updated.fulfilment_type,
+        branchName: updated.branch_name,
+        deliveryAddress: updated.delivery_address,
+      }).catch((waErr) => {
+        console.warn("Kitchen WhatsApp update error:", waErr);
+      });
+    }
 
     return NextResponse.json({
       success: true,

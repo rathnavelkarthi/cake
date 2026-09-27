@@ -235,3 +235,96 @@ This code will expire in 10 minutes.`;
 
   return await sendWhatsAppMessage(phone, message);
 }
+
+export async function sendKitchenStatusUpdateWhatsApp(order: {
+  orderNumber: string;
+  customerName: string;
+  customerMobile: string;
+  stage: string;
+  assignedChef?: string;
+  fulfilmentType?: string;
+  branchName?: string;
+  deliveryAddress?: string;
+}) {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kicheesbakeddelights.in";
+  let message = "";
+
+  switch (order.stage) {
+    case "IN_OVEN":
+      message = `🔥 *IN THE OVEN - KICHEE'S BAKERY*
+
+Hi *${order.customerName}*! Your order (*${order.orderNumber}*) is now inside the oven at our baking counter. 
+
+Chef ${order.assignedChef?.includes("Selva") ? "Selva" : "Selva & team"} is baking it to golden perfection. Once rested and cooled, it heads straight to the artisan decorating table!
+
+Track live bake status:
+👉 ${siteUrl}/orders`;
+      break;
+
+    case "COOLING":
+      message = `🌿 *FRESH OUT OF THE OVEN*
+
+Hi *${order.customerName}*, your bake just finished in the oven! We're letting it rest on our marble cooling counter so the sponge sets with a tender crumb before delicate piping begins.`;
+      break;
+
+    case "DECORATING":
+      message = `🎨 *DECORATING STATION - HANDCRAFTED FINISH*
+
+Hi *${order.customerName}*! Your cake has moved to the decoration counter with Chef ${order.assignedChef?.includes("Anbu") ? "Anbu" : "Anbu & decorators"}.
+
+We're piping the fresh frosting layers and handcrafted design details right now. It's looking beautiful! ✨
+
+Track your bake:
+👉 ${siteUrl}/orders`;
+      break;
+
+    case "READY":
+    case "READY_FOR_PICKUP":
+      if (order.fulfilmentType === "DELIVERY") {
+        message = `✨ *QUALITY CHECK PASSED & PACKED!*
+
+Dear *${order.customerName}*, your order (*${order.orderNumber}*) has passed chef inspection and is carefully packed in our temperature-controlled box! 
+
+Our delivery driver is collecting it for dispatch. 🚗💨
+
+Live tracker:
+👉 ${siteUrl}/orders`;
+      } else {
+        message = `🎂 *READY FOR PICKUP AT THE COUNTER!*
+
+Dear *${order.customerName}*, your cake (*${order.orderNumber}*) is freshly packaged and waiting for you!
+
+📍 *Collection Point:* ${order.branchName || "Kichee's Bakery (Harrisons Hotel, Nungambakkam)"}
+⏰ Feel free to pick it up anytime today. We can't wait to hand it over!
+
+Live details:
+👉 ${siteUrl}/orders`;
+      }
+      break;
+
+    case "OUT_FOR_DELIVERY":
+      message = `🛵 *OUT FOR DELIVERY - ON THE WAY!*
+
+Hi *${order.customerName}*, your cake is in transit!
+
+📌 *Delivery to:* ${order.deliveryAddress || "Your registered address"}
+Please keep your phone handy for our driver. Handle with love and refrigerate upon arrival! 🍰`;
+      break;
+
+    case "COMPLETED":
+      message = `🎉 *ENJOY YOUR CELEBRATION!*
+
+Dear *${order.customerName}*, your order (*${order.orderNumber}*) is marked completed.
+
+From our ovens to your celebrations, thank you for trusting Kichee's Baked Delights. We hope every slice brings joy! 
+
+Tag us in your cake-cutting photos or reply with your feedback right here ❤️`;
+      break;
+
+    default:
+      return null;
+  }
+
+  return await sendWhatsAppMessage(order.customerMobile, message);
+}
+
