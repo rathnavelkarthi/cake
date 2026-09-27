@@ -90,7 +90,7 @@ export default function FinalCtaSection() {
               textDecoration: "none",
             }}
           >
-            <span>Order for delivery or pickup</span>
+            <span>Order for Same-Day Delivery</span>
             <ArrowRight size={16} />
           </a>
 
@@ -115,7 +115,7 @@ export default function FinalCtaSection() {
             }}
           >
             <MessageCircle size={16} style={{ color: "#4ADE80" }} />
-            <span>Chat on WhatsApp</span>
+            <span>Enquire via WhatsApp</span>
           </a>
         </div>
 

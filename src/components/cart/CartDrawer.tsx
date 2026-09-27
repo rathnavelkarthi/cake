@@ -21,6 +21,10 @@ import {
   ExternalLink,
   ChevronDown,
   Info,
+  Sparkles,
+  Gift,
+  Camera,
+  ShieldCheck,
 } from "lucide-react";
 import { trackEvent } from "@/lib/analytics/events";
 import { triggerHaptic } from "@/lib/utils/haptics";
@@ -31,10 +35,14 @@ import {
 } from "@/lib/config/branches";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/Toast";
+import NumberFlow from "@number-flow/react";
 
 export default function CartDrawer() {
+  const { toast } = useToast();
   const {
     items,
+    addItem,
     isCartOpen,
     setIsCartOpen,
     removeItem,
@@ -63,6 +71,13 @@ export default function CartDrawer() {
   const [customerNotes, setCustomerNotes] = useState("");
   const [selectedLocality, setSelectedLocality] = useState("T. Nagar (Pondy Bazaar / Panagal Park)");
   const [customKm, setCustomKm] = useState(false);
+
+  // Gifting / NRI Long-Distance State
+  const [isGift, setIsGift] = useState(false);
+  const [recipientName, setRecipientName] = useState("");
+  const [recipientPhone, setRecipientPhone] = useState("");
+  const [giftCardMessage, setGiftCardMessage] = useState("");
+  const [photoProofRequested, setPhotoProofRequested] = useState(true);
 
   // Submission / Success State
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -134,15 +149,15 @@ export default function CartDrawer() {
 
   const handlePlaceOrder = async () => {
     if (!customerName.trim()) {
-      alert("Please enter your name for the order.");
+      toast("Name Required", { description: "Please enter your name for the order.", type: "error" });
       return;
     }
     if (!customerMobile.trim() || customerMobile.replace(/\D/g, "").length < 10) {
-      alert("Please enter a valid 10-digit WhatsApp phone number to receive order updates & UPI QR code.");
+      toast("Phone Required", { description: "Please enter a valid 10-digit WhatsApp phone number.", type: "error" });
       return;
     }
     if (fulfilmentType === "delivery" && !deliveryAddress.trim()) {
-      alert("Please provide your delivery address in Chennai.");
+      toast("Address Required", { description: "Please provide your delivery address in Chennai.", type: "error" });
       return;
     }
 
@@ -208,6 +223,66 @@ export default function CartDrawer() {
     setTimeout(() => setCopiedUpi(false), 2000);
   };
 
+  const CELEBRATION_ADDONS = [
+    {
+      productId: "addon-candles",
+      variantId: "set-1",
+      name: "Artisanal Gold Candles & Wooden Server Set",
+      variantLabel: "Set of 6 + Knife",
+      price: 99,
+      image: "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=200&auto=format&fit=crop&q=80",
+      tagline: "Sparkler candles with wooden server",
+    },
+    {
+      productId: "addon-card",
+      variantId: "card-1",
+      name: "Handwritten Letterpress Birthday Card",
+      variantLabel: "Custom Card",
+      price: 120,
+      image: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=200&auto=format&fit=crop&q=80",
+      tagline: "Personalized note on luxury cardstock",
+    },
+    {
+      productId: "addon-brownie-taster",
+      variantId: "taster-2",
+      name: "Taster Pair: Molten Dark Fudge Brownies",
+      variantLabel: "Box of 2",
+      price: 190,
+      image: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=200&auto=format&fit=crop&q=80",
+      tagline: "A molten treat for the sender",
+    },
+  ];
+
+  const handleOrderViaWhatsApp = () => {
+    if (!customerMobile.trim()) {
+      toast("Mobile Required", { description: "Please enter your WhatsApp mobile number first.", type: "error" });
+      return;
+    }
+    const itemsSummary = items
+      .map((i) => `• ${i.quantity}x ${i.name} (${i.variantLabel}) - ₹${i.price * i.quantity}`)
+      .join("\n");
+
+    const text = `Hi Kichees Bakery, I would like to place an order:
+
+${itemsSummary}
+
+Subtotal: ₹${subtotal.toLocaleString("en-IN")}
+Fulfilment: ${fulfilmentType === "pickup" ? `Store Pickup (${selectedBranch.shortName})` : `Doorstep Delivery (${selectedLocality})`}
+Delivery Fee: ${deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`}
+Total Amount: ₹${total.toLocaleString("en-IN")}
+
+Customer Name: ${customerName || "Customer"}
+Phone: ${customerMobile}
+${fulfilmentType === "delivery" ? `Delivery Address: ${deliveryAddress}` : ""}
+${isGift ? `\n🎁 Surprise Gift for: ${recipientName} (${recipientPhone})\nGreeting Card Note: "${giftCardMessage}"\nWhatsApp delivery photo proof: ${photoProofRequested ? "Yes" : "No"}` : ""}
+${customerNotes ? `Notes: ${customerNotes}` : ""}
+
+Please confirm kitchen availability and UPI payment QR code. Thank you!`;
+
+    const url = `https://wa.me/919884631078?text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank");
+  };
+
   const deliveryCalc = calculateDeliveryFee(deliveryDistanceKm, subtotal);
 
   return (
@@ -271,7 +346,7 @@ export default function CartDrawer() {
               Your Order Basket
             </h2>
             <span className="text-[11px] font-bold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full">
-              {items.reduce((acc, i) => acc + i.quantity, 0)} items
+              {items.reduce((acc, i) => acc + i.quantity, 0)} {items.reduce((acc, i) => acc + i.quantity, 0) === 1 ? "item" : "items"}
             </span>
           </div>
 
@@ -557,8 +632,9 @@ export default function CartDrawer() {
                       <div className="text-[11px] text-stone-500">
                         {item.variantLabel} {item.isEggless && "• Eggless"}
                       </div>
-                      <div className="text-xs font-bold text-amber-900 mt-0.5">
-                        ₹{(item.price * item.quantity).toLocaleString("en-IN")}
+                      <div className="text-xs font-bold text-amber-900 mt-0.5 inline-flex items-center gap-0.5">
+                        <span>₹</span>
+                        <NumberFlow value={item.price * item.quantity} />
                       </div>
                     </div>
 
@@ -575,8 +651,8 @@ export default function CartDrawer() {
                         >
                           <Minus size={11} />
                         </button>
-                        <span className="text-xs font-bold px-2 text-stone-900">
-                          {item.quantity}
+                        <span className="text-xs font-bold px-2 text-stone-900 inline-flex items-center">
+                          <NumberFlow value={item.quantity} />
                         </span>
                         <button
                           type="button"
@@ -605,11 +681,101 @@ export default function CartDrawer() {
                   </div>
                 ))
               )}
+
+              {/* 1-Click Celebration Add-ons Upsell (AOV Booster) */}
+              {items.length > 0 && (
+                <div className="pt-2">
+                  <div className="p-3.5 bg-amber-50/70 rounded-2xl border border-amber-200/70 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-800" />
+                        <span className="text-xs font-bold text-amber-950">
+                          Complete the Celebration
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-amber-800 font-bold bg-amber-100/80 px-2 py-0.5 rounded-full">
+                        1-Click Add-on
+                      </span>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      {CELEBRATION_ADDONS.map((addon) => {
+                        const alreadyInCart = items.some((i) => i.productId === addon.productId);
+                        return (
+                          <div
+                            key={addon.productId}
+                            className="flex items-center justify-between p-2 bg-white rounded-xl border border-amber-100/80 text-xs shadow-2xs"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <img
+                                src={addon.image}
+                                alt={addon.name}
+                                className="w-9 h-9 rounded-lg object-cover shrink-0 border border-stone-100"
+                              />
+                              <div className="truncate">
+                                <p className="font-bold text-stone-900 truncate leading-tight">
+                                  {addon.name}
+                                </p>
+                                <p className="text-[10px] text-stone-500 truncate">
+                                  {addon.tagline}
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (alreadyInCart) return;
+                                triggerHaptic("selection");
+                                addItem({
+                                  productId: addon.productId,
+                                  variantId: addon.variantId,
+                                  name: addon.name,
+                                  variantLabel: addon.variantLabel,
+                                  price: addon.price,
+                                  quantity: 1,
+                                  image: addon.image,
+                                  isEggless: true,
+                                });
+                              }}
+                              disabled={alreadyInCart}
+                              className={`px-3 py-1.5 rounded-lg text-[11px] font-bold shrink-0 transition-all ${
+                                alreadyInCart
+                                  ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                  : "bg-amber-900 hover:bg-amber-950 text-white shadow-xs"
+                              }`}
+                            >
+                              {alreadyInCart ? "✓ Added" : `+ ₹${addon.price}`}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Bottom Checkout Section */}
             {items.length > 0 && (
               <div className="p-4 sm:p-5 border-t border-stone-200 bg-[#faf7f2] space-y-3">
+                {/* Chilled Van & Eggless Trust Banner */}
+                <div className="grid grid-cols-2 gap-2 text-[10px] p-2.5 rounded-xl bg-white border border-stone-200/90 text-stone-700 shadow-2xs">
+                  <div className="flex items-start gap-1.5">
+                    <Truck className="w-3.5 h-3.5 text-amber-800 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="text-stone-900 block font-bold">4°C Chilled Van</strong>
+                      <span className="text-[9px] text-stone-500 leading-tight block">Zero-tilt secure delivery across Chennai</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="text-stone-900 block font-bold">Dedicated Eggless</strong>
+                      <span className="text-[9px] text-stone-500 leading-tight block">Cultured butter, zero synthetic icing</span>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Guest Details Form */}
                 <div className="space-y-2 bg-white p-3.5 rounded-xl border border-stone-200">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-stone-700 block">
@@ -653,13 +819,70 @@ export default function CartDrawer() {
                     onChange={(e) => setCustomerNotes(e.target.value)}
                     className="h-8 text-xs border-stone-200"
                   />
+
+                  {/* NRI / Long-Distance Gifting Experience */}
+                  <div className="pt-2 border-t border-stone-100">
+                    <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-stone-800">
+                      <input
+                        type="checkbox"
+                        checked={isGift}
+                        onChange={(e) => setIsGift(e.target.checked)}
+                        className="accent-amber-800 rounded"
+                      />
+                      <Gift className="w-3.5 h-3.5 text-amber-800" />
+                      <span>Sending as a Gift to Family / Friend in Chennai?</span>
+                    </label>
+
+                    {isGift && (
+                      <div className="mt-2.5 p-2.5 rounded-lg bg-amber-50/70 border border-amber-200/80 space-y-2 animate-in fade-in duration-200">
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input
+                            type="text"
+                            placeholder="Recipient's Name"
+                            value={recipientName}
+                            onChange={(e) => setRecipientName(e.target.value)}
+                            className="h-8 text-xs bg-white border-stone-200"
+                            required={isGift}
+                          />
+                          <Input
+                            type="tel"
+                            placeholder="Recipient's Phone"
+                            value={recipientPhone}
+                            onChange={(e) => setRecipientPhone(e.target.value)}
+                            className="h-8 text-xs bg-white border-stone-200"
+                            required={isGift}
+                          />
+                        </div>
+                        <Input
+                          type="text"
+                          placeholder="Personalized greeting note on handwritten card..."
+                          value={giftCardMessage}
+                          onChange={(e) => setGiftCardMessage(e.target.value)}
+                          className="h-8 text-xs bg-white border-stone-200"
+                        />
+                        <label className="flex items-center gap-1.5 text-[11px] text-stone-600 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={photoProofRequested}
+                            onChange={(e) => setPhotoProofRequested(e.target.checked)}
+                            className="accent-amber-800 rounded"
+                          />
+                          <Camera className="w-3 h-3 text-amber-800" />
+                          <span>Send presentation photo proof to my WhatsApp when delivered</span>
+                        </label>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Subtotal & Delivery Total */}
                 <div className="space-y-1 text-xs">
                   <div className="flex justify-between text-stone-600">
                     <span>Items Subtotal</span>
-                    <span>₹{subtotal.toLocaleString("en-IN")}</span>
+                    <span className="inline-flex items-center gap-0.5">
+                      <span>₹</span>
+                      <NumberFlow value={subtotal} />
+                    </span>
                   </div>
                   <div className="flex justify-between text-stone-600">
                     <span>
@@ -671,29 +894,43 @@ export default function CartDrawer() {
                   </div>
                   <div className="flex justify-between text-stone-900 font-bold text-sm pt-1 border-t border-stone-200">
                     <span>Total Amount</span>
-                    <span className="text-amber-900">₹{total.toLocaleString("en-IN")}</span>
+                    <span className="text-amber-900 inline-flex items-center gap-0.5">
+                      <span>₹</span>
+                      <NumberFlow value={total} />
+                    </span>
                   </div>
                 </div>
 
-                {/* Place Order & Trigger Evolution API WhatsApp */}
-                <Button
-                  onClick={handlePlaceOrder}
-                  disabled={isSubmitting}
-                  className="w-full h-11 bg-emerald-800 hover:bg-emerald-900 text-white font-semibold text-xs tracking-wider uppercase flex items-center justify-center gap-2 shadow-sm"
-                >
-                  {isSubmitting ? (
-                    <span>Sending Invoice via WhatsApp...</span>
-                  ) : (
-                    <>
-                      <MessageCircle className="w-4 h-4" />
-                      <span>Place Order & Pay via UPI</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </Button>
+                {/* Dual Fast-Track Checkout Actions */}
+                <div className="flex flex-col gap-2">
+                  <Button
+                    onClick={handlePlaceOrder}
+                    disabled={isSubmitting}
+                    className="w-full h-11 bg-amber-950 hover:bg-black text-white font-semibold text-xs tracking-wider uppercase flex items-center justify-center gap-2 shadow-sm rounded-xl"
+                  >
+                    {isSubmitting ? (
+                      <span>Sending Invoice via WhatsApp...</span>
+                    ) : (
+                      <>
+                        <QrCode className="w-4 h-4 text-amber-400" />
+                        <span>Place Order & Pay via UPI</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </Button>
+
+                  <button
+                    type="button"
+                    onClick={handleOrderViaWhatsApp}
+                    className="w-full h-10 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-colors shadow-xs"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    <span>Confirm & Enquire via WhatsApp</span>
+                  </button>
+                </div>
 
                 <p className="text-[10px] text-stone-400 text-center">
-                  Invoice & UPI QR code sent to your WhatsApp. Verified by kitchen manager.
+                  Invoice & UPI QR code sent directly to your WhatsApp. Verified by kitchen manager.
                 </p>
               </div>
             )}

@@ -21,7 +21,7 @@ export default function HeroSection({
   badge,
   headline,
   subline,
-  primaryCtaText = "Order for delivery or pickup",
+  primaryCtaText = "Order for Same-Day Delivery",
   primaryCtaLink = "#signature-cakes",
   imageUrl,
 }: HeroSectionProps = {}) {
@@ -127,30 +127,31 @@ export default function HeroSection({
               </span>
             </div>
 
-            {/* Main Hero Headline: Cormorant Garamond, 72–96px desktop / 48–60px mobile, Weight 600 */}
+            {/* Main Hero Headline: Cormorant Garamond, wide max-w-5xl container ensuring 2 lines */}
             <h1
               className="hero-headline font-serif"
               style={{
                 color: "#FFFFFF",
-                fontSize: "clamp(48px, 6.8vw, 92px)",
+                fontSize: "clamp(42px, 5.8vw, 84px)",
                 fontWeight: 600,
-                lineHeight: 1.04,
+                lineHeight: 1.08,
                 letterSpacing: "-0.025em",
                 fontFamily: "var(--font-serif)",
                 textShadow: "0 2px 28px rgba(0, 0, 0, 0.75)",
-                maxWidth: "880px",
+                maxWidth: "1080px",
                 display: "block",
                 textAlign: "center",
                 margin: "0 auto",
+                textWrap: "balance",
               }}
             >
-              {headline || "Real butter. Single origin chocolate. Cakes baked fresh in Nungambakkam."}
+              {headline || "Belgian Chocolate Cakes Handcrafted Fresh Daily — Delivered Cold to Your Door in 45 Mins."}
             </h1>
           </div>
         }
         subtitle={
           subline ||
-          "Order handcrafted Belgian dark chocolate truffle cakes, molten fudge brownies, and kettle-boiled bagels for same-day delivery across Chennai or counter pickup in thirty minutes. Zero commercial premixes."
+          "Baked with 100% pure farm butter, single-origin Callebaut chocolate, and zero cake premixes. Dispatched across Chennai in 4°C active-chilled vans with real-time WhatsApp photo proof."
         }
         primaryAction={{
           label: primaryCtaText,
@@ -158,11 +159,11 @@ export default function HeroSection({
           href: primaryCtaLink,
         }}
         secondaryAction={{
-          label: "Custom Cake Studio",
+          label: "Design Bespoke Custom Cake",
           onClick: handleCustomCakes,
           href: "#custom-studio",
         }}
-        disclaimer="*100% pure butter guarantee • Dedicated eggless station • Doorstep delivery across Chennai"
+        disclaimer="*100% pure butter guarantee • Dedicated eggless station • 4°C active-chilled van delivery across Chennai"
         socialProof={{
           avatars: [
             "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",

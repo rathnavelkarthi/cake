@@ -4,6 +4,7 @@ import "./globals.css";
 import { generateBakerySchema, generateFAQSchema } from "@/lib/seo/structured-data";
 import { BUSINESS_CONFIG } from "@/lib/config/business";
 import ClientShell from "@/components/layout/ClientShell";
+import { Toaster } from "sonner";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -83,6 +84,7 @@ export default function RootLayout({
       </head>
       <body className="paper-texture" suppressHydrationWarning>
         <ClientShell>{children}</ClientShell>
+        <Toaster richColors position="top-right" closeButton />
       </body>
     </html>
   );

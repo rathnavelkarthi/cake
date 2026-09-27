@@ -8,7 +8,7 @@ import { CartProvider, useCart } from "@/context/CartContext";
 import { ToastProvider, useToast } from "@/components/ui/Toast";
 import { getLiveProducts, getLiveCategories, subscribeProducts } from "@/lib/data/products";
 import { Product, ProductVariant } from "@/lib/data/types";
-import { Search, Sparkles, Filter, ChevronDown, Check, Plus, ShoppingBag, Clock, Heart } from "lucide-react";
+import { Search, Sparkles, Filter, ChevronDown, Check, Plus, ShoppingBag, Clock, Heart, Truck, ShieldCheck, Zap } from "lucide-react";
 import QuickViewModal from "@/components/products/QuickViewModal";
 
 function ShopContent() {
@@ -17,6 +17,7 @@ function ShopContent() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [egglessOnly, setEgglessOnly] = useState(false);
+  const [sameDayOnly, setSameDayOnly] = useState(false);
   const [sortBy, setSortBy] = useState<"featured" | "price-asc" | "price-desc">("featured");
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
@@ -76,6 +77,14 @@ function ShopContent() {
       // Eggless toggle
       if (egglessOnly && !product.isEggless) return false;
 
+      // Same-Day Dispatch toggle
+      if (sameDayOnly) {
+        const prep = product.preparationTime?.toLowerCase() || "";
+        const isQuickPrep = prep.includes("min") || prep.includes("instant") || prep.includes("counter");
+        const isStandardCounterItem = ["cakes", "pastries", "brownies", "cookies", "bestsellers", "beverages", "savories"].includes(product.categoryId);
+        if (!isQuickPrep && !isStandardCounterItem) return false;
+      }
+
       // Search query
       if (searchQuery.trim() !== "") {
         const q = searchQuery.toLowerCase();
@@ -104,7 +113,7 @@ function ShopContent() {
     }
 
     return result;
-  }, [productList, activeCategory, searchQuery, egglessOnly, sortBy]);
+  }, [productList, activeCategory, searchQuery, egglessOnly, sameDayOnly, sortBy]);
 
   const handleQuickAdd = (product: Product, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -219,8 +228,54 @@ function ShopContent() {
           </div>
         </section>
 
+        {/* Value & Delivery Assurance Banner */}
+        <div style={{ maxWidth: "1200px", margin: "16px auto 0", padding: "0 16px" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+              gap: "12px",
+              padding: "14px 20px",
+              borderRadius: "16px",
+              backgroundColor: "#fff",
+              border: "1px solid rgba(197, 160, 89, 0.2)",
+              boxShadow: "0 2px 10px rgba(42, 32, 26, 0.03)",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div style={{ width: "36px", height: "36px", borderRadius: "10px", backgroundColor: "#EFF6FF", color: "#1D4ED8", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Truck size={18} />
+              </div>
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--accent-cocoa, #2A201A)" }}>4°C Active-Chilled Van Fleet</div>
+                <div style={{ fontSize: "11px", color: "var(--text-secondary, #6B5B52)" }}>Zero melted frosting in Chennai heat. Shock-proof lock boxes.</div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div style={{ width: "36px", height: "36px", borderRadius: "10px", backgroundColor: "#F0FDF4", color: "#15803D", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <ShieldCheck size={18} />
+              </div>
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--accent-cocoa, #2A201A)" }}>100% Dedicated Eggless Line</div>
+                <div style={{ fontSize: "11px", color: "var(--text-secondary, #6B5B52)" }}>Independent counter, sanctified ovens & zero cross-contact.</div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div style={{ width: "36px", height: "36px", borderRadius: "10px", backgroundColor: "#FEF3C7", color: "#B45309", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Zap size={18} />
+              </div>
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--accent-cocoa, #2A201A)" }}>45-Minute Express Dispatch</div>
+                <div style={{ fontSize: "11px", color: "var(--text-secondary, #6B5B52)" }}>Fresh from our Nungambakkam counter right to your door.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Filter and Search Bar */}
-        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "24px 16px 0" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "20px 16px 0" }}>
           <div
             style={{
               display: "flex",
@@ -284,7 +339,7 @@ function ShopContent() {
             </div>
 
             {/* Quick Controls */}
-            <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
               {/* Eggless Toggle */}
               <button
                 onClick={() => setEgglessOnly(!egglessOnly)}
@@ -326,6 +381,28 @@ function ShopContent() {
                   />
                 </span>
                 Pure Veg / Eggless
+              </button>
+
+              {/* Same-Day Dispatch Toggle */}
+              <button
+                onClick={() => setSameDayOnly(!sameDayOnly)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "8px 14px",
+                  borderRadius: "999px",
+                  border: sameDayOnly ? "1.5px solid #F59E0B" : "1px solid #E5E7EB",
+                  backgroundColor: sameDayOnly ? "#FEF3C7" : "#fff",
+                  color: sameDayOnly ? "#B45309" : "#4B5563",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                <Zap size={13} style={{ color: sameDayOnly ? "#B45309" : "#F59E0B" }} />
+                <span>⚡ Same-Day Dispatch</span>
               </button>
 
               {/* Sort By Dropdown */}
@@ -451,6 +528,7 @@ function ShopContent() {
                   setSearchQuery("");
                   setActiveCategory("all");
                   setEgglessOnly(false);
+                  setSameDayOnly(false);
                 }}
                 style={{
                   padding: "10px 20px",
@@ -578,6 +656,27 @@ function ShopContent() {
                             }}
                           >
                             Bestseller
+                          </span>
+                        )}
+
+                        {(product.preparationTime?.includes("min") || ["cakes", "pastries", "brownies"].includes(product.categoryId)) && (
+                          <span
+                            style={{
+                              padding: "4px 8px",
+                              borderRadius: "6px",
+                              backgroundColor: "rgba(254, 243, 199, 0.95)",
+                              color: "#B45309",
+                              fontSize: "11px",
+                              fontWeight: 700,
+                              letterSpacing: "0.02em",
+                              border: "1px solid rgba(245, 158, 11, 0.3)",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "3px",
+                            }}
+                          >
+                            <Zap size={10} />
+                            Same-Day
                           </span>
                         )}
                       </div>

@@ -14,6 +14,9 @@ import {
   ArrowRight,
   Cake,
   CheckCircle2,
+  Truck,
+  ShieldCheck,
+  Camera,
 } from "lucide-react";
 import Link from "next/link";
 import { BUSINESS_CONFIG } from "@/lib/config/business";
@@ -63,8 +66,8 @@ export default function CustomCakeStudio() {
   const [selectedFlavour, setSelectedFlavour] = useState(FLAVOURS[0]);
   const [selectedWeight, setSelectedWeight] = useState(WEIGHTS[1]);
   const [selectedPipingColor, setSelectedPipingColor] = useState(PIPING_CREAM_PALETTE[0]);
-  const [cakeMessage, setCakeMessage] = useState("Happy 30th Birthday Priya!");
-  const [themeNotes, setThemeNotes] = useState("Minimalist botanical style with fresh flowers");
+  const [cakeMessage, setCakeMessage] = useState("");
+  const [themeNotes, setThemeNotes] = useState("");
   const [preferredDate, setPreferredDate] = useState("");
   const [preferredTime, setPreferredTime] = useState(TIME_SLOTS[2]);
   const [isEggless, setIsEggless] = useState(true);
@@ -79,8 +82,8 @@ export default function CustomCakeStudio() {
   const [previewModalImage, setPreviewModalImage] = useState<string | null>(null);
 
   // Direct Order Submission State
-  const [customerName, setCustomerName] = useState("Priya Sundaram");
-  const [customerMobile, setCustomerMobile] = useState("+91 98401 23456");
+  const [customerName, setCustomerName] = useState("");
+  const [customerMobile, setCustomerMobile] = useState("");
   const [orderSuccess, setOrderSuccess] = useState<{ orderNumber: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -182,7 +185,7 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
     try {
       const order = addInstantOrder({
         customerName: customerName.trim() || "Storefront Customer",
-        customerMobile: customerMobile.trim() || "+91 98401 23456",
+        customerMobile: customerMobile.trim() || "+91 98765 43210",
         fulfilmentType: "DELIVERY",
         deliveryDate: preferredDate || new Date().toISOString().split("T")[0],
         deliveryTimeSlot: preferredTime,
@@ -879,7 +882,7 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
                   setCakeMessage(e.target.value);
                   triggerPreviewPulse();
                 }}
-                placeholder="e.g. Happy Birthday Priya! (Max 45 chars)"
+                placeholder="e.g. Happy 30th Birthday! (Max 45 chars)"
                 style={{
                   width: "100%",
                   padding: "12px 16px",
@@ -962,7 +965,7 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
                   type="text"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="e.g. Priya Sundaram"
+                  placeholder="Enter your name"
                   className="w-full min-w-0 px-3 py-2 rounded-[var(--radius-md)] border border-[var(--border-medium)] bg-[var(--bg-surface)] text-sm text-[var(--text-primary)] outline-none box-border"
                 />
               </div>
@@ -974,7 +977,7 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
                   type="tel"
                   value={customerMobile}
                   onChange={(e) => setCustomerMobile(e.target.value)}
-                  placeholder="e.g. +91 98401 23456"
+                  placeholder="e.g. +91 98765 43210"
                   className="w-full min-w-0 px-3 py-2 rounded-[var(--radius-md)] border border-[var(--border-medium)] bg-[var(--bg-surface)] text-sm text-[var(--text-primary)] outline-none box-border"
                 />
               </div>
@@ -1000,6 +1003,44 @@ Please let me know the kitchen availability, feasibility, and price quote. Thank
               <div className="min-w-0 break-words">
                 <strong>Kitchen Protocol:</strong> Once placed, Head Chef Selva initiates sponge aeration while Confectionery Chef Anbu prepares bespoke colour-matching for your piping.
               </div>
+            </div>
+
+            {/* Custom Cake Delivery & Purity Assurance */}
+            <div
+              style={{
+                backgroundColor: "var(--bg-surface)",
+                padding: "14px",
+                borderRadius: "var(--radius-md)",
+                border: "1px solid var(--border-subtle)",
+                marginBottom: "20px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px",
+              }}
+              className="min-w-0"
+            >
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                <Truck size={17} style={{ color: "#2563EB", flexShrink: 0, marginTop: "2px" }} />
+                <div style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.4 }}>
+                  <strong style={{ color: "var(--accent-cocoa)" }}>4°C Chilled Van Delivery Guarantee:</strong> All custom tier cakes and delicate piping arrive in our temperature-regulated van fleet. Zero sag, zero melt in Chennai humidity.
+                </div>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                <Camera size={17} style={{ color: "var(--accent-caramel)", flexShrink: 0, marginTop: "2px" }} />
+                <div style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.4 }}>
+                  <strong style={{ color: "var(--accent-cocoa)" }}>WhatsApp Photo Proof:</strong> We photograph your completed cake and message it to you for final approval prior to dispatch.
+                </div>
+              </div>
+
+              {isEggless && (
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                  <ShieldCheck size={17} style={{ color: "#16A34A", flexShrink: 0, marginTop: "2px" }} />
+                  <div style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.4 }}>
+                    <strong style={{ color: "#15803D" }}>100% Dedicated Eggless Line:</strong> Baked in our strictly segregated, egg-free confectionery bay.
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}

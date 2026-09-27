@@ -28,6 +28,26 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CHENNAI_BRANCHES } from "@/lib/config/branches";
 import { getOrders, OrderItem } from "@/lib/orders/order-store";
+import { OTPInput, SlotProps } from "input-otp";
+
+function OtpSlot(props: SlotProps) {
+  return (
+    <div
+      className={`relative w-10 sm:w-12 h-12 sm:h-14 text-lg font-bold flex items-center justify-center border rounded-xl transition-all font-mono ${
+        props.isActive
+          ? "border-emerald-600 ring-2 ring-emerald-500/20 bg-white text-stone-900 shadow-sm"
+          : "border-stone-300 bg-stone-50/80 text-stone-800"
+      }`}
+    >
+      {props.char !== null ? props.char : ""}
+      {props.hasFakeCaret && (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <div className="w-0.5 h-6 bg-emerald-600 animate-pulse" />
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function CustomerOrdersPage() {
   const [customerPhone, setCustomerPhone] = useState("");
@@ -299,7 +319,7 @@ export default function CustomerOrdersPage() {
                       </label>
                       <Input
                         type="text"
-                        placeholder="e.g. Priya Sundaram"
+                        placeholder="Enter your name"
                         value={inputName}
                         onChange={(e) => setInputName(e.target.value)}
                         className="h-11 text-xs border-stone-200"
@@ -364,21 +384,35 @@ export default function CustomerOrdersPage() {
                       </button>
                     </div>
 
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-stone-700">
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-stone-700 block text-center">
                         Enter 6-Digit WhatsApp Code
                       </label>
-                      <Input
-                        type="text"
-                        maxLength={6}
-                        required
-                        autoFocus
-                        placeholder="••••••"
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
-                        className="h-12 text-center text-lg font-mono tracking-widest border-stone-300 focus-visible:ring-emerald-700"
-                        disabled={loading}
-                      />
+                      <div className="flex justify-center py-2">
+                        <OTPInput
+                          maxLength={6}
+                          value={otp}
+                          onChange={setOtp}
+                          autoFocus
+                          disabled={loading}
+                          containerClassName="group flex items-center justify-center gap-1.5 sm:gap-2"
+                          render={({ slots }) => (
+                            <>
+                              <div className="flex gap-1.5 sm:gap-2">
+                                {slots.slice(0, 3).map((slot, idx) => (
+                                  <OtpSlot key={idx} {...slot} />
+                                ))}
+                              </div>
+                              <div className="text-stone-400 font-bold px-0.5 sm:px-1">–</div>
+                              <div className="flex gap-1.5 sm:gap-2">
+                                {slots.slice(3, 6).map((slot, idx) => (
+                                  <OtpSlot key={idx} {...slot} />
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        />
+                      </div>
                     </div>
 
                     <Button

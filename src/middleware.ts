@@ -12,16 +12,16 @@ export function middleware(request: NextRequest) {
   ) {
     // Check for NextAuth session token cookie
     const token =
-      request.cookies.get("authjs.session-token") ||
-      request.cookies.get("__Secure-authjs.session-token") ||
-      request.cookies.get("next-auth.session-token") ||
-      request.cookies.get("__Secure-next-auth.session-token");
+      request.cookies.get("authjs.session-token")?.value ||
+      request.cookies.get("__Secure-authjs.session-token")?.value ||
+      request.cookies.get("next-auth.session-token")?.value ||
+      request.cookies.get("__Secure-next-auth.session-token")?.value;
 
-    // In local development or demo mode, if no session exists, allow access or redirect to login
-    // If you want strict enforcement:
-    // if (!token) {
-    //   return NextResponse.redirect(new URL("/admin/login", request.url));
-    // }
+    if (!token) {
+      const loginUrl = new URL("/admin/login", request.url);
+      loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname);
+      return NextResponse.redirect(loginUrl);
+    }
   }
 
   return NextResponse.next();

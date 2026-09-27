@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ShieldCheck, Sparkles, Heart, Utensils, CheckCircle } from "lucide-react";
+import { ShieldCheck, Sparkles, Heart, Utensils, CheckCircle, Truck } from "lucide-react";
 import { BUSINESS_CONFIG } from "@/lib/config/business";
 
 export default function BrandStory() {
@@ -49,19 +49,13 @@ export default function BrandStory() {
           </p>
         </div>
 
-        {/* 4 Pillars Grid */}
+        {/* 4 Pillars Gapless Bento Grid */}
         <div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-14 min-w-0"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16 min-w-0 grid-flow-dense"
         >
           {/* Pillar 1 */}
           <div
-            style={{
-              backgroundColor: "var(--bg-surface)",
-              padding: "28px",
-              borderRadius: "var(--radius-lg)",
-              border: "1px solid var(--border-subtle)",
-              boxShadow: "var(--shadow-sm)",
-            }}
+            className="group p-7 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300"
           >
             <div
               style={{
@@ -79,22 +73,16 @@ export default function BrandStory() {
               <ShieldCheck size={22} />
             </div>
             <h3 className="font-serif" style={{ fontSize: "18px", fontWeight: 700, color: "var(--accent-cocoa)", marginBottom: "8px" }}>
-              100% Pure Dairy Butter
+              100% Farm Butter. Zero Margarine.
             </h3>
             <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.55 }}>
-              We bake exclusively with unsalted farm butter and fresh dairy cream. No vanaspati, no margarine, and zero palm oil fats.
+              Every sponge and crust is made with pure unsalted dairy butter. No vegetable shortening, no vanaspati, and zero palm oil.
             </p>
           </div>
 
           {/* Pillar 2 */}
           <div
-            style={{
-              backgroundColor: "var(--bg-surface)",
-              padding: "28px",
-              borderRadius: "var(--radius-lg)",
-              border: "1px solid var(--border-subtle)",
-              boxShadow: "var(--shadow-sm)",
-            }}
+            className="group p-7 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300"
           >
             <div
               style={{
@@ -112,22 +100,16 @@ export default function BrandStory() {
               <Utensils size={20} />
             </div>
             <h3 className="font-serif" style={{ fontSize: "18px", fontWeight: 700, color: "var(--accent-cocoa)", marginBottom: "8px" }}>
-              Belgian Callebaut Chocolate
+              54% Callebaut Dark Chocolate. No Compound.
             </h3>
             <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.55 }}>
-              Our truffle ganaches and fudge brownies are made with genuine 54% and 70% Callebaut dark chocolate for authentic depth.
+              We melt real Callebaut cocoa butter discs into our truffles for deep, slow-melting chocolate flavour.
             </p>
           </div>
 
           {/* Pillar 3 */}
           <div
-            style={{
-              backgroundColor: "var(--bg-surface)",
-              padding: "28px",
-              borderRadius: "var(--radius-lg)",
-              border: "1px solid var(--border-subtle)",
-              boxShadow: "var(--shadow-sm)",
-            }}
+            className="group p-7 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300"
           >
             <div
               style={{
@@ -145,22 +127,16 @@ export default function BrandStory() {
               <CheckCircle size={22} />
             </div>
             <h3 className="font-serif" style={{ fontSize: "18px", fontWeight: 700, color: "var(--accent-cocoa)", marginBottom: "8px" }}>
-              Dedicated Eggless Counter
+              100% Dedicated Eggless Line.
             </h3>
             <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.55 }}>
-              We maintain separated mixing bowls, whisks, and cake tins for eggless bakes to prevent cross-contact.
+              Our vegetarian cakes are prepared with separate tools, sanctified mixers, and independent ovens for complete peace of mind.
             </p>
           </div>
 
           {/* Pillar 4 */}
           <div
-            style={{
-              backgroundColor: "var(--bg-surface)",
-              padding: "28px",
-              borderRadius: "var(--radius-lg)",
-              border: "1px solid var(--border-subtle)",
-              boxShadow: "var(--shadow-sm)",
-            }}
+            className="group p-7 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300"
           >
             <div
               style={{
@@ -175,13 +151,13 @@ export default function BrandStory() {
                 marginBottom: "16px",
               }}
             >
-              <Heart size={20} />
+              <Truck size={20} />
             </div>
             <h3 className="font-serif" style={{ fontSize: "18px", fontWeight: 700, color: "var(--accent-cocoa)", marginBottom: "8px" }}>
-              Baked in Daily Batches
+              4°C Active-Chilled Van Fleet.
             </h3>
             <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.55 }}>
-              Sponges are baked each morning for same day delivery. We never freeze bases or sell day old display cakes.
+              Every gateau travels in custom shock-proof thermal lock boxes inside our refrigerated van fleet. Zero melted frosting in Chennai traffic.
             </p>
           </div>
         </div>

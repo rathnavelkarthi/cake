@@ -16,6 +16,8 @@ import {
   Settings,
   Store,
   ChevronRight,
+  UserCheck,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -50,6 +52,17 @@ export const navItems: NavItem[] = [
     title: "Billing & POS",
     href: "/admin/billing",
     icon: Receipt,
+  },
+  {
+    title: "Staff Workload",
+    href: "/admin/staff",
+    icon: UserCheck,
+    badge: "Live",
+  },
+  {
+    title: "Team Chat",
+    href: "/admin/chat",
+    icon: MessageSquare,
   },
   {
     title: "Inventory",

@@ -194,7 +194,7 @@ export function ManualOrderModal({
                 required
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="e.g. Priya Sundaram / Walk-in Customer"
+                placeholder="e.g. Walk-in Customer / Online Order"
                 className="h-9 text-xs border-stone-300"
               />
             </div>
@@ -352,7 +352,7 @@ export function ManualOrderModal({
             <Input
               value={cakeMessage}
               onChange={(e) => setCakeMessage(e.target.value)}
-              placeholder="e.g. Happy 30th Birthday Priya! / Best Wishes"
+              placeholder="e.g. Happy 30th Birthday! / Best Wishes"
               className="h-9 text-xs border-stone-300"
             />
           </div>

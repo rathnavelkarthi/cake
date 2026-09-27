@@ -11,6 +11,10 @@ import {
   ArrowRight,
   Package,
   Users,
+  UserCheck,
+  MessageSquare,
+  Flame,
+  ChefHat,
 } from "lucide-react";
 import {
   Card,
@@ -154,6 +158,102 @@ export default async function AdminDashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Live Employee Workload Summary Banner (PRODUCT.md Staff Operations) */}
+      <Card className="border-stone-200/90 shadow-xs bg-gradient-to-r from-amber-950 via-stone-900 to-amber-950 text-white rounded-2xl overflow-hidden p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 rounded-lg bg-amber-800/60 text-amber-200">
+                <UserCheck className="w-4 h-4" />
+              </span>
+              <h2 className="text-sm font-bold text-white tracking-wide">
+                Live Employee Workload & Kitchen Stations
+              </h2>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                4 Active on Duty
+              </span>
+            </div>
+            <p className="text-xs text-stone-300 mt-1">
+              Real-time monitoring of chef output, custom cake decorating, and POS billing load.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button asChild size="sm" variant="outline" className="h-8 bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs">
+              <Link href="/admin/chat">
+                <MessageSquare className="w-3.5 h-3.5 mr-1 text-amber-300" />
+                <span>Team Chat</span>
+              </Link>
+            </Button>
+            <Button asChild size="sm" className="h-8 bg-amber-800 hover:bg-amber-700 text-white text-xs font-semibold">
+              <Link href="/admin/staff">
+                <span>Staff Workload Hub</span>
+                <ArrowRight className="w-3.5 h-3.5 ml-1" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+
+        {/* 4 Staff Quick Load Snapshot */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-amber-100 flex items-center gap-1.5">
+                <span>👨‍🍳</span> Selva (Head Chef)
+              </span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-mono">82% Load</span>
+            </div>
+            <p className="text-[11px] text-stone-300 mt-1 truncate">Hot Deck Ovens 1 & 2</p>
+            <div className="flex justify-between items-center mt-2 text-[10px] text-stone-400">
+              <span>14 Sponges Baked</span>
+              <span className="text-emerald-400">2 In Prep</span>
+            </div>
+          </div>
+
+          <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-pink-200 flex items-center gap-1.5">
+                <span>🎂</span> Anbu (Confectionery)
+              </span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-red-500/20 text-pink-300 font-mono">91% Load</span>
+            </div>
+            <p className="text-[11px] text-stone-300 mt-1 truncate">Custom Piping & Deco</p>
+            <div className="flex justify-between items-center mt-2 text-[10px] text-stone-400">
+              <span>9 Custom Finished</span>
+              <span className="text-amber-300">3 Piped In Queue</span>
+            </div>
+          </div>
+
+          <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-emerald-200 flex items-center gap-1.5">
+                <span>☕</span> Sara (Cafe Staff)
+              </span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono">68% Load</span>
+            </div>
+            <p className="text-[11px] text-stone-300 mt-1 truncate">Front POS Register</p>
+            <div className="flex justify-between items-center mt-2 text-[10px] text-stone-400">
+              <span>28 Orders Billed</span>
+              <span className="text-emerald-400">42s Avg Checkout</span>
+            </div>
+          </div>
+
+          <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-blue-200 flex items-center gap-1.5">
+                <span>🛵</span> Murugan (Logistics)
+              </span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-300 font-mono">60% Load</span>
+            </div>
+            <p className="text-[11px] text-stone-300 mt-1 truncate">Refrigerated Van #1</p>
+            <div className="flex justify-between items-center mt-2 text-[10px] text-stone-400">
+              <span>7 Dispatched</span>
+              <span className="text-cyan-300">4.2°C Chill</span>
+            </div>
+          </div>
+        </div>
+      </Card>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Recent Orders Table (PRODUCT.md Section 44) */}

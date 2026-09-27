@@ -44,9 +44,9 @@ interface CustomerRecord {
 const INITIAL_CUSTOMERS: CustomerRecord[] = [
   {
     id: 1,
-    name: "Priya Sundaram",
+    name: "Divya Narayanan",
     mobile: "+91 98401 23456",
-    email: "priya.sundaram@gmail.com",
+    email: "divya.narayanan@gmail.com",
     totalOrders: 6,
     totalSpend: 7850,
     tags: ["REPEAT_CUSTOMER", "CAKE_CUSTOMER", "HIGH_VALUE"],

@@ -213,7 +213,7 @@ let localOrders: AdminOrderItem[] = [
   {
     id: 1,
     orderNumber: "ORD-2026-0891",
-    customerName: "Priya Sundaram",
+    customerName: "Divya Narayanan",
     customerMobile: "+91 98401 23456",
     total: 1450,
     paymentStatus: "PAID",
@@ -263,9 +263,9 @@ let localOrders: AdminOrderItem[] = [
 let localCustomers: AdminCustomerItem[] = [
   {
     id: 1,
-    name: "Priya Sundaram",
+    name: "Divya Narayanan",
     mobile: "+91 98401 23456",
-    email: "priya.sundaram@gmail.com",
+    email: "divya.narayanan@gmail.com",
     totalOrders: 6,
     totalSpend: 7850,
     tags: ["REPEAT_CUSTOMER", "CAKE_CUSTOMER", "HIGH_VALUE"],

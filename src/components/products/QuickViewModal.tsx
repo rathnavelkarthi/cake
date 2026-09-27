@@ -3,8 +3,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Product, ProductVariant } from "@/lib/data/types";
 import { useCart } from "@/context/CartContext";
-import { X, Plus, Check, Clock, ShieldCheck, AlertCircle } from "lucide-react";
+import { X, Plus, Check, Clock, ShieldCheck, AlertCircle, Truck, MapPin, Star } from "lucide-react";
 import { triggerHaptic } from "@/lib/utils/haptics";
+import NumberFlow from "@number-flow/react";
 
 interface QuickViewModalProps {
   product: Product | null;
@@ -439,6 +440,53 @@ export default function QuickViewModal({ product, onClose }: QuickViewModalProps
               </div>
             </div>
 
+            {/* Delivery & Purity Assurance Box */}
+            <div
+              style={{
+                backgroundColor: "var(--bg-muted)",
+                padding: "12px 14px",
+                borderRadius: "var(--radius-md)",
+                marginBottom: "20px",
+                border: "1px solid var(--border-subtle)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                <Truck size={15} style={{ color: "#2563EB", flexShrink: 0, marginTop: "2px" }} />
+                <div style={{ fontSize: "11px", color: "var(--text-secondary)", lineHeight: 1.4 }}>
+                  <strong style={{ color: "var(--text-primary)" }}>4°C Chilled Van Delivery:</strong> Thermal lock boxes ensure zero melt or deformation in Chennai transit.
+                </div>
+              </div>
+
+              {activeProduct.isEggless && (
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                  <ShieldCheck size={15} style={{ color: "#16A34A", flexShrink: 0, marginTop: "2px" }} />
+                  <div style={{ fontSize: "11px", color: "var(--text-secondary)", lineHeight: 1.4 }}>
+                    <strong style={{ color: "#15803D" }}>100% Dedicated Eggless Line:</strong> Segregated prep table, sanctified equipment & zero cross-contact.
+                  </div>
+                </div>
+              )}
+
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  paddingTop: "6px",
+                  borderTop: "1px dashed rgba(0,0,0,0.08)",
+                  fontSize: "11px",
+                  color: "#9A735C",
+                }}
+              >
+                <MapPin size={13} style={{ color: "var(--accent-caramel)", flexShrink: 0 }} />
+                <span>
+                  Delivering fresh across Harrington Rd, Alwarpet, Anna Nagar, Besant Nagar & ECR.
+                </span>
+              </div>
+            </div>
+
             {/* Action Bar */}
             <div
               style={{
@@ -452,8 +500,9 @@ export default function QuickViewModal({ product, onClose }: QuickViewModalProps
             >
               <div>
                 <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Total Price</div>
-                <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--accent-caramel)" }}>
-                  ₹{selectedVariant.price.toLocaleString("en-IN")}
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "var(--accent-caramel)", display: "inline-flex", alignItems: "center", gap: "2px" }}>
+                  <span>₹</span>
+                  <NumberFlow value={selectedVariant.price} />
                 </div>
               </div>
 

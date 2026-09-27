@@ -47,8 +47,8 @@ export async function GET(req: NextRequest) {
     `;
 
     const sampleVars: Record<string, string> = {
-      customer_name: "Priya Sundaram",
-      customer_email: "priya@example.com",
+      customer_name: "Divya Narayanan",
+      customer_email: "divya@example.com",
       login_url: "http://localhost:3000/shop",
       discount_code: "KICHEES10",
       order_number: "KCH-2026-9481",
