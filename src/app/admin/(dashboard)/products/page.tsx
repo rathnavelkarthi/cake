@@ -293,6 +293,8 @@ export default function AdminProductsPage() {
         product.category.toLowerCase().includes(search.toLowerCase());
 
       if (selectedTab === "all") return matchesSearch;
+      if (selectedTab === "veg") return matchesSearch && product.isEggless !== false;
+      if (selectedTab === "nonveg") return matchesSearch && product.isEggless === false;
       return matchesSearch && product.status === selectedTab;
     });
   }, [productsList, search, selectedTab]);
@@ -803,17 +805,68 @@ export default function AdminProductsPage() {
                   </p>
                 </div>
 
-                {/* 100% Pure Eggless Bake Checkbox */}
-                <div className="pt-1 border-t border-stone-200/50">
-                  <label className="flex items-center gap-2 text-xs font-semibold text-stone-700 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={newProductIsEggless}
-                      onChange={(e) => setNewProductIsEggless(e.target.checked)}
-                      className="rounded border-stone-300 text-amber-900 focus:ring-amber-800 accent-amber-900"
-                    />
-                    <span>100% Pure Eggless Bake (Dedicated prep station & utensils)</span>
+                {/* Dietary Preference: Veg vs Non-Veg */}
+                <div className="space-y-2 pt-2 border-t border-stone-200/70">
+                  <label className="text-xs font-bold text-stone-800 flex items-center justify-between">
+                    <span>Dietary Classification (Veg / Non-Veg)</span>
+                    <span className="text-[10px] text-stone-500 font-normal">
+                      Shows FSSAI mark on customer menu & bills
+                    </span>
                   </label>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {/* Vegetarian (100% Eggless) Card */}
+                    <button
+                      type="button"
+                      onClick={() => setNewProductIsEggless(true)}
+                      className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                        newProductIsEggless
+                          ? "border-emerald-600 bg-emerald-50/80 ring-2 ring-emerald-600/20 shadow-xs"
+                          : "border-stone-200 bg-white hover:border-stone-300"
+                      }`}
+                    >
+                      <div className="mt-0.5 inline-flex items-center justify-center w-4 h-4 border-2 border-emerald-600 rounded-[3px] bg-white p-[2px] shrink-0">
+                        <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-xs font-bold text-emerald-950 flex items-center justify-between">
+                          <span>Vegetarian (Veg)</span>
+                          <span className="text-[9px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 rounded px-1.5 py-0.2">
+                            100% Eggless
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-emerald-800/80 mt-0.5">
+                          Dedicated pure-veg station, no eggs used.
+                        </p>
+                      </div>
+                    </button>
+
+                    {/* Non-Vegetarian (Contains Egg) Card */}
+                    <button
+                      type="button"
+                      onClick={() => setNewProductIsEggless(false)}
+                      className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                        !newProductIsEggless
+                          ? "border-amber-800 bg-amber-50/80 ring-2 ring-amber-800/20 shadow-xs"
+                          : "border-stone-200 bg-white hover:border-stone-300"
+                      }`}
+                    >
+                      <div className="mt-0.5 inline-flex items-center justify-center w-4 h-4 border-2 border-amber-800 rounded-[3px] bg-white p-[2px] shrink-0">
+                        <span className="w-2 h-2 rounded-full bg-amber-800"></span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-xs font-bold text-amber-950 flex items-center justify-between">
+                          <span>Non-Vegetarian</span>
+                          <span className="text-[9px] font-semibold bg-amber-100 text-amber-900 border border-amber-300 rounded px-1.5 py-0.2">
+                            Contains Egg
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-amber-900/80 mt-0.5">
+                          Baked with eggs for classic bakery sponge.
+                        </p>
+                      </div>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1222,21 +1275,24 @@ export default function AdminProductsPage() {
           onValueChange={setSelectedTab}
           className="w-full sm:w-auto"
         >
-          <TabsList className="bg-stone-100">
+          <TabsList className="bg-stone-100 flex-wrap h-auto p-1">
             <TabsTrigger value="all" className="text-xs">
               All ({productsList.length})
             </TabsTrigger>
             <TabsTrigger value="active" className="text-xs">
-              Active (
-              {productsList.filter((p) => p.status === "active").length})
+              Active ({productsList.filter((p) => p.status === "active").length})
+            </TabsTrigger>
+            <TabsTrigger value="veg" className="text-xs text-emerald-800 data-[state=active]:text-emerald-950 data-[state=active]:bg-emerald-50">
+              🟢 Veg ({productsList.filter((p) => p.isEggless !== false).length})
+            </TabsTrigger>
+            <TabsTrigger value="nonveg" className="text-xs text-amber-900 data-[state=active]:text-amber-950 data-[state=active]:bg-amber-50">
+              🟤 Non-Veg ({productsList.filter((p) => p.isEggless === false).length})
             </TabsTrigger>
             <TabsTrigger value="inactive" className="text-xs">
-              Draft (
-              {productsList.filter((p) => p.status === "inactive").length})
+              Draft ({productsList.filter((p) => p.status === "inactive").length})
             </TabsTrigger>
             <TabsTrigger value="archived" className="text-xs">
-              Archived (
-              {productsList.filter((p) => p.status === "archived").length})
+              Archived ({productsList.filter((p) => p.status === "archived").length})
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -1315,13 +1371,28 @@ export default function AdminProductsPage() {
 
                   {/* Name and SKU */}
                   <TableCell>
-                    <div className="font-semibold text-stone-900 text-xs">
-                      {product.name}
+                    <div className="font-semibold text-stone-900 text-xs flex items-center gap-1.5">
+                      {product.isEggless !== false ? (
+                        <span
+                          className="inline-flex items-center justify-center w-3.5 h-3.5 border border-emerald-600 rounded-[2px] bg-white p-[1px] shrink-0"
+                          title="Vegetarian (100% Eggless)"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                        </span>
+                      ) : (
+                        <span
+                          className="inline-flex items-center justify-center w-3.5 h-3.5 border border-amber-800 rounded-[2px] bg-white p-[1px] shrink-0"
+                          title="Non-Vegetarian (Contains Egg)"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-800"></span>
+                        </span>
+                      )}
+                      <span>{product.name}</span>
                     </div>
-                    <div className="text-[10px] font-mono text-stone-400">
+                    <div className="text-[10px] font-mono text-stone-400 pl-5">
                       {product.sku}
                     </div>
-                    <div className="text-[10px] text-amber-800 font-medium flex items-center gap-1 mt-0.5">
+                    <div className="text-[10px] text-amber-800 font-medium flex items-center gap-1 mt-0.5 pl-5">
                       <MapPin className="h-2.5 w-2.5 shrink-0" />
                       <span>
                         {product.availableBranches === "harrisons"
@@ -1333,11 +1404,24 @@ export default function AdminProductsPage() {
                     </div>
                   </TableCell>
 
-                  {/* Menu Category */}
+                  {/* Menu Category & Dietary Tag */}
                   <TableCell>
-                    <Badge variant="outline" className="text-[10px] bg-stone-50">
-                      {product.category}
-                    </Badge>
+                    <div className="flex flex-col items-start gap-1">
+                      <Badge variant="outline" className="text-[10px] bg-stone-50">
+                        {product.category}
+                      </Badge>
+                      {product.isEggless !== false ? (
+                        <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                          Veg
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-amber-900 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-800"></span>
+                          Non-Veg
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
 
                   {/* Recipe Ingredients / BOM */}
@@ -1753,15 +1837,70 @@ export default function AdminProductsPage() {
                       <span>Mark as Best Seller Badge</span>
                     </label>
 
-                    <label className="flex items-center gap-2 text-xs font-medium text-stone-700 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={editIsEggless}
-                        onChange={(e) => setEditIsEggless(e.target.checked)}
-                        className="rounded border-stone-300 text-amber-900 focus:ring-amber-800"
-                      />
-                      <span>100% Pure Eggless Bake</span>
-                    </label>
+                  </div>
+                </div>
+
+                {/* Dietary Preference: Veg vs Non-Veg */}
+                <div className="space-y-2 pt-2 border-t border-stone-200/70">
+                  <label className="text-xs font-bold text-stone-800 flex items-center justify-between">
+                    <span>Dietary Classification (Veg / Non-Veg)</span>
+                    <span className="text-[10px] text-stone-500 font-normal">
+                      Shows FSSAI mark on customer menu & bills
+                    </span>
+                  </label>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {/* Vegetarian (100% Eggless) Card */}
+                    <button
+                      type="button"
+                      onClick={() => setEditIsEggless(true)}
+                      className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                        editIsEggless
+                          ? "border-emerald-600 bg-emerald-50/80 ring-2 ring-emerald-600/20 shadow-xs"
+                          : "border-stone-200 bg-white hover:border-stone-300"
+                      }`}
+                    >
+                      <div className="mt-0.5 inline-flex items-center justify-center w-4 h-4 border-2 border-emerald-600 rounded-[3px] bg-white p-[2px] shrink-0">
+                        <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-xs font-bold text-emerald-950 flex items-center justify-between">
+                          <span>Vegetarian (Veg)</span>
+                          <span className="text-[9px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 rounded px-1.5 py-0.2">
+                            100% Eggless
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-emerald-800/80 mt-0.5">
+                          Dedicated pure-veg station, no eggs used.
+                        </p>
+                      </div>
+                    </button>
+
+                    {/* Non-Vegetarian (Contains Egg) Card */}
+                    <button
+                      type="button"
+                      onClick={() => setEditIsEggless(false)}
+                      className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                        !editIsEggless
+                          ? "border-amber-800 bg-amber-50/80 ring-2 ring-amber-800/20 shadow-xs"
+                          : "border-stone-200 bg-white hover:border-stone-300"
+                      }`}
+                    >
+                      <div className="mt-0.5 inline-flex items-center justify-center w-4 h-4 border-2 border-amber-800 rounded-[3px] bg-white p-[2px] shrink-0">
+                        <span className="w-2 h-2 rounded-full bg-amber-800"></span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-xs font-bold text-amber-950 flex items-center justify-between">
+                          <span>Non-Vegetarian</span>
+                          <span className="text-[9px] font-semibold bg-amber-100 text-amber-900 border border-amber-300 rounded px-1.5 py-0.2">
+                            Contains Egg
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-amber-900/80 mt-0.5">
+                          Baked with eggs for classic bakery sponge.
+                        </p>
+                      </div>
+                    </button>
                   </div>
                 </div>
               </div>
