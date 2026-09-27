@@ -5,6 +5,7 @@ import { AdminSidebar } from "@/components/admin/sidebar";
 import { AdminHeader } from "@/components/admin/header";
 import { AdminProviders } from "@/components/admin/providers";
 import { InternalTeamChatWidget } from "@/components/admin/InternalTeamChatWidget";
+import AdminNotificationProvider from "@/components/admin/AdminNotificationProvider";
 
 export default async function AdminDashboardLayout({
   children,
@@ -29,6 +30,8 @@ export default async function AdminDashboardLayout({
         </div>
         {/* Floating Internal Bakery Team Chat for all admin pages */}
         <InternalTeamChatWidget />
+        {/* Sound + browser push notifications for orders and chat */}
+        <AdminNotificationProvider />
       </div>
     </AdminProviders>
   );

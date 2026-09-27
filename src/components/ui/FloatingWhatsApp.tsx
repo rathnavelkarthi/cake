@@ -17,12 +17,13 @@ export default function FloatingWhatsApp() {
       style={{
         position: "fixed",
         bottom: "24px",
-        right: "24px",
+        right: "16px",
         zIndex: 900,
         display: "flex",
         flexDirection: "column",
         alignItems: "flex-end",
         gap: "10px",
+        maxWidth: "calc(100vw - 32px)",
       }}
     >
       {/* Expanded Quick Contact Card */}
@@ -129,16 +130,19 @@ export default function FloatingWhatsApp() {
           boxShadow: "0 8px 24px rgba(37, 211, 102, 0.35)",
           display: "inline-flex",
           alignItems: "center",
+          justifyContent: "center",
           gap: "8px",
-          padding: "0 18px",
+          padding: "0 16px",
           cursor: "pointer",
           fontWeight: 700,
           fontSize: "14px",
+          whiteSpace: "nowrap",
           transition: "all 200ms cubic-bezier(0.16, 1, 0.3, 1)",
+          minWidth: "48px",
         }}
-        className="hover:scale-105 active:scale-95 hover:bg-[#20ba5a]"
+        className="hover:scale-105 active:scale-95 hover:brightness-110 sm:pr-5"
       >
-        <MessageCircle size={19} />
+        <MessageCircle size={20} />
         <span className="hidden sm:inline">Order Support</span>
       </button>
     </div>
