@@ -74,16 +74,70 @@ const KITCHEN_STAGES: {
 ];
 
 export default function KitchenDisplayPage() {
-  const [orders, setOrders] = useState<OrderItem[]>([]);
+  const [localOrders, setLocalOrders] = useState<OrderItem[]>([]);
+  const [dbOrders, setDbOrders] = useState<OrderItem[]>([]);
   const [selectedStation, setSelectedStation] = useState<"ALL" | "SELVA" | "ANBU">("ALL");
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
+  const mapDbRow = (row: any): OrderItem => ({
+    id: row.id,
+    orderNumber: row.order_number,
+    customerName: row.customer_name,
+    customerMobile: row.customer_mobile,
+    total: Number(row.total),
+    paymentStatus: row.payment_status || "PENDING",
+    orderStatus: row.order_status || "PENDING_PAYMENT",
+    fulfilmentType: row.fulfilment_type === "DELIVERY" ? "DELIVERY" : "PICKUP",
+    branchName: row.branch_name,
+    deliveryDistanceKm: row.delivery_distance_km,
+    deliveryAddress: row.delivery_address,
+    deliveryFee: row.delivery_fee,
+    itemsCount: Array.isArray(row.items) ? row.items.length : 1,
+    date: new Date(row.created_at).toLocaleString("en-IN", {
+      day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+    }),
+    deliveryDate: row.requested_date || "Today",
+    deliveryTimeSlot: row.requested_time || "ASAP",
+    flavour: Array.isArray(row.items) && row.items[0]
+      ? (typeof row.items[0] === "string" ? row.items[0] : row.items[0].name || "Custom Cake")
+      : "Custom Cake",
+    weightKg: Array.isArray(row.items) && row.items[0]?.variantLabel ? row.items[0].variantLabel : "1 kg",
+    isEggless: false,
+    cakeMessage: row.customer_notes,
+    assignedChef: row.assigned_chef || "Selva (Head Chef)",
+    isInstantOrder: false,
+    notes: row.admin_notes,
+    items: Array.isArray(row.items)
+      ? row.items.map((i: any) => (typeof i === "string" ? i : `${i.quantity || 1}x ${i.name || "Item"}`))
+      : [],
+    createdAt: row.created_at,
+  });
+
+  const fetchFromDb = async () => {
+    try {
+      const res = await fetch("/api/orders");
+      if (!res.ok) return;
+      const data = await res.json();
+      if (Array.isArray(data.orders) && data.orders.length > 0) {
+        setDbOrders(data.orders.map(mapDbRow));
+      }
+    } catch {}
+  };
+
+  // Merged: DB orders first, then local-only orders not in DB
+  const orders = React.useMemo(() => {
+    const dbNums = new Set(dbOrders.map((o) => o.orderNumber));
+    const localOnly = localOrders.filter((o) => !dbNums.has(o.orderNumber));
+    return [...dbOrders, ...localOnly];
+  }, [dbOrders, localOrders]);
+
   useEffect(() => {
-    return subscribeOrders((updatedOrders) => {
-      setOrders(updatedOrders);
-    });
+    const unsub = subscribeOrders((updated) => setLocalOrders(updated));
+    fetchFromDb();
+    const interval = setInterval(fetchFromDb, 15000);
+    return () => { unsub(); clearInterval(interval); };
   }, []);
 
   const filteredOrders = orders.filter((order) => {

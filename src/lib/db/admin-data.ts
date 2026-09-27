@@ -209,56 +209,37 @@ const sampleRecipes: Record<string, RecipeIngredient[]> = {
 // 2. Initial Product Inventory - Populated live from Supabase
 export let localProducts: AdminProductItem[] = [];
 
-let localOrders: AdminOrderItem[] = [
-  {
-    id: 1,
-    orderNumber: "ORD-2026-0891",
-    customerName: "Divya Narayanan",
-    customerMobile: "+91 98401 23456",
-    total: 1450,
-    paymentStatus: "PAID",
-    orderStatus: "PREPARING",
-    fulfilmentType: "DELIVERY",
-    itemsCount: 2,
-    date: "2026-09-13 14:30",
-  },
-  {
-    id: 2,
-    orderNumber: "ORD-2026-0892",
-    customerName: "Karthik Raja",
-    customerMobile: "+91 97910 88231",
-    total: 890,
-    paymentStatus: "PAID",
-    orderStatus: "READY_FOR_PICKUP",
-    fulfilmentType: "PICKUP",
-    itemsCount: 1,
-    date: "2026-09-13 15:10",
-  },
-  {
-    id: 3,
-    orderNumber: "ORD-2026-0893",
-    customerName: "Ananya Iyer",
-    customerMobile: "+91 98842 11904",
-    total: 2400,
-    paymentStatus: "PENDING",
-    orderStatus: "PENDING_PAYMENT",
-    fulfilmentType: "DELIVERY",
-    itemsCount: 3,
-    date: "2026-09-13 15:45",
-  },
-  {
-    id: 4,
-    orderNumber: "ORD-2026-0894",
-    customerName: "Vikram Raman",
-    customerMobile: "+91 98412 77334",
-    total: 650,
-    paymentStatus: "PAID",
-    orderStatus: "COMPLETED",
-    fulfilmentType: "PICKUP",
-    itemsCount: 1,
-    date: "2026-09-13 11:20",
-  },
-];
+let localOrders: AdminOrderItem[] = [];
+
+// Pull real orders from Supabase via the /api/orders route (server-side safe)
+async function fetchOrdersFromSupabase(): Promise<AdminOrderItem[]> {
+  try {
+    const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    const res = await fetch(`${base}/api/orders`, { cache: "no-store" });
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (!Array.isArray(data.orders) || data.orders.length === 0) return [];
+    return data.orders.map((row: any, idx: number): AdminOrderItem => ({
+      id: idx + 1,
+      orderNumber: row.order_number,
+      customerName: row.customer_name,
+      customerMobile: row.customer_mobile,
+      total: Number(row.total),
+      paymentStatus: (row.payment_status as AdminOrderItem["paymentStatus"]) || "PENDING",
+      orderStatus: (row.order_status as AdminOrderItem["orderStatus"]) || "PENDING_PAYMENT",
+      fulfilmentType: row.fulfilment_type === "DELIVERY" ? "DELIVERY" : "PICKUP",
+      itemsCount: Array.isArray(row.items) ? row.items.length : 1,
+      date: new Date(row.created_at).toLocaleString("en-IN", {
+        day: "numeric",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    }));
+  } catch {
+    return [];
+  }
+}
 
 let localCustomers: AdminCustomerItem[] = [
   {
@@ -304,11 +285,14 @@ let localCustomers: AdminCustomerItem[] = [
 ];
 
 export async function getDashboardMetrics() {
-  const totalSalesToday = localOrders
+  const liveOrders = await fetchOrdersFromSupabase();
+  const orders = liveOrders.length > 0 ? liveOrders : localOrders;
+
+  const totalSalesToday = orders
     .filter((o) => o.paymentStatus === "PAID")
     .reduce((sum, o) => sum + o.total, 0);
 
-  const pendingOrdersCount = localOrders.filter(
+  const pendingOrdersCount = orders.filter(
     (o) => o.orderStatus === "PENDING_PAYMENT" || o.orderStatus === "PREPARING"
   ).length;
 
@@ -322,7 +306,7 @@ export async function getDashboardMetrics() {
 
   return {
     todaySales: totalSalesToday,
-    todayOrders: localOrders.length,
+    todayOrders: orders.length,
     pendingOrders: pendingOrdersCount,
     lowStockCount,
     lowRawMaterialsCount,
@@ -350,7 +334,8 @@ export async function getAdminProducts(search?: string, status?: string) {
 }
 
 export async function getAdminOrders(status?: string) {
-  let filtered = [...localOrders];
+  const liveOrders = await fetchOrdersFromSupabase();
+  let filtered = liveOrders.length > 0 ? liveOrders : [...localOrders];
   if (status && status !== "all") {
     filtered = filtered.filter((o) => o.orderStatus === status);
   }

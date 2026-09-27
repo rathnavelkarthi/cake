@@ -51,22 +51,101 @@ import { Phone, MessageSquare, Check, AlertCircle as AlertIcon } from "lucide-re
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<OrderItem[]>([]);
+  const [dbOrders, setDbOrders] = useState<OrderItem[]>([]);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<string>("all");
   const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Map a raw Supabase row to our OrderItem shape
+  const mapDbRow = (row: any): OrderItem => ({
+    id: row.id,
+    orderNumber: row.order_number,
+    customerName: row.customer_name,
+    customerMobile: row.customer_mobile,
+    customerEmail: row.customer_email || undefined,
+    total: Number(row.total),
+    paymentStatus: (row.payment_status as OrderItem["paymentStatus"]) || "PENDING",
+    orderStatus: (row.order_status as OrderItem["orderStatus"]) || "PENDING_PAYMENT",
+    fulfilmentType: (row.fulfilment_type as "PICKUP" | "DELIVERY") || "PICKUP",
+    branchId: row.branch_id || undefined,
+    branchName: row.branch_name || undefined,
+    deliveryDistanceKm: row.delivery_distance_km || undefined,
+    deliveryAddress: row.delivery_address || undefined,
+    deliveryFee: row.delivery_fee || undefined,
+    itemsCount: Array.isArray(row.items) ? row.items.length : 1,
+    date: new Date(row.created_at).toLocaleString("en-IN", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+    deliveryDate: row.requested_date || "Today",
+    deliveryTimeSlot: row.requested_time || "ASAP",
+    flavour: Array.isArray(row.items) && row.items[0]
+      ? (typeof row.items[0] === "string" ? row.items[0] : row.items[0].name || "Custom Cake")
+      : "Custom Cake",
+    weightKg: Array.isArray(row.items) && row.items[0]?.variantLabel
+      ? row.items[0].variantLabel
+      : "1 kg",
+    isEggless: false,
+    cakeMessage: row.customer_notes || undefined,
+    assignedChef: row.assigned_chef || "Selva (Head Chef)",
+    isInstantOrder: false,
+    notes: row.admin_notes || undefined,
+    items: Array.isArray(row.items)
+      ? row.items.map((i: any) => (typeof i === "string" ? i : `${i.quantity || 1}x ${i.name || "Item"}`))
+      : [],
+    createdAt: row.created_at,
+  });
+
+  const fetchFromDb = async (quiet = false) => {
+    if (!quiet) setIsSyncing(true);
+    try {
+      const res = await fetch("/api/orders");
+      if (!res.ok) return;
+      const data = await res.json();
+      if (Array.isArray(data.orders) && data.orders.length > 0) {
+        setDbOrders(data.orders.map(mapDbRow));
+      }
+    } catch (err) {
+      console.error("Failed to fetch orders from DB:", err);
+    } finally {
+      if (!quiet) setIsSyncing(false);
+    }
+  };
+
+  // Merge: DB orders first (real), then local orders not already in DB (by orderNumber)
+  const mergedOrders = React.useMemo(() => {
+    const dbNums = new Set(dbOrders.map((o) => o.orderNumber));
+    const localOnly = orders.filter((o) => !dbNums.has(o.orderNumber));
+    return [...dbOrders, ...localOnly];
+  }, [dbOrders, orders]);
 
   useEffect(() => {
-    return subscribeOrders((allOrders) => {
+    // Subscribe to local store for instant order changes
+    const unsub = subscribeOrders((allOrders) => {
       setOrders(allOrders);
     });
+
+    // Fetch from Supabase immediately then every 15s
+    fetchFromDb();
+    const interval = setInterval(() => fetchFromDb(true), 15000);
+
+    return () => {
+      unsub();
+      clearInterval(interval);
+    };
   }, []);
 
   const handleConfirmPaymentAndPush = async (order: OrderItem) => {
     try {
+      // Update local store immediately for instant UI feedback
       confirmPaymentAndPushToKitchen(order.id, order.assignedChef || "Selva (Head Chef)");
-      
+
+      // Persist to Supabase and send WhatsApp confirmation
       const res = await fetch("/api/orders/confirm-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -79,14 +158,19 @@ export default function AdminOrdersPage() {
         }),
       });
 
-      setActionSuccess(`Payment verified! Order #${order.orderNumber} dispatched to kitchen station.`);
+      if (res.ok) {
+        // Re-fetch DB orders so the verified status shows immediately
+        await fetchFromDb(true);
+      }
+
+      setActionSuccess(`Payment verified. Order ${order.orderNumber} dispatched to kitchen.`);
       setTimeout(() => setActionSuccess(null), 4000);
     } catch (err) {
       console.error("Payment confirmation failed:", err);
     }
   };
 
-  const filteredOrders = orders.filter((order) => {
+  const filteredOrders = mergedOrders.filter((order) => {
     const matchesSearch =
       order.orderNumber.toLowerCase().includes(search.toLowerCase()) ||
       order.customerName.toLowerCase().includes(search.toLowerCase()) ||
@@ -166,18 +250,18 @@ export default function AdminOrdersPage() {
         >
           <TabsList className="bg-stone-100">
             <TabsTrigger value="all" className="text-xs">
-              All ({orders.length})
+              All ({mergedOrders.length})
             </TabsTrigger>
             <TabsTrigger value="unpaid" className="text-xs text-rose-800 font-semibold">
-              ⏳ Verify Payment ({orders.filter((o) => o.paymentStatus !== "PAID").length})
+              Verify Payment ({mergedOrders.filter((o) => o.paymentStatus !== "PAID").length})
             </TabsTrigger>
             <TabsTrigger value="rush" className="text-xs text-amber-800 font-semibold">
-              ⚡ Rush Orders ({orders.filter((o) => o.isInstantOrder).length})
+              ⚡ Rush Orders ({mergedOrders.filter((o) => o.isInstantOrder).length})
             </TabsTrigger>
             <TabsTrigger value="pending" className="text-xs">
               In Kitchen (
               {
-                orders.filter(
+                mergedOrders.filter(
                   (o) =>
                     o.orderStatus === "CONFIRMED" ||
                     o.orderStatus === "IN_OVEN" ||
@@ -191,7 +275,7 @@ export default function AdminOrdersPage() {
             <TabsTrigger value="ready" className="text-xs">
               Ready for Dispatch (
               {
-                orders.filter(
+                mergedOrders.filter(
                   (o) =>
                     o.orderStatus === "READY_FOR_PICKUP" ||
                     o.orderStatus === "READY" ||
@@ -202,7 +286,7 @@ export default function AdminOrdersPage() {
             </TabsTrigger>
             <TabsTrigger value="completed" className="text-xs">
               Completed (
-              {orders.filter((o) => o.orderStatus === "COMPLETED").length})
+              {mergedOrders.filter((o) => o.orderStatus === "COMPLETED").length})
             </TabsTrigger>
           </TabsList>
         </Tabs>
