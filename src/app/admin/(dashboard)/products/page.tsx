@@ -22,6 +22,8 @@ import {
   MapPin,
   Copy,
   ExternalLink,
+  ChefHat,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,7 +71,81 @@ import {
   addInventoryProduct,
   updateInventoryProduct,
   deleteInventoryProduct,
+  getDefaultRecipeForProduct,
 } from "@/lib/db/admin-data";
+
+const RECIPE_PRESETS: {
+  label: string;
+  icon: string;
+  category: string;
+  description: string;
+  ingredients: RecipeIngredient[];
+}[] = [
+  {
+    label: "Belgian Chocolate Truffle",
+    icon: "🍫",
+    category: "Cakes",
+    description: "Multi-layered Dutch dark chocolate sponge steeped in single-origin syrup and blanketed in 54% Callebaut ganache.",
+    ingredients: [
+      { rawMaterialId: 3, rawMaterialName: "54% Callebaut Dark Belgian Chocolate", amount: 300, unit: "g" },
+      { rawMaterialId: 1, rawMaterialName: "Refined Wheat Flour (Maida)", amount: 250, unit: "g" },
+      { rawMaterialId: 4, rawMaterialName: "Unsalted Dairy Butter", amount: 180, unit: "g" },
+      { rawMaterialId: 5, rawMaterialName: "Granulated White Sugar", amount: 150, unit: "g" },
+      { rawMaterialId: 8, rawMaterialName: "Heavy Dairy Whipping Cream", amount: 200, unit: "ml" },
+    ],
+  },
+  {
+    label: "Artisanal Sesame Bagel",
+    icon: "🥯",
+    category: "Bagels",
+    description: "Boiled and stone-baked chewy sourdough bagel crusted with aromatic toasted white sesame seeds.",
+    ingredients: [
+      { rawMaterialId: 2, rawMaterialName: "High-Gluten Bread Flour (for Bagels)", amount: 350, unit: "g" },
+      { rawMaterialId: 6, rawMaterialName: "Active Dry Yeast", amount: 8, unit: "g" },
+      { rawMaterialId: 10, rawMaterialName: "Toasted White Sesame Seeds", amount: 20, unit: "g" },
+      { rawMaterialId: 5, rawMaterialName: "Granulated White Sugar", amount: 20, unit: "g" },
+      { rawMaterialId: 4, rawMaterialName: "Unsalted Dairy Butter", amount: 30, unit: "g" },
+    ],
+  },
+  {
+    label: "Fudge Brownie",
+    icon: "🍪",
+    category: "Brownies",
+    description: "Dense, crackly-top fudge brownies baked with brown butter and melted Belgian chocolate.",
+    ingredients: [
+      { rawMaterialId: 3, rawMaterialName: "54% Callebaut Dark Belgian Chocolate", amount: 250, unit: "g" },
+      { rawMaterialId: 4, rawMaterialName: "Unsalted Dairy Butter", amount: 150, unit: "g" },
+      { rawMaterialId: 5, rawMaterialName: "Granulated White Sugar", amount: 180, unit: "g" },
+      { rawMaterialId: 1, rawMaterialName: "Refined Wheat Flour (Maida)", amount: 120, unit: "g" },
+    ],
+  },
+  {
+    label: "Philadelphia Cheesecake",
+    icon: "🍰",
+    category: "Cheesecakes & Tarts",
+    description: "Silky slow-baked cream cheese on a crushed butter-biscuit crust scented with Madagascar vanilla extract.",
+    ingredients: [
+      { rawMaterialId: 7, rawMaterialName: "Philadelphia Cream Cheese", amount: 350, unit: "g" },
+      { rawMaterialId: 8, rawMaterialName: "Heavy Dairy Whipping Cream", amount: 200, unit: "ml" },
+      { rawMaterialId: 5, rawMaterialName: "Granulated White Sugar", amount: 120, unit: "g" },
+      { rawMaterialId: 4, rawMaterialName: "Unsalted Dairy Butter", amount: 100, unit: "g" },
+      { rawMaterialId: 9, rawMaterialName: "Pure Madagascar Vanilla Extract", amount: 10, unit: "ml" },
+    ],
+  },
+  {
+    label: "Classic Vanilla / Tea Cake",
+    icon: "🧁",
+    category: "Cakes",
+    description: "Classic golden buttery tea cake infused with real vanilla and dairy richness, perfect for evening chai.",
+    ingredients: [
+      { rawMaterialId: 1, rawMaterialName: "Refined Wheat Flour (Maida)", amount: 250, unit: "g" },
+      { rawMaterialId: 4, rawMaterialName: "Unsalted Dairy Butter", amount: 160, unit: "g" },
+      { rawMaterialId: 5, rawMaterialName: "Granulated White Sugar", amount: 150, unit: "g" },
+      { rawMaterialId: 8, rawMaterialName: "Heavy Dairy Whipping Cream", amount: 100, unit: "ml" },
+      { rawMaterialId: 9, rawMaterialName: "Pure Madagascar Vanilla Extract", amount: 15, unit: "ml" },
+    ],
+  },
+];
 
 const MENU_CATEGORIES = [
   "Cakes",
@@ -114,6 +190,9 @@ export default function AdminProductsPage() {
   const [newProductPrice, setNewProductPrice] = useState("750");
   const [newProductStock, setNewProductStock] = useState("10");
   const [newProductBranch, setNewProductBranch] = useState("all");
+  const [newProductDescription, setNewProductDescription] = useState("");
+  const [newProductIsEggless, setNewProductIsEggless] = useState(true);
+  const [rawSelectKey, setRawSelectKey] = useState(0);
 
   // Post-Creation Success Modal & Copy URL state
   const [copiedProductId, setCopiedProductId] = useState<string | null>(null);
@@ -177,6 +256,32 @@ export default function AdminProductsPage() {
   const [customRawUnit, setCustomRawUnit] = useState<"g" | "kg" | "ml" | "l">("g");
   const [customRawAmount, setCustomRawAmount] = useState("100");
   const [showAddCustomRaw, setShowAddCustomRaw] = useState(false);
+
+  const handleApplyPreset = (preset: (typeof RECIPE_PRESETS)[0]) => {
+    setRecipeIngredients([...preset.ingredients]);
+    if (!newProductDescription) {
+      setNewProductDescription(preset.description);
+    }
+    if (!newProductName) {
+      setNewProductName(preset.label);
+    }
+    setNewProductCategory(preset.category);
+  };
+
+  const handleAddRawPill = (rawId: number) => {
+    const raw = localRawMaterials.find((r) => r.id === rawId);
+    if (!raw) return;
+    if (recipeIngredients.some((i) => i.rawMaterialId === raw.id)) return;
+    setRecipeIngredients((prev) => [
+      ...prev,
+      {
+        rawMaterialId: raw.id,
+        rawMaterialName: raw.name,
+        amount: raw.unit === "kg" ? 200 : raw.unit === "l" ? 150 : 1,
+        unit: raw.unit === "kg" ? "g" : raw.unit === "l" ? "ml" : "pcs",
+      },
+    ]);
+  };
 
   const filteredProducts = useMemo(() => {
     return productsList.filter((product) => {
@@ -274,17 +379,18 @@ export default function AdminProductsPage() {
     const raw = localRawMaterials.find((r) => r.id === rawId);
     if (!raw) return;
 
-    if (recipeIngredients.some((i) => i.rawMaterialId === raw.id)) return;
-
-    setRecipeIngredients([
-      ...recipeIngredients,
-      {
-        rawMaterialId: raw.id,
-        rawMaterialName: raw.name,
-        amount: raw.unit === "kg" ? 200 : 100,
-        unit: raw.unit === "kg" ? "g" : raw.unit === "l" ? "ml" : "pcs",
-      },
-    ]);
+    if (!recipeIngredients.some((i) => i.rawMaterialId === raw.id)) {
+      setRecipeIngredients((prev) => [
+        ...prev,
+        {
+          rawMaterialId: raw.id,
+          rawMaterialName: raw.name,
+          amount: raw.unit === "kg" ? 200 : raw.unit === "l" ? 150 : 1,
+          unit: raw.unit === "kg" ? "g" : raw.unit === "l" ? "ml" : "pcs",
+        },
+      ]);
+    }
+    setRawSelectKey((k) => k + 1);
   };
 
   const handleUpdateIngredientAmount = (index: number, newAmount: number) => {
@@ -344,6 +450,8 @@ export default function AdminProductsPage() {
       stock: initialStock,
       lowStockThreshold: 5,
       imageUrl: imagePreview,
+      description: newProductDescription.trim(),
+      isEggless: newProductIsEggless,
       recipe: recipeIngredients,
       availableBranches: newProductBranch,
       branchIds: newProductBranch === "all" ? ["harrisons", "nungambakkam"] : [newProductBranch],
@@ -355,7 +463,10 @@ export default function AdminProductsPage() {
     setNewProductName("");
     setNewProductPrice("750");
     setNewProductStock("10");
+    setNewProductDescription("");
+    setNewProductIsEggless(true);
     setNewProductBranch("all");
+    setRecipeIngredients(getDefaultRecipeForProduct(newProductCategory, ""));
 
     // Open post-creation success modal with prominent Copy Product URL button
     setCreatedSuccessProduct(created);
@@ -378,6 +489,8 @@ export default function AdminProductsPage() {
   const [editDescription, setEditDescription] = useState("");
   const [editIsEggless, setEditIsEggless] = useState(true);
   const [editBranch, setEditBranch] = useState("all");
+  const [editRecipe, setEditRecipe] = useState<RecipeIngredient[]>([]);
+  const [editRawSelectKey, setEditRawSelectKey] = useState(0);
 
   const handleOpenEditProduct = (prod: AdminProductItem) => {
     setEditingProduct(prod);
@@ -394,7 +507,52 @@ export default function AdminProductsPage() {
     setEditDescription(prod.description || "");
     setEditIsEggless(prod.isEggless !== false);
     setEditBranch(prod.availableBranches || "all");
+    setEditRecipe(
+      prod.recipe && prod.recipe.length > 0
+        ? [...prod.recipe]
+        : getDefaultRecipeForProduct(prod.category, prod.name)
+    );
     setIsEditOpen(true);
+  };
+
+  const handleAddEditIngredient = (rawIdStr: string) => {
+    const rawId = parseInt(rawIdStr, 10);
+    const raw = localRawMaterials.find((r) => r.id === rawId);
+    if (!raw) return;
+
+    if (!editRecipe.some((i) => i.rawMaterialId === raw.id)) {
+      setEditRecipe((prev) => [
+        ...prev,
+        {
+          rawMaterialId: raw.id,
+          rawMaterialName: raw.name,
+          amount: raw.unit === "kg" ? 200 : raw.unit === "l" ? 150 : 1,
+          unit: raw.unit === "kg" ? "g" : raw.unit === "l" ? "ml" : "pcs",
+        },
+      ]);
+    }
+    setEditRawSelectKey((k) => k + 1);
+  };
+
+  const handleUpdateEditIngredientAmount = (index: number, newAmount: number) => {
+    setEditRecipe((prev) =>
+      prev.map((item, idx) =>
+        idx === index ? { ...item, amount: Math.max(1, newAmount) } : item
+      )
+    );
+  };
+
+  const handleUpdateEditIngredientUnit = (
+    index: number,
+    newUnit: "g" | "kg" | "ml" | "l" | "pcs"
+  ) => {
+    setEditRecipe((prev) =>
+      prev.map((item, idx) => (idx === index ? { ...item, unit: newUnit } : item))
+    );
+  };
+
+  const handleRemoveEditIngredient = (index: number) => {
+    setEditRecipe((prev) => prev.filter((_, idx) => idx !== index));
   };
 
   const handleSaveEditProduct = (e: React.FormEvent) => {
@@ -414,6 +572,7 @@ export default function AdminProductsPage() {
       bestSeller: editBestSeller,
       description: editDescription,
       isEggless: editIsEggless,
+      recipe: editRecipe,
       availableBranches: editBranch,
       branchIds: editBranch === "all" ? ["harrisons", "nungambakkam"] : [editBranch],
     });
@@ -570,6 +729,19 @@ export default function AdminProductsPage() {
                     Determines which outlet will show pickup stock when customers order.
                   </p>
                 </div>
+
+                {/* 100% Pure Eggless Bake Checkbox */}
+                <div className="pt-1 border-t border-stone-200/50">
+                  <label className="flex items-center gap-2 text-xs font-semibold text-stone-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={newProductIsEggless}
+                      onChange={(e) => setNewProductIsEggless(e.target.checked)}
+                      className="rounded border-stone-300 text-amber-900 focus:ring-amber-800 accent-amber-900"
+                    />
+                    <span>100% Pure Eggless Bake (Dedicated prep station & utensils)</span>
+                  </label>
+                </div>
               </div>
 
               {/* Section 2: Image Upload & Preview */}
@@ -614,65 +786,135 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              {/* Section 3: Raw Materials / Byproducts Recipe Selection */}
+              {/* Section 3: Recipe Story & Chef Preparation Instructions */}
+              <div className="space-y-3 rounded-xl border border-stone-100 bg-stone-50/50 p-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700 flex items-center gap-1.5">
+                    <BookOpen className="h-3.5 w-3.5 text-amber-800" />
+                    Recipe Story & Chef Preparation Notes
+                  </h3>
+                  <span className="text-[11px] text-stone-400">Customer menu & chef instructions</span>
+                </div>
+
+                <div className="space-y-1.5">
+                  <textarea
+                    rows={3}
+                    value={newProductDescription}
+                    onChange={(e) => setNewProductDescription(e.target.value)}
+                    placeholder="Artisanal recipe details: Single-origin Belgian chocolate percentage, butter aeration, oven temperature, crumb texture, and signature garnish..."
+                    className="w-full text-xs rounded-md border border-stone-300 bg-white p-2.5 text-stone-900 placeholder:text-stone-500 font-sans outline-none focus:border-amber-800 focus:ring-1 focus:ring-amber-800/20 shadow-2xs resize-y"
+                  />
+                  <p className="text-[10px] text-stone-500">
+                    Document the baking technique, temperatures, and key flavor nuances for the kitchen team and customer discovery.
+                  </p>
+                </div>
+              </div>
+
+              {/* Section 4: Raw Material Inventory & Recipe (Bill of Materials) */}
               <div className="space-y-4 rounded-xl border border-stone-100 bg-stone-50/50 p-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-600 flex items-center gap-1.5">
-                      <Scale className="h-3.5 w-3.5 text-amber-800" />
-                      Raw Material Inventory & Recipe
-                    </h3>
-                    <p className="text-[11px] text-stone-500">
-                      Select raw materials used to bake 1 unit of this product.
-                    </p>
+                <div className="space-y-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div>
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700 flex items-center gap-1.5">
+                        <Scale className="h-3.5 w-3.5 text-amber-800" />
+                        Raw Materials Recipe (Bill of Materials)
+                      </h3>
+                      <p className="text-[11px] text-stone-500">
+                        Exact quantities of raw ingredients deducted from inventory to bake 1 unit.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {/* Add existing raw material */}
+                      <Select
+                        key={rawSelectKey}
+                        onValueChange={(val) => handleAddExistingIngredient(val)}
+                      >
+                        <SelectTrigger className="h-7 text-[11px] bg-white border-stone-300 text-stone-900 w-48 shadow-2xs">
+                          <SelectValue placeholder="+ Add Raw Material" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {localRawMaterials.map((r) => (
+                            <SelectItem key={r.id} value={r.id.toString()} className="text-xs">
+                              {r.name} ({r.stock} {r.unit})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowAddCustomRaw(!showAddCustomRaw)}
+                        className="h-7 text-[11px] px-2 bg-white border-stone-300 text-stone-800"
+                      >
+                        + New Ingredient
+                      </Button>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    {/* Add existing raw material */}
-                    <Select onValueChange={handleAddExistingIngredient}>
-                      <SelectTrigger className="h-7 text-[11px] bg-white w-44">
-                        <SelectValue placeholder="+ Select Raw Material" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {localRawMaterials.map((r) => (
-                          <SelectItem key={r.id} value={r.id.toString()} className="text-xs">
-                            {r.name} ({r.stock} {r.unit})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  {/* Quick Recipe Presets */}
+                  <div className="pt-2 border-t border-stone-200/60">
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <Sparkles className="w-3 h-3 text-amber-700" />
+                      <span className="text-[11px] font-semibold text-stone-600">Quick Recipe Presets (1-Click Load):</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {RECIPE_PRESETS.map((preset, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleApplyPreset(preset)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/80 transition-colors shadow-2xs cursor-pointer"
+                        >
+                          <span>{preset.icon}</span>
+                          <span>{preset.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowAddCustomRaw(!showAddCustomRaw)}
-                      className="h-7 text-[11px] px-2 bg-white"
-                    >
-                      + New Byproduct
-                    </Button>
+                  {/* Fast Ingredient Add Pills */}
+                  <div className="flex items-center gap-1 flex-wrap pt-1">
+                    <span className="text-[10px] text-stone-400 font-medium mr-1">Fast Add:</span>
+                    {localRawMaterials.slice(0, 7).map((mat) => (
+                      <button
+                        key={mat.id}
+                        type="button"
+                        onClick={() => handleAddRawPill(mat.id)}
+                        disabled={recipeIngredients.some((i) => i.rawMaterialId === mat.id)}
+                        className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${
+                          recipeIngredients.some((i) => i.rawMaterialId === mat.id)
+                            ? "bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed"
+                            : "bg-white text-stone-700 border-stone-300 hover:border-amber-700 hover:text-amber-900 cursor-pointer shadow-2xs"
+                        }`}
+                      >
+                        + {mat.name.split("(")[0].trim().split(" ").slice(0, 2).join(" ")}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
                 {/* Inline New Byproduct Form */}
                 {showAddCustomRaw && (
-                  <div className="p-3 rounded-lg bg-amber-50/60 border border-amber-200 space-y-2">
+                  <div className="p-3 rounded-lg bg-amber-50/70 border border-amber-200 space-y-2">
                     <p className="text-xs font-semibold text-amber-900">
-                      Add Custom Byproduct / Ingredient
+                      Add Custom Byproduct / Ingredient to Inventory
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <Input
                         placeholder="Ingredient name (e.g. Yeast)"
                         value={customRawName}
                         onChange={(e) => setCustomRawName(e.target.value)}
-                        className="h-8 text-xs bg-white"
+                        className="h-8 text-xs bg-white border-stone-300 text-stone-900"
                       />
                       <Input
                         type="number"
                         placeholder="Volume / Weight"
                         value={customRawAmount}
                         onChange={(e) => setCustomRawAmount(e.target.value)}
-                        className="h-8 text-xs bg-white"
+                        className="h-8 text-xs bg-white border-stone-300 text-stone-900"
                       />
                       <div className="flex gap-2">
                         <Select
@@ -681,7 +923,7 @@ export default function AdminProductsPage() {
                             setCustomRawUnit(v as "g" | "kg" | "ml" | "l")
                           }
                         >
-                          <SelectTrigger className="h-8 text-xs bg-white">
+                          <SelectTrigger className="h-8 text-xs bg-white border-stone-300 text-stone-900">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -695,7 +937,7 @@ export default function AdminProductsPage() {
                           type="button"
                           size="sm"
                           onClick={handleCreateCustomRawMaterial}
-                          className="h-8 text-xs bg-amber-900 text-white"
+                          className="h-8 text-xs bg-amber-900 text-white hover:bg-amber-950 font-semibold"
                         >
                           Add
                         </Button>
@@ -706,64 +948,71 @@ export default function AdminProductsPage() {
 
                 {/* Selected Recipe Items List */}
                 <div className="space-y-2">
-                  {recipeIngredients.map((ing, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center justify-between p-2.5 rounded-lg border border-stone-200 bg-white gap-3"
-                    >
-                      <span className="text-xs font-semibold text-stone-900 flex-1">
-                        {ing.rawMaterialName}
-                      </span>
+                  {recipeIngredients.length === 0 ? (
+                    <div className="p-4 rounded-lg border border-dashed border-stone-300 text-center bg-white/60">
+                      <p className="text-xs text-stone-500 font-medium">No ingredients added to this recipe yet.</p>
+                      <p className="text-[11px] text-stone-400">Click a preset recipe above or select ingredients from the dropdown.</p>
+                    </div>
+                  ) : (
+                    recipeIngredients.map((ing, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between p-2.5 rounded-lg border border-stone-200 bg-white gap-3 shadow-2xs"
+                      >
+                        <span className="text-xs font-semibold text-stone-900 flex-1">
+                          {ing.rawMaterialName}
+                        </span>
 
-                      <div className="flex items-center gap-2">
-                        <div className="w-24">
-                          <Input
-                            type="number"
-                            min="1"
-                            value={ing.amount}
-                            onChange={(e) =>
-                              handleUpdateIngredientAmount(
+                        <div className="flex items-center gap-2">
+                          <div className="w-24">
+                            <Input
+                              type="number"
+                              min="1"
+                              value={ing.amount}
+                              onChange={(e) =>
+                                handleUpdateIngredientAmount(
+                                  idx,
+                                  parseFloat(e.target.value) || 0
+                                )
+                              }
+                              className="h-7 text-xs text-right pr-2 bg-white border-stone-300 text-stone-900"
+                            />
+                          </div>
+
+                          <Select
+                            value={ing.unit}
+                            onValueChange={(val) =>
+                              handleUpdateIngredientUnit(
                                 idx,
-                                parseFloat(e.target.value) || 0
+                                val as "g" | "kg" | "ml" | "l" | "pcs"
                               )
                             }
-                            className="h-7 text-xs text-right pr-2"
-                          />
+                          >
+                            <SelectTrigger className="h-7 w-20 text-xs bg-white border-stone-300 text-stone-900">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="g">g</SelectItem>
+                              <SelectItem value="kg">kg</SelectItem>
+                              <SelectItem value="ml">ml</SelectItem>
+                              <SelectItem value="l">l</SelectItem>
+                              <SelectItem value="pcs">pcs</SelectItem>
+                            </SelectContent>
+                          </Select>
+
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveIngredient(idx)}
+                            className="h-7 w-7 text-stone-400 hover:text-red-600"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
                         </div>
-
-                        <Select
-                          value={ing.unit}
-                          onValueChange={(val) =>
-                            handleUpdateIngredientUnit(
-                              idx,
-                              val as "g" | "kg" | "ml" | "l" | "pcs"
-                            )
-                          }
-                        >
-                          <SelectTrigger className="h-7 w-20 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="g">g</SelectItem>
-                            <SelectItem value="kg">kg</SelectItem>
-                            <SelectItem value="ml">ml</SelectItem>
-                            <SelectItem value="l">l</SelectItem>
-                            <SelectItem value="pcs">pcs</SelectItem>
-                          </SelectContent>
-                        </Select>
-
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleRemoveIngredient(idx)}
-                          className="h-7 w-7 text-stone-400 hover:text-red-600"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -1411,18 +1660,124 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              {/* Description */}
+              {/* Description & Recipe Notes */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-stone-700">
-                  Product Description
+                <label className="text-xs font-semibold text-stone-700 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <BookOpen className="h-3.5 w-3.5 text-amber-800" />
+                    Recipe Story & Product Description
+                  </span>
+                  <span className="text-[11px] text-stone-400">Storefront & kitchen ticket</span>
                 </label>
                 <textarea
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
                   rows={3}
-                  placeholder="Artisanal recipe details, Belgian chocolate percentage, flavor notes..."
-                  className="w-full text-xs rounded-md border border-stone-200 bg-white p-2.5 focus:outline-hidden focus:ring-1 focus:ring-amber-900"
+                  placeholder="Artisanal recipe details, Belgian chocolate percentage, flavor notes, oven temperature..."
+                  className="w-full text-xs rounded-md border border-stone-300 bg-white p-2.5 text-stone-900 placeholder:text-stone-500 font-sans outline-none focus:border-amber-800 focus:ring-1 focus:ring-amber-800/20 shadow-2xs resize-y"
                 />
+              </div>
+
+              {/* Section: Raw Material Inventory & Recipe (Bill of Materials) */}
+              <div className="space-y-3 rounded-xl border border-stone-100 bg-stone-50/50 p-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-stone-700 flex items-center gap-1.5">
+                      <Scale className="h-3.5 w-3.5 text-amber-800" />
+                      Recipe Ingredients (Bill of Materials)
+                    </h4>
+                    <p className="text-[11px] text-stone-500">
+                      Raw materials deducted per 1 unit baked.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Select
+                      key={editRawSelectKey}
+                      onValueChange={(val) => handleAddEditIngredient(val)}
+                    >
+                      <SelectTrigger className="h-7 text-[11px] bg-white border-stone-300 text-stone-900 w-44 shadow-2xs">
+                        <SelectValue placeholder="+ Add Ingredient" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {localRawMaterials.map((r) => (
+                          <SelectItem key={r.id} value={r.id.toString()} className="text-xs">
+                            {r.name} ({r.stock} {r.unit})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Selected Edit Recipe Items List */}
+                <div className="space-y-2">
+                  {editRecipe.length === 0 ? (
+                    <div className="p-3 rounded-lg border border-dashed border-stone-300 text-center bg-white/60">
+                      <p className="text-xs text-stone-500">No raw materials linked to this product.</p>
+                      <p className="text-[10px] text-stone-400">Select an ingredient from the dropdown above.</p>
+                    </div>
+                  ) : (
+                    editRecipe.map((ing, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between p-2 rounded-lg border border-stone-200 bg-white gap-2 shadow-2xs"
+                      >
+                        <span className="text-xs font-semibold text-stone-900 flex-1 truncate">
+                          {ing.rawMaterialName}
+                        </span>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <div className="w-20">
+                            <Input
+                              type="number"
+                              min="1"
+                              value={ing.amount}
+                              onChange={(e) =>
+                                handleUpdateEditIngredientAmount(
+                                  idx,
+                                  parseFloat(e.target.value) || 0
+                                )
+                              }
+                              className="h-7 text-xs text-right pr-2 bg-white border-stone-300 text-stone-900"
+                            />
+                          </div>
+
+                          <Select
+                            value={ing.unit}
+                            onValueChange={(val) =>
+                              handleUpdateEditIngredientUnit(
+                                idx,
+                                val as "g" | "kg" | "ml" | "l" | "pcs"
+                              )
+                            }
+                          >
+                            <SelectTrigger className="h-7 w-16 text-xs bg-white border-stone-300 text-stone-900 px-1.5">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="g">g</SelectItem>
+                              <SelectItem value="kg">kg</SelectItem>
+                              <SelectItem value="ml">ml</SelectItem>
+                              <SelectItem value="l">l</SelectItem>
+                              <SelectItem value="pcs">pcs</SelectItem>
+                            </SelectContent>
+                          </Select>
+
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveEditIngredient(idx)}
+                            className="h-7 w-7 text-stone-400 hover:text-red-600"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
 
               <DialogFooter className="pt-2">

@@ -158,6 +158,8 @@ export function addLiveProduct(item: {
   imageUrl?: string;
   description?: string;
   isEggless?: boolean;
+  ingredients?: string[];
+  recipe?: { rawMaterialName: string }[];
 }): Product {
   const categoryId = item.category.toLowerCase().replace(/[^a-z0-9]+/g, "-");
   const slug = item.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -190,7 +192,12 @@ export function addLiveProduct(item: {
     isBestSeller: false,
     isFeatured: true,
     preparationTime: "2 hours",
-    ingredients: ["Pure Butter", "Unbleached Flour", "Organic Sugar"],
+    ingredients:
+      item.ingredients && item.ingredients.length > 0
+        ? item.ingredients
+        : item.recipe && item.recipe.length > 0
+        ? item.recipe.map((r) => r.rawMaterialName)
+        : ["Pure Butter", "Unbleached Flour", "Organic Sugar"],
     variants: [
       {
         id: `v-${id}-1`,

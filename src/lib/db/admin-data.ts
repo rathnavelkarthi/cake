@@ -190,20 +190,62 @@ export let localRawMaterials: RawMaterialItem[] = [
 ];
 
 // Sample default recipes for products
-const sampleRecipes: Record<string, RecipeIngredient[]> = {
-  "prod-1": [
-    { rawMaterialId: 3, rawMaterialName: "54% Callebaut Dark Belgian Chocolate", amount: 350, unit: "g" },
+export function getDefaultRecipeForProduct(category: string = "", name: string = ""): RecipeIngredient[] {
+  const cat = (category || "").toLowerCase();
+  const n = (name || "").toLowerCase();
+
+  if (n.includes("bagel") || cat.includes("bagel") || cat.includes("bread") || n.includes("bun")) {
+    return [
+      { rawMaterialId: 2, rawMaterialName: "High-Gluten Bread Flour (for Bagels)", amount: 350, unit: "g" },
+      { rawMaterialId: 6, rawMaterialName: "Active Dry Yeast", amount: 8, unit: "g" },
+      { rawMaterialId: 10, rawMaterialName: "Toasted White Sesame Seeds", amount: 20, unit: "g" },
+      { rawMaterialId: 5, rawMaterialName: "Granulated White Sugar", amount: 20, unit: "g" },
+      { rawMaterialId: 4, rawMaterialName: "Unsalted Dairy Butter", amount: 30, unit: "g" },
+    ];
+  }
+
+  if (n.includes("brownie") || cat.includes("brownie") || n.includes("fudge")) {
+    return [
+      { rawMaterialId: 3, rawMaterialName: "54% Callebaut Dark Belgian Chocolate", amount: 250, unit: "g" },
+      { rawMaterialId: 4, rawMaterialName: "Unsalted Dairy Butter", amount: 150, unit: "g" },
+      { rawMaterialId: 5, rawMaterialName: "Granulated White Sugar", amount: 180, unit: "g" },
+      { rawMaterialId: 1, rawMaterialName: "Refined Wheat Flour (Maida)", amount: 120, unit: "g" },
+    ];
+  }
+
+  if (n.includes("cheese") || cat.includes("cheese") || cat.includes("tart") || n.includes("tart")) {
+    return [
+      { rawMaterialId: 7, rawMaterialName: "Philadelphia Cream Cheese", amount: 350, unit: "g" },
+      { rawMaterialId: 8, rawMaterialName: "Heavy Dairy Whipping Cream", amount: 200, unit: "ml" },
+      { rawMaterialId: 5, rawMaterialName: "Granulated White Sugar", amount: 120, unit: "g" },
+      { rawMaterialId: 4, rawMaterialName: "Unsalted Dairy Butter", amount: 100, unit: "g" },
+      { rawMaterialId: 9, rawMaterialName: "Pure Madagascar Vanilla Extract", amount: 10, unit: "ml" },
+    ];
+  }
+
+  if (n.includes("tea cake") || n.includes("ghee") || n.includes("vanilla") || n.includes("sponge")) {
+    return [
+      { rawMaterialId: 1, rawMaterialName: "Refined Wheat Flour (Maida)", amount: 250, unit: "g" },
+      { rawMaterialId: 4, rawMaterialName: "Unsalted Dairy Butter", amount: 160, unit: "g" },
+      { rawMaterialId: 5, rawMaterialName: "Granulated White Sugar", amount: 150, unit: "g" },
+      { rawMaterialId: 8, rawMaterialName: "Heavy Dairy Whipping Cream", amount: 100, unit: "ml" },
+      { rawMaterialId: 9, rawMaterialName: "Pure Madagascar Vanilla Extract", amount: 15, unit: "ml" },
+    ];
+  }
+
+  // Default signature artisanal cake recipe
+  return [
+    { rawMaterialId: 3, rawMaterialName: "54% Callebaut Dark Belgian Chocolate", amount: 300, unit: "g" },
     { rawMaterialId: 1, rawMaterialName: "Refined Wheat Flour (Maida)", amount: 250, unit: "g" },
     { rawMaterialId: 4, rawMaterialName: "Unsalted Dairy Butter", amount: 180, unit: "g" },
     { rawMaterialId: 5, rawMaterialName: "Granulated White Sugar", amount: 150, unit: "g" },
     { rawMaterialId: 8, rawMaterialName: "Heavy Dairy Whipping Cream", amount: 200, unit: "ml" },
-  ],
-  "prod-2": [
-    { rawMaterialId: 3, rawMaterialName: "54% Callebaut Dark Belgian Chocolate", amount: 250, unit: "g" },
-    { rawMaterialId: 4, rawMaterialName: "Unsalted Dairy Butter", amount: 150, unit: "g" },
-    { rawMaterialId: 5, rawMaterialName: "Granulated White Sugar", amount: 200, unit: "g" },
-    { rawMaterialId: 1, rawMaterialName: "Refined Wheat Flour (Maida)", amount: 120, unit: "g" },
-  ],
+  ];
+}
+
+const sampleRecipes: Record<string, RecipeIngredient[]> = {
+  "prod-1": getDefaultRecipeForProduct("Cakes", "Belgian Chocolate Truffle"),
+  "prod-2": getDefaultRecipeForProduct("Brownies", "Fudge Brownie"),
 };
 
 // 2. Initial Product Inventory - Populated live from Supabase
@@ -393,7 +435,13 @@ export async function syncAdminProductsFromSupabase(): Promise<void> {
           bestSeller: Boolean(p.is_bestseller),
           description: p.description,
           isEggless: Boolean(p.is_eggless),
-          recipe: p.recipe || [],
+          recipe:
+            Array.isArray(p.recipe) && p.recipe.length > 0
+              ? p.recipe
+              : getDefaultRecipeForProduct(
+                  p.category_name || (p.category_id ? p.category_id.charAt(0).toUpperCase() + p.category_id.slice(1) : "Cakes"),
+                  p.name
+                ),
         }));
         notifyInventoryChange();
       }
@@ -449,7 +497,10 @@ export function addInventoryProduct(item: {
 }): AdminProductItem {
   const newId = `kch-prod-${Date.now()}`;
   const initialStock = item.stock || 0;
-  const recipe = item.recipe || [];
+  const recipe =
+    item.recipe && item.recipe.length > 0
+      ? item.recipe
+      : getDefaultRecipeForProduct(item.category, item.name);
 
   // Deduct raw materials for initial production batch if recipe provided
   if (initialStock > 0 && recipe.length > 0) {
@@ -495,6 +546,7 @@ export function addInventoryProduct(item: {
     imageUrl: newProd.imageUrl,
     description: item.description,
     isEggless: item.isEggless,
+    recipe,
   });
 
   notifyInventoryChange();
