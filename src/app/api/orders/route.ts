@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       items,
       subtotal,
       fulfilmentType = "PICKUP",
-      branchId = "harrisons",
+      branchId = CHENNAI_BRANCHES[0]?.id ?? "nungambakkam",
       deliveryAddress,
       deliveryDistanceKm = 0,
       deliveryFee = 0,

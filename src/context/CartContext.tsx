@@ -5,7 +5,7 @@ import { CartItem } from "@/lib/data/types";
 import { BUSINESS_CONFIG } from "@/lib/config/business";
 import { trackEvent } from "@/lib/analytics/events";
 import { useToast } from "@/components/ui/Toast";
-import { calculateDeliveryFee } from "@/lib/config/branches";
+import { calculateDeliveryFee, CHENNAI_BRANCHES } from "@/lib/config/branches";
 
 interface CartContextType {
   items: CartItem[];
@@ -35,7 +35,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [fulfilmentType, setFulfilmentType] = useState<"delivery" | "pickup">("delivery");
-  const [selectedBranchId, setSelectedBranchId] = useState<string>("harrisons");
+  // Single kitchen, so there is only ever one branch to select.
+    const [selectedBranchId, setSelectedBranchId] = useState<string>(
+      CHENNAI_BRANCHES[0]?.id ?? "nungambakkam"
+    );
   const [deliveryDistanceKm, setDeliveryDistanceKm] = useState<number>(3);
   const [deliveryAddress, setDeliveryAddress] = useState<string>("");
   const { toast } = useToast();

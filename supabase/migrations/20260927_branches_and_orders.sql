@@ -21,17 +21,19 @@ CREATE TABLE IF NOT EXISTS public.branches (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Seed Chennai Outlets: Harrisons Hotel & Casablanca Studio Nungambakkam
-INSERT INTO public.branches (id, name, short_name, address, area, city, pincode, phone, hours, latitude, longitude)
+-- Single kitchen. The former Harrisons Hotel counter has been retired, so it is
+-- marked inactive rather than deleted: historical orders still reference its id.
+INSERT INTO public.branches (id, name, short_name, address, area, city, pincode, phone, hours, latitude, longitude, is_active)
 VALUES 
-  ('harrisons', 'Kichee''s Baked Delights - Harrisons Hotel', 'Harrisons Hotel (Valluvar Kottam)', 'No. 315, Harrisons Hotel, Next to Bosch Showroom, Valluvar Kottam High Road, Nungambakkam, Chennai - 600034, Tamil Nadu', 'Valluvar Kottam High Road', 'Chennai', '600034', '+91 98846 31078', '9:00 AM - 10:30 PM', 13.056900, 80.242500),
-  ('nungambakkam', 'Kichee''s Baked Delights - Casablanca Studio', 'Casablanca Studio (Thirumoorthy Nagar)', 'Flat No. S2, Ground Floor, KG Casablanca-1, 17/18, Dr. Thirumoorthy Nagar Main Road, Nungambakkam, Chennai - 600034, Tamil Nadu', 'Dr. Thirumoorthy Nagar', 'Chennai', '600034', '+91 98846 31078', '8:00 AM - 11:00 PM', 13.060100, 80.237200)
+  ('nungambakkam', 'Kichee''s Baked Delights - Casablanca Studio', 'Casablanca Studio (Thirumoorthy Nagar)', 'KG Casablanca 1, S2, Ground Floor, Dr. Thirumoorthy Nagar Main Road, Nungambakkam, Chennai - 600034, Tamil Nadu', 'Dr. Thirumoorthy Nagar', 'Chennai', '600034', '+91 98846 31078', '8:00 AM - 11:00 PM', 13.060100, 80.237200, true),
+  ('harrisons', 'Kichee''s Baked Delights - Harrisons Hotel (Closed)', 'Harrisons Hotel (Retired)', 'No. 315, Harrisons Hotel, Valluvar Kottam High Road, Nungambakkam, Chennai - 600034, Tamil Nadu', 'Valluvar Kottam High Road', 'Chennai', '600034', '+91 98846 31078', 'Closed', 13.056900, 80.242500, false)
 ON CONFLICT (id) DO UPDATE SET
   name = EXCLUDED.name,
   short_name = EXCLUDED.short_name,
   address = EXCLUDED.address,
   phone = EXCLUDED.phone,
   hours = EXCLUDED.hours,
+  is_active = EXCLUDED.is_active,
   updated_at = now();
 
 -- 2. Products Outlet Association

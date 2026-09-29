@@ -1,5 +1,11 @@
-// Kichee's Baked Delights: Multi-Branch & Delivery Logistics Configuration
-// Verified Chennai Locations: Harrisons Hotel (Valluvar Kottam) & Casablanca Studio (Thirumoorthy Nagar)
+// Kichee's Baked Delights: Single-Kitchen & Delivery Logistics Configuration
+//
+// Kichees operates from one location: KG Casablanca 1, S2 Ground Floor,
+// Dr. Thirumoorthy Nagar, Nungambakkam. The former Harrisons Hotel counter has
+// been retired, so it must not be offered at checkout or printed on invoices.
+//
+// A separate delivery radius model still applies: we travel across Chennai, we
+// just bake in one kitchen.
 
 export interface BranchLocation {
   id: string;
@@ -18,30 +24,16 @@ export interface BranchLocation {
   isActive: boolean;
 }
 
+// The only location. Kept as a single-element array because checkout and order
+// history iterate over it, so the same code path works if a second kitchen is
+// added later.
 export const CHENNAI_BRANCHES: BranchLocation[] = [
-  {
-    id: "harrisons",
-    name: "Kichee's Baked Delights - Harrisons Hotel",
-    shortName: "Harrisons Hotel (Valluvar Kottam High Rd)",
-    address:
-      "No. 315, Harrisons Hotel, Next to Bosch Showroom, Valluvar Kottam High Road, Nungambakkam, Chennai - 600034, Tamil Nadu",
-    area: "Valluvar Kottam High Road, Nungambakkam",
-    city: "Chennai",
-    pincode: "600034",
-    phone: "+91 98846 31078",
-    timings: "9:00 AM - 10:30 PM (Daily)",
-    lat: 13.0569,
-    lng: 80.2425,
-    mapLink: "https://maps.google.com/?q=Harrisons+Hotel+Nungambakkam+Chennai",
-    isPickupAvailable: true,
-    isActive: true,
-  },
   {
     id: "nungambakkam",
     name: "Kichee's Baked Delights - Casablanca Studio",
     shortName: "Casablanca Studio (Thirumoorthy Nagar)",
     address:
-      "Flat No. S2, Ground Floor, KG Casablanca-1, 17/18, Dr. Thirumoorthy Nagar Main Road, Nungambakkam, Chennai - 600034, Tamil Nadu",
+      "KG Casablanca 1, S2, Ground Floor, Dr. Thirumoorthy Nagar Main Road, Nungambakkam, Chennai - 600034, Tamil Nadu",
     area: "Dr. Thirumoorthy Nagar, Nungambakkam",
     city: "Chennai",
     pincode: "600034",

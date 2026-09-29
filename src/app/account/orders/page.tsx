@@ -446,7 +446,7 @@ export default function CustomerOrdersPage() {
             </Card>
 
             <div className="mt-8 text-center text-xs text-stone-400">
-              <p>Kichee's Baked Delights • Central Kitchen & Harrisons Hotel Counter</p>
+              <p>Kichee's Baked Delights • Casablanca Studio, Nungambakkam</p>
               <p className="mt-1">For urgent queries, call +91 98846 31078</p>
             </div>
           </div>

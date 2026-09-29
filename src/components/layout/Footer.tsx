@@ -60,7 +60,7 @@ export default function Footer() {
 
             <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--accent-gold)", fontSize: "12px", fontWeight: 600 }}>
               <ShieldCheck size={16} />
-              <span>FSSAI Lic. #22421539000128 • Clean Kitchen Certified</span>
+              <span>GSTIN: {BUSINESS_CONFIG.taxIdentity.gstin} • Clean Kitchen</span>
             </div>
           </div>
 

@@ -23,6 +23,15 @@ export interface BusinessConfig {
     landmark: string;
     full: string;
   };
+  /**
+   * Tax registration details printed on every invoice. Kept here rather than
+   * inline in the billing page so the number is changed in exactly one place.
+   */
+  taxIdentity: {
+    gstin: string;
+    stateCode: string;
+    stateName: string;
+  };
   mapsUrl: string;
   googleMapsEmbedUrl?: string;
   openingHours: OpeningHour[];
@@ -55,16 +64,24 @@ export const BUSINESS_CONFIG: BusinessConfig = {
   whatsapp: "+919840823145",
   whatsappDisplay: "+91 98408 23145",
   email: "orders@kichees.in",
+  // Single registered place of business. The former Harrisons Hotel counter is
+  // no longer a separate outlet, so it must not appear on invoices.
   address: {
-    line1: "142 Nungambakkam High Road",
-    locality: "Nungambakkam",
+    line1: "KG Casablanca 1, S2, Ground Floor",
+    locality: "Dr. Thirumoorthy Nagar, Nungambakkam",
     city: "Chennai",
     state: "Tamil Nadu",
     pincode: "600034",
-    landmark: "Near Sterling Road Junction",
-    full: "142 Nungambakkam High Road, Nungambakkam, Chennai, Tamil Nadu 600034",
+    landmark: "Dr. Thirumoorthy Nagar Main Road",
+    full: "KG Casablanca 1, S2, Ground Floor, Dr. Thirumoorthy Nagar Main Road, Nungambakkam, Chennai, Tamil Nadu 600034",
   },
-  mapsUrl: "https://maps.google.com/?q=Nungambakkam+High+Road+Chennai+600034",
+  taxIdentity: {
+    gstin: "33BCVPK6982M2ZL",
+    stateCode: "33",
+    stateName: "Tamil Nadu",
+  },
+  mapsUrl:
+    "https://maps.google.com/?q=KG+Casablanca+1+Dr+Thirumoorthy+Nagar+Nungambakkam+Chennai+600034",
   openingHours: [
     { days: "Monday to Sunday", hours: "9:00 AM to 10:30 PM", isOpenToday: true },
   ],

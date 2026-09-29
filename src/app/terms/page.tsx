@@ -44,7 +44,7 @@ export default function TermsOfServicePage() {
                     2. Pricing & No Hidden Fees
                   </h2>
                   <p>
-                    All listed prices in our bakery menu are transparent. Applicable delivery fees based on distance from our Nungambakkam / Harrisons Hotel hubs are clearly displayed in your bag before final confirmation.
+                    All listed prices in our bakery menu are transparent. Applicable delivery fees based on distance from our Casablanca Studio, Nungambakkam kitchen are clearly displayed in your bag before final confirmation.
                   </p>
                 </section>
 

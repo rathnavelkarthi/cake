@@ -52,6 +52,23 @@ import {
   subscribeInventory,
   AdminProductItem,
 } from "@/lib/db/admin-data";
+import { BUSINESS_CONFIG } from "@/lib/config/business";
+
+/**
+ * The single place invoices read business identity from.
+ *
+ * Previously the GSTIN, FSSAI number, both outlet addresses and the phone
+ * numbers were typed inline in three separate blocks, so they drifted apart and
+ * two of them were placeholders. Changing a detail here updates every bill.
+ */
+const BILLING_IDENTITY = {
+  address: BUSINESS_CONFIG.address.full,
+  gstin: BUSINESS_CONFIG.taxIdentity.gstin,
+  stateCode: BUSINESS_CONFIG.taxIdentity.stateCode,
+  stateName: BUSINESS_CONFIG.taxIdentity.stateName,
+  phone: `${BUSINESS_CONFIG.phoneDisplay} / ${BUSINESS_CONFIG.whatsappDisplay}`,
+  email: BUSINESS_CONFIG.email,
+} as const;
 
 interface BillItem {
   id: string;
@@ -192,9 +209,9 @@ function generateInvoiceHtml(data: InvoicePrintData): string {
   <div class="text-center">
     <div style="font-size: 15px; font-weight: bold; letter-spacing: 0.5px;">KICHEE'S BAKED DELIGHTS</div>
     <div style="font-size: 9.5px;">Artisanal Cakes & Patisserie</div>
-    <div style="font-size: 9px; margin-top: 2px;">Harrisons Hotel & Casablanca Studio, Chennai</div>
-    <div style="font-size: 9px;">GSTIN: 33AAFCK8920C1Z4 • FSSAI: 12423002000543</div>
-    <div style="font-size: 9px;">Ph: +91 98400 00000 / +91 98840 22000</div>
+    <div style="font-size: 9px; margin-top: 2px;">${BILLING_IDENTITY.address}</div>
+    <div style="font-size: 9px;">GSTIN: ${BILLING_IDENTITY.gstin}</div>
+    <div style="font-size: 9px;">Ph: ${BILLING_IDENTITY.phone}</div>
   </div>
 
   <div class="divider"></div>
@@ -424,13 +441,11 @@ function generateInvoiceHtml(data: InvoicePrintData): string {
           <div class="brand-title">Kichee's Baked Delights</div>
           <div class="brand-subtitle">Artisanal Patisserie & Bespoke Cake Studio</div>
           <div class="brand-address">
-            <strong>Outlet 1:</strong> Harrisons Hotel, 315 Valluvar Kottam High Rd, Nungambakkam, Chennai - 600034<br>
-            <strong>Outlet 2:</strong> Casablanca Studio, Dr. Thirumoorthy Nagar, Nungambakkam, Chennai - 600034<br>
-            <strong>Phone:</strong> +91 98400 00000 / +91 98840 22000 | <strong>Email:</strong> orders@kicheesbakeddelights.in
+            <strong>Address:</strong> ${BILLING_IDENTITY.address}<br>
+            <strong>Phone:</strong> ${BILLING_IDENTITY.phone} | <strong>Email:</strong> ${BILLING_IDENTITY.email}
           </div>
           <div style="margin-top: 6px;">
-            <span class="tax-badge">GSTIN: 33AAFCK8920C1Z4</span>
-            <span class="tax-badge" style="margin-left: 4px;">FSSAI: 12423002000543</span>
+            <span class="tax-badge">GSTIN: ${BILLING_IDENTITY.gstin}</span>
           </div>
         </td>
         <td class="invoice-title-col">
@@ -461,7 +476,7 @@ function generateInvoiceHtml(data: InvoicePrintData): string {
           <td class="meta-label">Payment Mode:</td>
           <td class="meta-val" style="color: #15803d;">${data.paymentMethod} (Verified & Paid)</td>
           <td class="meta-label">State Code:</td>
-          <td class="meta-val">33 (Tamil Nadu)</td>
+          <td class="meta-val">${BILLING_IDENTITY.stateCode} (${BILLING_IDENTITY.stateName})</td>
         </tr>
       </table>
     </div>
@@ -515,7 +530,7 @@ function generateInvoiceHtml(data: InvoicePrintData): string {
             <span style="font-style: italic; font-weight: 700; color: #3a2016;">${numberToWords(data.grandTotal)}</span>
             <div style="margin-top: 8px; font-size: 10px; color: #777;">
               • Bakery Tax Invoice issued under Section 31 of CGST Act, 2017.<br>
-              • Food grade packaging adhering to FSSAI packaging guidelines.
+              • Food grade packaging, safe for direct food contact.
             </div>
           </div>
         </td>
@@ -862,7 +877,8 @@ export default function AdminBillingPage() {
       `*Payment Method:* ${paymentMethod} (Paid)`,
       `--------------------------------`,
       `Thank you for baking sweet memories with Kichee's!`,
-      `📍 Harrisons Hotel & Casablanca Studio, Chennai`,
+      `📍 ${BILLING_IDENTITY.address}`,
+      `GSTIN: ${BILLING_IDENTITY.gstin}`,
     ].filter(Boolean);
 
     const text = encodeURIComponent(lines.join("\n"));
@@ -1568,16 +1584,12 @@ export default function AdminBillingPage() {
                       Artisanal Oven-Fresh Patisserie & Bespoke Cake Studio
                     </p>
                     <div className="text-[11px] text-stone-600 mt-1 space-y-0.5">
-                      <p>Harrisons Hotel, 315 Valluvar Kottam High Rd, Chennai - 600034</p>
-                      <p>Casablanca Studio, Dr. Thirumoorthy Nagar, Chennai - 600034</p>
-                      <p>Ph: +91 98400 00000 / +91 98840 22000</p>
+                      <p>{BILLING_IDENTITY.address}</p>
+                      <p>Ph: {BILLING_IDENTITY.phone}</p>
                     </div>
                     <div className="flex gap-2 mt-2">
                       <span className="text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200 px-1.5 py-0.5 rounded">
-                        GSTIN: 33AAFCK8920C1Z4
-                      </span>
-                      <span className="text-[10px] font-bold bg-stone-50 text-stone-700 border border-stone-200 px-1.5 py-0.5 rounded">
-                        FSSAI: 12423002000543
+                        GSTIN: {BILLING_IDENTITY.gstin}
                       </span>
                     </div>
                   </div>

@@ -431,7 +431,7 @@ export default function AdminOrdersPage() {
                       )}
                       <span className="font-semibold line-clamp-1">
                         {order.fulfilmentType === "PICKUP"
-                          ? (order.branchName || "Harrisons Hotel (Valluvar Kottam)")
+                          ? (order.branchName || "Casablanca Studio (Nungambakkam)")
                           : `Delivery (${order.deliveryDistanceKm || "3"} km)`}
                       </span>
                     </div>

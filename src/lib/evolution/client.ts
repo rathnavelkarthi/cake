@@ -1,6 +1,8 @@
 // Evolution API integration for Kichee's Baked Delights
 // Sends order confirmations, UPI payment QR codes, kitchen status alerts, and customer login OTPs.
 
+import { BUSINESS_CONFIG } from "@/lib/config/business";
+
 export interface EvolutionSendResult {
   success: boolean;
   messageId?: string;
@@ -149,7 +151,7 @@ export async function sendOrderConfirmationWhatsApp(order: {
   const fulfillmentDetails =
     order.fulfilmentType === "PICKUP"
       ? `📍 *Self-Collection / Counter Pickup:*\n🏢 ${order.branchName || "Kichee's Bakery"}\n📌 ${
-          order.branchAddress || "Harrisons Hotel / Nungambakkam, Chennai"
+          order.branchAddress || BUSINESS_CONFIG.address.full
         }`
       : `🚚 *Home Delivery across Chennai:*\n📌 Address: ${order.deliveryAddress || "As registered"}\n📏 Est. Distance: ${
           order.deliveryDistanceKm || "N/A"
@@ -300,7 +302,7 @@ Live tracker:
 
 Dear *${order.customerName}*, your cake (*${order.orderNumber}*) is freshly packaged and waiting for you!
 
-📍 *Collection Point:* ${order.branchName || "Kichee's Bakery (Harrisons Hotel, Nungambakkam)"}
+📍 *Collection Point:* ${order.branchName || `Kichee's Bakery (${BUSINESS_CONFIG.address.full})`}
 ⏰ Feel free to pick it up anytime today. We can't wait to hand it over!
 
 Live details:
