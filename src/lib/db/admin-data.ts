@@ -27,7 +27,7 @@ export interface AdminProductItem {
   isEggless?: boolean;
   recipe?: RecipeIngredient[];
   branchIds?: string[];
-  availableBranches?: string; // 'all' | 'harrisons' | 'nungambakkam'
+  availableBranches?: string; // 'all' | 'nungambakkam' (single kitchen)
 }
 
 export interface RawMaterialItem {
@@ -375,6 +375,132 @@ export async function getAdminProducts(search?: string, status?: string) {
   return filtered;
 }
 
+export interface BulkRowResult {
+  index: number;
+  name: string;
+  action: "created" | "updated" | "skipped";
+  id?: string | number;
+  error?: string;
+}
+
+export interface BulkImportSummary {
+  created: number;
+  updated: number;
+  skipped: number;
+}
+
+export interface BulkImportOutcome {
+  summary: BulkImportSummary;
+  results: BulkRowResult[];
+}
+
+export interface BulkRawMaterialInput {
+  name: string;
+  sku?: string;
+  category?: string;
+  stock?: number;
+  unit?: string;
+  minThreshold?: number;
+  costPerUnit?: number;
+  supplier?: string;
+}
+
+export interface BulkProductInput {
+  name: string;
+  slug?: string;
+  sku?: string;
+  category?: string;
+  price: number;
+  salePrice?: number;
+  stock?: number;
+  lowStockThreshold?: number;
+  description?: string;
+  isEggless?: boolean;
+  isActive?: boolean;
+  isFeatured?: boolean;
+  isBestSeller?: boolean;
+  imageUrl?: string;
+  availableBranches?: string;
+  branchIds?: string[];
+  recipe?: RecipeIngredient[];
+}
+
+const EMPTY_SUMMARY: BulkImportSummary = { created: 0, updated: 0, skipped: 0 };
+
+function summariseRows(results: BulkRowResult[]): BulkImportSummary {
+  if (!Array.isArray(results) || results.length === 0) return { ...EMPTY_SUMMARY };
+  return {
+    created: results.filter((r) => r.action === "created").length,
+    updated: results.filter((r) => r.action === "updated").length,
+    skipped: results.filter((r) => r.action === "skipped").length,
+  };
+}
+
+/**
+ * Writes a whole sheet of raw materials in a single request, then re-reads the
+ * authoritative list so the inventory page reflects server-assigned ids and SKUs.
+ */
+export async function bulkImportRawMaterials(
+  items: BulkRawMaterialInput[]
+): Promise<BulkImportOutcome> {
+  if (items.length === 0) {
+    return { summary: { ...EMPTY_SUMMARY }, results: [] };
+  }
+
+  const res = await fetch("/api/raw-materials/bulk", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ items }),
+  });
+
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new Error(data?.error || `Import failed (${res.status})`);
+  }
+
+  await syncRawMaterialsFromSupabase();
+  return {
+    summary: data.summary ?? summariseRows(data.results),
+    results: data.results ?? [],
+  };
+}
+
+/** Writes a whole sheet of products in a single request. */
+export async function bulkImportProducts(
+  items: BulkProductInput[]
+): Promise<BulkImportOutcome> {
+  if (items.length === 0) {
+    return { summary: { ...EMPTY_SUMMARY }, results: [] };
+  }
+
+  const res = await fetch("/api/products/bulk", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ items }),
+  });
+
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new Error(data?.error || `Import failed (${res.status})`);
+  }
+
+  await syncAdminProductsFromSupabase();
+  return {
+    summary: data.summary ?? summariseRows(data.results),
+    results: data.results ?? [],
+  };
+}
+
+/** Upload one image to Supabase storage and return its public URL. */
+export async function uploadImage(file: File): Promise<string | null> {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch("/api/upload", { method: "POST", body: form });
+  if (!res.ok) return null;
+  const data = await res.json().catch(() => null);
+  return data?.url ?? null;
+}
+
 export async function getAdminOrders(status?: string) {
   const liveOrders = await fetchOrdersFromSupabase();
   let filtered = liveOrders.length > 0 ? liveOrders : [...localOrders];
@@ -411,6 +537,30 @@ export async function getRawMaterials() {
 type InventoryChangeListener = () => void;
 const inventoryChangeListeners: Set<InventoryChangeListener> = new Set();
 let hasSyncedFromSupabase = false;
+let hasSyncedRawMaterials = false;
+
+/**
+ * Replaces the in-memory raw material list with the persisted one.
+ *
+ * Raw materials used to exist only in this module, so anything staff added
+ * vanished on refresh. The server is now the source of truth; if the request
+ * fails we keep the seeded defaults so the kitchen page still works offline.
+ */
+export async function syncRawMaterialsFromSupabase(): Promise<void> {
+  if (typeof window === "undefined") return;
+  try {
+    const res = await fetch("/api/raw-materials", { cache: "no-store" });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (Array.isArray(data.rawMaterials) && data.rawMaterials.length > 0) {
+      localRawMaterials = data.rawMaterials;
+      notifyInventoryChange();
+    }
+    hasSyncedRawMaterials = true;
+  } catch (err) {
+    console.warn("Failed to sync raw materials from Supabase:", err);
+  }
+}
 
 export async function syncAdminProductsFromSupabase(): Promise<void> {
   if (typeof window === "undefined") return;
@@ -455,13 +605,15 @@ export async function syncAdminProductsFromSupabase(): Promise<void> {
 if (typeof window !== "undefined" && !hasSyncedFromSupabase) {
   setTimeout(() => {
     syncAdminProductsFromSupabase();
+    syncRawMaterialsFromSupabase();
   }, 10);
 }
 
 export function subscribeInventory(listener: InventoryChangeListener): () => void {
   inventoryChangeListeners.add(listener);
-  if (typeof window !== "undefined" && !hasSyncedFromSupabase) {
-    syncAdminProductsFromSupabase();
+  if (typeof window !== "undefined") {
+    if (!hasSyncedFromSupabase) syncAdminProductsFromSupabase();
+    if (!hasSyncedRawMaterials) syncRawMaterialsFromSupabase();
   }
   return () => {
     inventoryChangeListeners.delete(listener);
@@ -532,7 +684,7 @@ export function addInventoryProduct(item: {
     isEggless: item.isEggless ?? true,
     recipe,
     availableBranches: item.availableBranches || "all",
-    branchIds: item.branchIds || ["harrisons", "nungambakkam"],
+    branchIds: item.branchIds || ["nungambakkam"],
   };
 
   localProducts.unshift(newProd);
@@ -638,14 +790,37 @@ export function deleteInventoryProduct(id: number | string): boolean {
   return false;
 }
 
+/**
+ * Registers a new raw material. The server assigns the id and assigns the
+ * SKU when blank, so we re-hydrate rather than guessing a local id.
+ */
 export async function addRawMaterial(item: Omit<RawMaterialItem, "id">) {
-  const newItem: RawMaterialItem = {
-    id: localRawMaterials.length + 1,
+  // Optimistic local insert so the table updates instantly.
+  const optimistic: RawMaterialItem = {
     ...item,
+    id: Math.max(0, ...localRawMaterials.map((r) => r.id)) + 1,
   };
-  localRawMaterials.push(newItem);
+  localRawMaterials.push(optimistic);
   notifyInventoryChange();
-  return newItem;
+
+  if (typeof window !== "undefined") {
+    try {
+      const res = await fetch("/api/raw-materials", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(item),
+      });
+      if (!res.ok) {
+        console.error("Failed to persist raw material:", res.status);
+      }
+    } catch (err) {
+      console.error("Failed to persist raw material:", err);
+    }
+    // Replace the optimistic row (and pick up any concurrent bulk import).
+    await syncRawMaterialsFromSupabase();
+  }
+
+  return optimistic;
 }
 
 export async function adjustRawMaterialStock(
@@ -654,10 +829,23 @@ export async function adjustRawMaterialStock(
   reason: string
 ) {
   const item = localRawMaterials.find((r) => r.id === id);
-  if (item) {
-    item.stock = Math.max(0, Math.round((item.stock + delta) * 100) / 100);
-    notifyInventoryChange();
+  if (!item) return item;
+
+  item.stock = Math.max(0, Math.round((item.stock + delta) * 100) / 100);
+  notifyInventoryChange();
+
+  if (typeof window !== "undefined") {
+    try {
+      await fetch("/api/raw-materials", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, stock: item.stock }),
+      });
+    } catch (err) {
+      console.error("Failed to persist raw material stock adjustment:", err);
+    }
   }
+
   return item;
 }
 

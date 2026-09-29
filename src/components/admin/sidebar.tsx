@@ -18,6 +18,7 @@ import {
   ChevronRight,
   UserCheck,
   MessageSquare,
+  FileSpreadsheet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -79,6 +80,12 @@ export const navItems: NavItem[] = [
     title: "Products",
     href: "/admin/products",
     icon: Cake,
+  },
+  {
+    title: "Bulk Upload",
+    href: "/admin/bulk-upload",
+    icon: FileSpreadsheet,
+    badge: "Fast",
   },
   {
     title: "Reports & Sales",
@@ -159,6 +166,8 @@ export function AdminSidebar() {
                     "rounded-full px-2 py-0.5 text-[10px] font-bold",
                     item.badge === "Low"
                       ? "bg-amber-100 text-amber-800"
+                      : item.badge === "Fast"
+                      ? "bg-emerald-100 text-emerald-800"
                       : "bg-stone-200 text-stone-700"
                   )}
                 >

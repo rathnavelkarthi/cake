@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   Plus,
   Search,
@@ -529,7 +530,7 @@ export default function AdminProductsPage() {
       isEggless: newProductIsEggless,
       recipe: recipeIngredients,
       availableBranches: newProductBranch,
-      branchIds: newProductBranch === "all" ? ["harrisons", "nungambakkam"] : [newProductBranch],
+      branchIds: ["nungambakkam"],
     });
 
     setIsAddOpen(false);
@@ -649,7 +650,7 @@ export default function AdminProductsPage() {
       isEggless: editIsEggless,
       recipe: editRecipe,
       availableBranches: editBranch,
-      branchIds: editBranch === "all" ? ["harrisons", "nungambakkam"] : [editBranch],
+      branchIds: ["nungambakkam"],
     });
 
     setIsEditOpen(false);
@@ -682,8 +683,18 @@ export default function AdminProductsPage() {
           </p>
         </div>
 
-        {/* Add Product Dialog */}
-        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+        <div className="flex items-center gap-2.5">
+          {/* Bulk upload is the fast path for a whole menu or stock list. */}
+          <Link
+            href="/admin/bulk-upload?tab=products"
+            className="inline-flex h-9 items-center gap-2 rounded-md border border-stone-300 bg-white px-3 text-xs font-semibold text-stone-800 shadow-sm transition-colors hover:bg-stone-50"
+          >
+            <Upload className="h-4 w-4" />
+            Bulk Upload
+          </Link>
+
+          {/* Add Product Dialog */}
+          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
             <Button className="bg-amber-900 hover:bg-amber-950 text-white font-medium shadow-sm">
               <Plus className="mr-2 h-4 w-4" />
@@ -779,7 +790,7 @@ export default function AdminProductsPage() {
                 <div className="space-y-1.5 pt-1">
                   <label className="text-xs font-semibold text-stone-700 flex items-center justify-between">
                     <span>Bakery Outlet / Inventory Location</span>
-                    <span className="text-[10px] text-amber-800 font-medium">Harrisons & Nungambakkam</span>
+                    <span className="text-[10px] text-amber-800 font-medium">Casablanca Studio</span>
                   </label>
                   <Select
                     value={newProductBranch}
@@ -790,10 +801,7 @@ export default function AdminProductsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all" className="text-xs font-semibold">
-                        📍 Available at Both Outlets (Harrisons Hotel & Casablanca Studio)
-                      </SelectItem>
-                      <SelectItem value="harrisons" className="text-xs">
-                        📍 Kichee's @ Harrisons Hotel (Valluvar Kottam High Rd)
+                        📍 Kichee's @ Casablanca Studio (Dr. Thirumoorthy Nagar)
                       </SelectItem>
                       <SelectItem value="nungambakkam" className="text-xs">
                         📍 Kichee's @ Casablanca Studio (Dr. Thirumoorthy Nagar)
@@ -810,7 +818,7 @@ export default function AdminProductsPage() {
                   <label className="text-xs font-bold text-stone-800 flex items-center justify-between">
                     <span>Dietary Classification (Veg / Non-Veg)</span>
                     <span className="text-[10px] text-stone-500 font-normal">
-                      Shows FSSAI mark on customer menu & bills
+                      Shows the green veg mark on customer menu & bills
                     </span>
                   </label>
 
@@ -1265,7 +1273,8 @@ export default function AdminProductsPage() {
               </DialogFooter>
             </form>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
       {/* Filter and Search Bar */}
@@ -1395,11 +1404,7 @@ export default function AdminProductsPage() {
                     <div className="text-[10px] text-amber-800 font-medium flex items-center gap-1 mt-0.5 pl-5">
                       <MapPin className="h-2.5 w-2.5 shrink-0" />
                       <span>
-                        {product.availableBranches === "harrisons"
-                          ? "Harrisons Hotel"
-                          : product.availableBranches === "nungambakkam"
-                          ? "Casablanca Studio"
-                          : "Both Outlets"}
+                        Casablanca Studio
                       </span>
                     </div>
                   </TableCell>
@@ -1766,7 +1771,7 @@ export default function AdminProductsPage() {
                 <div className="space-y-1.5 pt-1">
                   <label className="text-xs font-semibold text-stone-700 flex items-center justify-between">
                     <span>Bakery Outlet / Inventory Location</span>
-                    <span className="text-[10px] text-amber-800 font-medium">Harrisons Hotel & Casablanca Studio</span>
+                    <span className="text-[10px] text-amber-800 font-medium">Casablanca Studio</span>
                   </label>
                   <Select value={editBranch} onValueChange={setEditBranch}>
                     <SelectTrigger className="bg-white text-xs h-9 border-stone-200">
@@ -1774,10 +1779,7 @@ export default function AdminProductsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all" className="text-xs font-semibold">
-                        📍 Available at Both Outlets (Harrisons & Casablanca)
-                      </SelectItem>
-                      <SelectItem value="harrisons" className="text-xs">
-                        📍 Kichee's @ Harrisons Hotel (Valluvar Kottam High Rd)
+                        📍 Kichee's @ Casablanca Studio (Dr. Thirumoorthy Nagar)
                       </SelectItem>
                       <SelectItem value="nungambakkam" className="text-xs">
                         📍 Kichee's @ Casablanca Studio (Dr. Thirumoorthy Nagar)
@@ -1845,7 +1847,7 @@ export default function AdminProductsPage() {
                   <label className="text-xs font-bold text-stone-800 flex items-center justify-between">
                     <span>Dietary Classification (Veg / Non-Veg)</span>
                     <span className="text-[10px] text-stone-500 font-normal">
-                      Shows FSSAI mark on customer menu & bills
+                      Shows the green veg mark on customer menu & bills
                     </span>
                   </label>
 

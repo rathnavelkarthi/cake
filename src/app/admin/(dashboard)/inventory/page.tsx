@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import {
   Package,
   Search,
@@ -13,6 +14,7 @@ import {
   Scale,
   Sparkles,
   ArrowRight,
+  Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -284,6 +286,13 @@ export default function AdminInventoryPage() {
 
         {/* Kitchen Bake Production Action */}
         <div className="flex items-center gap-2.5">
+          <Link
+            href="/admin/bulk-upload?tab=raw-materials"
+            className="inline-flex h-9 items-center gap-2 rounded-md border border-stone-300 bg-white px-3 text-xs font-semibold text-stone-800 shadow-sm transition-colors hover:bg-stone-50"
+          >
+            <Upload className="h-4 w-4" />
+            Bulk Upload
+          </Link>
           <Button
             onClick={() => setIsBakeOpen(true)}
             className="bg-amber-900 hover:bg-amber-950 text-white font-medium text-xs h-9 shadow-sm"
@@ -333,15 +342,27 @@ export default function AdminInventoryPage() {
             </div>
 
             {activeInventoryTab === "raw_materials" && (
-              <Button
-                size="sm"
-                onClick={() => setIsAddRawOpen(true)}
-                variant="outline"
-                className="h-9 text-xs gap-1 border-stone-300"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Add Raw Material
-              </Button>
+              <>
+                <Button
+                  size="sm"
+                  onClick={() => setIsAddRawOpen(true)}
+                  variant="outline"
+                  className="h-9 text-xs gap-1 border-stone-300"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add Raw Material
+                </Button>
+                <Button
+                  size="sm"
+                  asChild
+                  className="h-9 text-xs bg-amber-900 text-white hover:bg-amber-950"
+                >
+                  <Link href="/admin/bulk-upload?tab=raw-materials">
+                    <Upload className="mr-1.5 h-3.5 w-3.5" />
+                    Bulk Upload
+                  </Link>
+                </Button>
+              </>
             )}
           </div>
         </div>
