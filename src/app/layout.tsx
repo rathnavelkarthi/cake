@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Manrope } from "next/font/google";
+import { Cormorant_Garamond, Manrope, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { generateBakerySchema, generateFAQSchema } from "@/lib/seo/structured-data";
 import { BUSINESS_CONFIG } from "@/lib/config/business";
@@ -17,6 +17,12 @@ const manrope = Manrope({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
   variable: "--font-manrope",
+  display: "swap",
+});
+
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
   display: "swap",
 });
 
@@ -64,7 +70,7 @@ export default function RootLayout({
   const faqSchema = generateFAQSchema();
 
   return (
-    <html lang="en" className={`${cormorant.variable} ${manrope.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${cormorant.variable} ${manrope.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <head>
         {/* Anti-FOUC Dark Mode Theme Initializer */}
         <script

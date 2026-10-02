@@ -306,6 +306,38 @@ export function addInstantOrder(input: InstantOrderInput): OrderItem {
   return newOrder;
 }
 
+export function addOrder(input: Partial<OrderItem> & { orderNumber: string; customerName: string; customerMobile: string; total: number }): OrderItem {
+  const orders = getOrders();
+  const newOrder: OrderItem = {
+    id: input.id || `ord-${Date.now()}`,
+    orderNumber: input.orderNumber,
+    customerName: input.customerName,
+    customerMobile: input.customerMobile,
+    customerEmail: input.customerEmail,
+    total: input.total,
+    paymentStatus: input.paymentStatus || "PAID",
+    orderStatus: input.orderStatus || "CONFIRMED",
+    fulfilmentType: input.fulfilmentType || "DELIVERY",
+    itemsCount: input.itemsCount || 1,
+    date: input.date || `Today, ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+    deliveryDate: input.deliveryDate || new Date().toISOString().split("T")[0],
+    deliveryTimeSlot: input.deliveryTimeSlot || "Evening (5:00 PM to 8:30 PM)",
+    flavour: input.flavour || "Artisanal Selection",
+    weightKg: input.weightKg || "Custom Tier",
+    isEggless: input.isEggless ?? true,
+    cakeMessage: input.cakeMessage,
+    referenceImage: input.referenceImage,
+    assignedChef: input.assignedChef || "Selva (Head Chef)",
+    isInstantOrder: false,
+    notes: input.notes,
+    items: input.items || [],
+    createdAt: new Date().toISOString(),
+  };
+
+  saveOrders([newOrder, ...orders]);
+  return newOrder;
+}
+
 export function updateOrderStatus(orderId: string, status: OrderItem["orderStatus"]): OrderItem | null {
   const orders = getOrders();
   const index = orders.findIndex((o) => o.id === orderId || o.orderNumber === orderId);

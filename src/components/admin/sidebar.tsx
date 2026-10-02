@@ -55,6 +55,12 @@ export const navItems: NavItem[] = [
     icon: Receipt,
   },
   {
+    title: "Quotations",
+    href: "/admin/quotations",
+    icon: FileText,
+    badge: "Estimates",
+  },
+  {
     title: "Staff Workload",
     href: "/admin/staff",
     icon: UserCheck,

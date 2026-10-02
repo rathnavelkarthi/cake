@@ -207,7 +207,12 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="/custom-cakes" style={{ color: "#C5BCB6", textDecoration: "none" }} className="hover:text-amber-300">
+                <a href="/quote" style={{ color: "var(--accent-gold)", textDecoration: "none", fontWeight: 600 }} className="hover:text-amber-200">
+                  Request Cake Quotation
+                </a>
+              </li>
+              <li>
+                <a href="/quote" style={{ color: "#C5BCB6", textDecoration: "none" }} className="hover:text-amber-300">
                   Custom Celebration Gateaux
                 </a>
               </li>

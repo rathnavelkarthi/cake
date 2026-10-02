@@ -53,6 +53,8 @@ import {
   AdminProductItem,
 } from "@/lib/db/admin-data";
 import { BUSINESS_CONFIG } from "@/lib/config/business";
+import { getQuotations, Quotation } from "@/lib/quotations/quotation-store";
+import { toast } from "sonner";
 
 /**
  * The single place invoices read business identity from.
@@ -656,6 +658,38 @@ export default function AdminBillingPage() {
   const [customItemIsEggless, setCustomItemIsEggless] = useState(true);
   const [customItemNotes, setCustomItemNotes] = useState("");
 
+  // Quotation Import Modal State
+  const [isImportQuoteOpen, setIsImportQuoteOpen] = useState(false);
+  const [availableQuotes, setAvailableQuotes] = useState<Quotation[]>([]);
+
+  const handleOpenImportQuote = () => {
+    setAvailableQuotes(getQuotations());
+    setIsImportQuoteOpen(true);
+  };
+
+  const handleImportQuote = (quote: Quotation) => {
+    setCustomerName(quote.customerName);
+    setCustomerMobile(quote.customerMobile);
+    const mappedItems: BillItem[] = quote.items.map((it) => ({
+      id: `quote-item-${it.id}`,
+      name: it.name,
+      originalPrice: it.unitPrice,
+      price: it.unitPrice,
+      quantity: it.quantity,
+      isCustom: true,
+      notes: it.description || it.flavour,
+      isEggless: it.isEggless,
+      category: it.category || "Quotation Item",
+    }));
+    setBillItems(mappedItems);
+    setDeliveryFee(quote.deliveryFee);
+    setDiscount(quote.discount);
+    setIncludeGst(quote.includeGst);
+    setGstRate(quote.gstRate);
+    setIsImportQuoteOpen(false);
+    toast.success(`Imported quotation ${quote.quotationNumber} into register!`);
+  };
+
   // Inline Note Editor State
   const [editingNoteItemId, setEditingNoteItemId] = useState<string | null>(null);
   const [itemNoteInput, setItemNoteInput] = useState("");
@@ -900,6 +934,17 @@ export default function AdminBillingPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleOpenImportQuote}
+            className="h-9 text-xs border-amber-900/30 text-amber-900 hover:bg-amber-50 font-semibold gap-1.5 shadow-xs"
+          >
+            <FileText className="h-3.5 w-3.5" />
+            Import Quotation
+          </Button>
+
           <Button
             type="button"
             variant="outline"
@@ -1931,6 +1976,63 @@ export default function AdminBillingPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import Quotation Dialog */}
+      <Dialog open={isImportQuoteOpen} onOpenChange={setIsImportQuoteOpen}>
+        <DialogContent className="max-w-2xl bg-white p-6 rounded-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-stone-900">
+              Import Quotation into Register
+            </DialogTitle>
+            <DialogDescription className="text-xs text-stone-500">
+              Select an approved or active commercial estimate to load client details and line items directly into this billing session.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 pt-2">
+            {availableQuotes.length === 0 ? (
+              <div className="text-center py-8 text-stone-500 text-xs">
+                No active quotations found. Create one in the Quotations module.
+              </div>
+            ) : (
+              availableQuotes.map((q) => (
+                <div
+                  key={q.id}
+                  className="p-3.5 rounded-xl border border-stone-200 hover:border-amber-700/50 hover:bg-amber-50/20 transition-all flex items-center justify-between gap-4"
+                >
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-sm text-stone-900">{q.quotationNumber}</span>
+                      <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-stone-100 text-stone-700">
+                        {q.status}
+                      </span>
+                    </div>
+                    <div className="text-xs font-semibold text-stone-800 mt-1">
+                      {q.customerName} ({q.customerMobile})
+                    </div>
+                    <div className="text-[11px] text-stone-500 mt-0.5">
+                      {q.occasion} · {q.items.length} item{q.items.length > 1 ? "s" : ""} ({q.items.map((i) => i.name).join(", ").slice(0, 45)}...)
+                    </div>
+                  </div>
+
+                  <div className="text-right flex flex-col items-end gap-1.5 shrink-0">
+                    <div className="font-bold text-base text-stone-900">
+                      ₹{q.grandTotal.toLocaleString("en-IN")}
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => handleImportQuote(q)}
+                      className="bg-amber-900 hover:bg-amber-950 text-white text-xs h-7 px-3 rounded-lg"
+                    >
+                      Load into POS
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

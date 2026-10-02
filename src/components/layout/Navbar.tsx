@@ -246,6 +246,7 @@ export default function Navbar() {
           >
             <a href="/shop" style={{ ...navLinkStyle, color: "var(--accent-cocoa)", fontWeight: 600 }}>Shop All</a>
             <a href="/#signature-cakes" style={navLinkStyle}>Signature Cakes</a>
+            <a href="/quote" style={{ ...navLinkStyle, color: "var(--accent-caramel)", fontWeight: 700 }}>Get Quotation</a>
             <a href="/#custom-studio" style={navLinkStyle}>Custom Studio</a>
             <a href="/account/orders" style={navLinkStyle}>My Orders</a>
             <a href="/#bakery-story" style={navLinkStyle}>Our Kitchen</a>
@@ -660,9 +661,9 @@ export default function Navbar() {
                 </div>
               </a>
 
-              {/* Card 2: Custom Cake Studio */}
+              {/* Card 2: Custom Cake Studio & Quotations */}
               <a
-                href="/#custom-studio"
+                href="/quote"
                 onClick={handleCloseMenu}
                 className="pressable"
                 style={{
@@ -693,10 +694,10 @@ export default function Navbar() {
                 </div>
                 <div>
                   <div style={{ fontSize: "14px", fontWeight: 700, color: "#FFFFFF" }}>
-                    Custom Studio
+                    Get Quotation
                   </div>
                   <div style={{ fontSize: "11px", color: "rgba(255, 255, 255, 0.6)", marginTop: "2px" }}>
-                    Bespoke celebrations
+                    Custom wedding & tiered
                   </div>
                 </div>
               </a>
