@@ -59,6 +59,59 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Hydrate cart from pre-filled AI voice session URL parameter (?cart=cs_xxx)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const sessionId = params.get("cart") || params.get("cartSession") || params.get("session");
+
+      if (sessionId && sessionId.startsWith("cs_")) {
+        fetch(`/api/cart/session?id=${encodeURIComponent(sessionId)}`)
+          .then((res) => {
+            if (!res.ok) throw new Error("Session fetch failed");
+            return res.json();
+          })
+          .then((data) => {
+            if (data.success && data.session && Array.isArray(data.session.items) && data.session.items.length > 0) {
+              setItems(data.session.items);
+              try {
+                localStorage.setItem("kichees_cart", JSON.stringify(data.session.items));
+                if (data.session.customerPhone) {
+                  localStorage.setItem("kichees_customer_phone", data.session.customerPhone);
+                }
+                if (data.session.customerName) {
+                  localStorage.setItem("kichees_customer_name", data.session.customerName);
+                }
+                if (data.session.customerNotes) {
+                  localStorage.setItem("kichees_customer_notes", data.session.customerNotes);
+                }
+              } catch {}
+
+              setIsCartOpen(true);
+              toast("Basket Loaded!", {
+                description: `Loaded ${data.session.items.length} ${data.session.items.length === 1 ? "item" : "items"} from your voice order request.`,
+                type: "success",
+              });
+
+              // Clean up query param from URL bar
+              const cleanUrl = new URL(window.location.href);
+              cleanUrl.searchParams.delete("cart");
+              cleanUrl.searchParams.delete("cartSession");
+              cleanUrl.searchParams.delete("session");
+              window.history.replaceState({}, "", cleanUrl.pathname + (cleanUrl.search ? cleanUrl.search : "") + cleanUrl.hash);
+            }
+          })
+          .catch((err) => {
+            console.warn("Could not hydrate cart session:", err);
+          });
+      }
+    } catch (e) {
+      console.warn("Cart URL hydration check error:", e);
+    }
+  }, [toast]);
+
   // Save cart to localStorage
   useEffect(() => {
     try {

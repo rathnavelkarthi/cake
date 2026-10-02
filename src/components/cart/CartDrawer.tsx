@@ -84,13 +84,16 @@ export default function CartDrawer() {
   const [placedOrder, setPlacedOrder] = useState<any>(null);
   const [copiedUpi, setCopiedUpi] = useState(false);
 
-  // Autofill from localStorage if guest has previously identified themselves
+  // Autofill from localStorage if guest has previously identified themselves or hydrated via session link
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const savedPhone = localStorage.getItem("kichees_customer_phone");
     const savedName = localStorage.getItem("kichees_customer_name");
+    const savedNotes = localStorage.getItem("kichees_customer_notes");
     if (savedPhone) setCustomerMobile(savedPhone.replace(/\D/g, "").slice(-10));
     if (savedName) setCustomerName(savedName);
-  }, []);
+    if (savedNotes && !customerNotes) setCustomerNotes(savedNotes);
+  }, [isCartOpen]);
 
   useEffect(() => {
     if (isCartOpen) {
