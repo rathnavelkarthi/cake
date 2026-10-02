@@ -23,7 +23,7 @@ function toNumber(value: unknown, fallback = 0): number {
 }
 
 /** Normalises a thrown value into a message without asserting it is an Error. */
-export function errorMessage(err: unknown): string {
+function errorMessage(err: unknown): string {
   return err instanceof Error ? err.message : "Unexpected server error";
 }
 
