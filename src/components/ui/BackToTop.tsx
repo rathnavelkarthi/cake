@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { ArrowUp } from "lucide-react";
 import { triggerHaptic } from "@/lib/utils/haptics";
 
 export default function BackToTop() {
   const [isVisible, setIsVisible] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const toggleVisibility = () => {
@@ -24,7 +26,7 @@ export default function BackToTop() {
     });
   };
 
-  if (!isVisible) return null;
+  if (pathname?.startsWith("/admin") || !isVisible) return null;
 
   return (
     <button

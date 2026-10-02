@@ -1,12 +1,19 @@
 "use client";
 
 import React, { useState } from "react";
+import { usePathname } from "next/navigation";
 import { MessageCircle, Phone, X } from "lucide-react";
 import { BUSINESS_CONFIG } from "@/lib/config/business";
 import { triggerHaptic } from "@/lib/utils/haptics";
 
 export default function FloatingWhatsApp() {
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Never render customer order support floating button on admin dashboard routes
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
 
   const whatsappUrl = `https://wa.me/${BUSINESS_CONFIG.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(
     "Hi Kichees Baked Delights! I'd like to check today's fresh bakes and order availability."
@@ -127,7 +134,7 @@ export default function FloatingWhatsApp() {
           backgroundColor: "#25D366",
           color: "#FFFFFF",
           border: "none",
-          boxShadow: "0 8px 24px rgba(37, 211, 102, 0.35)",
+          boxShadow: "0 4px 16px rgba(37, 211, 102, 0.35), 0 2px 6px rgba(0, 0, 0, 0.08)",
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",

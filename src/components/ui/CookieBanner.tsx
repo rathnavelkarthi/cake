@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Cookie, X } from "lucide-react";
 import { triggerHaptic } from "@/lib/utils/haptics";
@@ -9,6 +10,7 @@ const COOKIE_CONSENT_KEY = "kichees_cookie_consent";
 
 export default function CookieBanner() {
   const [showBanner, setShowBanner] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     try {
@@ -33,7 +35,7 @@ export default function CookieBanner() {
     setShowBanner(false);
   };
 
-  if (!showBanner) return null;
+  if (pathname?.startsWith("/admin") || !showBanner) return null;
 
   return (
     <div

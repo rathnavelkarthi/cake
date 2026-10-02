@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import ScrollProgressBar from "@/components/ui/ScrollProgressBar";
 import BackToTop from "@/components/ui/BackToTop";
 import FloatingWhatsApp from "@/components/ui/FloatingWhatsApp";
@@ -12,6 +13,9 @@ interface ClientShellProps {
 }
 
 export default function ClientShell({ children }: ClientShellProps) {
+  const pathname = usePathname();
+  const isAdmin = pathname?.startsWith("/admin");
+
   useEffect(() => {
     // Capture marketing UTM parameters on first page load
     captureUtmParameters();
@@ -24,18 +28,22 @@ export default function ClientShell({ children }: ClientShellProps) {
         Skip to main content
       </a>
 
-      {/* Real-time reading & scroll progress indicator */}
-      <ScrollProgressBar />
+      {/* Real-time reading & scroll progress indicator (customer pages only) */}
+      {!isAdmin && <ScrollProgressBar />}
 
       {/* Main Page Content Target */}
       <div id="main-content" tabIndex={-1} style={{ outline: "none", minWidth: 0, width: "100%" }}>
         {children}
       </div>
 
-      {/* Persistent Accessibility & Conversion Controls */}
-      <BackToTop />
-      <FloatingWhatsApp />
-      <CookieBanner />
+      {/* Persistent Accessibility & Conversion Controls (customer pages only) */}
+      {!isAdmin && (
+        <>
+          <BackToTop />
+          <FloatingWhatsApp />
+          <CookieBanner />
+        </>
+      )}
     </>
   );
 }
