@@ -19,6 +19,8 @@ import {
   UserCheck,
   MessageSquare,
   FileSpreadsheet,
+  TrendingDown,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -53,6 +55,17 @@ export const navItems: NavItem[] = [
     title: "Billing & POS",
     href: "/admin/billing",
     icon: Receipt,
+  },
+  {
+    title: "Expenses",
+    href: "/admin/expenses",
+    icon: TrendingDown,
+  },
+  {
+    title: "Purchase Orders",
+    href: "/admin/purchase-orders",
+    icon: ClipboardList,
+    badge: "PO",
   },
   {
     title: "Quotations",

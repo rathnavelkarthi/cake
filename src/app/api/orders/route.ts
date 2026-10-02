@@ -7,6 +7,11 @@ import {
   formatWhatsAppNumber,
 } from "@/lib/evolution/client";
 import { CHENNAI_BRANCHES } from "@/lib/config/branches";
+import {
+  sendEmail,
+  generateOrderConfirmationEmail,
+  generateOwnerOrderAlertEmail,
+} from "@/lib/email/mailer";
 
 // GET /api/orders
 // Fetch orders: by customer mobile or all for admin
@@ -180,6 +185,63 @@ export async function POST(req: NextRequest) {
       console.error("Evolution WhatsApp send failed:", waErr);
     }
 
+    // Trigger Email notifications via Hostinger SMTP (non-blocking)
+    let emailSent = false;
+    try {
+      const parsedItems = items.map((it: any) => ({
+        name: typeof it === "string" ? it : it.name || "Bakery Item",
+        quantity: typeof it === "string" ? 1 : Number(it.quantity || 1),
+        price: typeof it === "string" ? 0 : Number(it.price || 0),
+        variant: typeof it === "object" ? it.variantLabel || it.weight || "" : "",
+        isEggless: typeof it === "object" ? it.isEggless !== false : true,
+      }));
+
+      // 1. Send owner instant alert to billing@kicheesbakeddelights.in
+      const ownerAlert = generateOwnerOrderAlertEmail({
+        orderNumber,
+        customerName: customerName.trim(),
+        customerMobile: customerMobile.trim(),
+        customerEmail: customerEmail?.trim(),
+        items: parsedItems,
+        total: calculatedTotal,
+        fulfilmentType: fulfilmentType === "DELIVERY" ? "DELIVERY" : "PICKUP",
+        deliveryAddress,
+        paymentMethod: "UPI",
+      });
+      sendEmail({
+        to: process.env.SMTP_USER || "billing@kicheesbakeddelights.in",
+        subject: ownerAlert.subject,
+        html: ownerAlert.html,
+      }).catch((e) => console.error("Owner alert email failed:", e));
+
+      // 2. If customer provided email, send them customer receipt
+      if (customerEmail && customerEmail.trim()) {
+        const custReceipt = generateOrderConfirmationEmail({
+          orderNumber,
+          customerName: customerName.trim(),
+          customerMobile: customerMobile.trim(),
+          customerEmail: customerEmail.trim(),
+          items: parsedItems,
+          subtotal: Number(subtotal || calculatedTotal),
+          deliveryFee: Number(deliveryFee || 0),
+          total: calculatedTotal,
+          fulfilmentType: fulfilmentType === "DELIVERY" ? "DELIVERY" : "PICKUP",
+          deliveryAddress,
+          deliveryDate: requestedDate,
+          deliveryTime: requestedTime,
+          paymentMethod: "UPI",
+        });
+        const custResult = await sendEmail({
+          to: customerEmail.trim(),
+          subject: custReceipt.subject,
+          html: custReceipt.html,
+        });
+        emailSent = custResult.success;
+      }
+    } catch (emailErr) {
+      console.error("Hostinger SMTP send error in /api/orders:", emailErr);
+    }
+
     return NextResponse.json({
       success: true,
       order: {
@@ -197,6 +259,7 @@ export async function POST(req: NextRequest) {
         orderStatus: "PENDING_PAYMENT",
         paymentStatus: "PENDING",
         whatsappSent,
+        emailSent,
         createdAt: new Date().toISOString(),
       },
       upi: upiDetails,

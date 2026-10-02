@@ -19,6 +19,7 @@ import {
   Receipt,
   Shield,
   Clock,
+  Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { navItems } from "./sidebar";
 import { cn } from "@/lib/utils";
+import { QuickEmailModal } from "./QuickEmailModal";
 
 interface AdminHeaderProps {
   user?: {
@@ -47,6 +49,7 @@ export function AdminHeader({ user: initialUser }: AdminHeaderProps) {
   const { data: session } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
   const currentUser = {
     name: session?.user?.name || initialUser?.name || "Staff Member",
@@ -147,6 +150,18 @@ export function AdminHeader({ user: initialUser }: AdminHeaderProps) {
               <span>Team Chat</span>
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
             </Link>
+          </Button>
+
+          {/* Owner Quick Send Email Shortcut */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsEmailModalOpen(true)}
+            className="flex items-center gap-1.5 h-9 px-3 text-stone-700 hover:text-amber-950 hover:bg-amber-50/70 border border-stone-200 rounded-lg text-xs font-semibold"
+            title="Compose & Send Email (billing@kicheesbakeddelights.in)"
+          >
+            <Mail className="h-4 w-4 text-amber-800" />
+            <span className="hidden sm:inline">Send Email</span>
           </Button>
 
           {/* Notification Center Trigger */}
@@ -358,6 +373,9 @@ export function AdminHeader({ user: initialUser }: AdminHeaderProps) {
           </div>
         </div>
       )}
+
+      {/* Owner Global Email Dispatcher Modal */}
+      <QuickEmailModal open={isEmailModalOpen} onOpenChange={setIsEmailModalOpen} />
     </>
   );
 }

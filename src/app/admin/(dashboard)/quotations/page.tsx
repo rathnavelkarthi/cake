@@ -385,6 +385,44 @@ export default function QuotationsPage() {
     toast.success("Quotation opened in WhatsApp. Status marked as SENT.");
   };
 
+  // Email Quotation to Client via Hostinger SMTP
+  const handleEmailQuotation = async (quote: Quotation) => {
+    const recipient = quote.customerEmail?.trim();
+    if (!recipient) {
+      toast.error("Customer has no email address. Please click Edit to add an email.");
+      return;
+    }
+
+    const toastId = toast.loading(`Sending quote ${quote.quotationNumber} to ${recipient}...`);
+    try {
+      const res = await fetch("/api/email/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "custom",
+          recipientEmail: recipient,
+          recipientName: quote.customerName,
+          subject: `Bespoke Cake Quotation ${quote.quotationNumber} - Kichee's Baked Delights`,
+          customMessage: generateQuotationHtml(quote),
+          ccOwner: true,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.dismiss(toastId);
+        toast.success(`Quotation ${quote.quotationNumber} emailed to ${recipient}! Copy sent to billing.`);
+        updateQuotationStatus(quote.id, "SENT");
+      } else {
+        toast.dismiss(toastId);
+        toast.error(data.error || "Failed to send quotation email");
+      }
+    } catch (err: any) {
+      toast.dismiss(toastId);
+      toast.error(err.message || "Failed to dispatch email");
+    }
+  };
+
   const getStatusBadge = (status: QuotationStatus) => {
     switch (status) {
       case "APPROVED":
@@ -632,6 +670,17 @@ export default function QuotationsPage() {
                           className="h-8 w-8 text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg"
                         >
                           <Share2 className="h-4 w-4" />
+                        </Button>
+
+                        {/* Email to Client */}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEmailQuotation(quote)}
+                          title="Email Quotation to Client"
+                          className="h-8 w-8 text-amber-800 hover:text-amber-950 hover:bg-amber-50 rounded-lg"
+                        >
+                          <Mail className="h-4 w-4" />
                         </Button>
 
                         {/* Print / PDF */}

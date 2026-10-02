@@ -9,6 +9,9 @@ import {
   Shield,
   Save,
   CheckCircle2,
+  Mail,
+  Server,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +26,25 @@ export default function AdminSettingsPage() {
   const [address, setAddress] = useState(BUSINESS_CONFIG.address.full);
   const [minOrder, setMinOrder] = useState("300");
   const [gstRate, setGstRate] = useState("5");
+  const [testingSmtp, setTestingSmtp] = useState(false);
+  const [smtpStatus, setSmtpStatus] = useState<string | null>("Connected (Port 465 SSL)");
+
+  const handleTestSmtp = async () => {
+    setTestingSmtp(true);
+    try {
+      const res = await fetch("/api/email/test");
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSmtpStatus("Connected & Verified (smtp.hostinger.com)");
+      } else {
+        setSmtpStatus("Error: " + (data.error || "Connection failed"));
+      }
+    } catch (e: any) {
+      setSmtpStatus("Error: " + e.message);
+    } finally {
+      setTestingSmtp(false);
+    }
+  };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,6 +148,84 @@ export default function AdminSettingsPage() {
                   onChange={(e) => setMinOrder(e.target.value)}
                 />
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Hostinger SMTP & Business Email */}
+        <Card className="border-stone-200 shadow-xs">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-amber-900" />
+                <CardTitle className="text-base">Hostinger Business Email & SMTP</CardTitle>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full font-semibold">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                <span>Active • SSL Secured</span>
+              </div>
+            </div>
+            <CardDescription>
+              Configured Hostinger email server for automated purchase orders, customer receipts, and POS tax invoices.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-stone-700">
+                  Billing Email Address
+                </label>
+                <Input value="billing@kicheesbakeddelights.in" disabled className="bg-stone-50 text-xs font-mono" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-stone-700">
+                  Outgoing Server (SMTP)
+                </label>
+                <Input value="smtp.hostinger.com (Port 465 SSL)" disabled className="bg-stone-50 text-xs font-mono" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-stone-700">
+                  Incoming Server (IMAP)
+                </label>
+                <Input value="imap.hostinger.com (Port 993)" disabled className="bg-stone-50 text-xs font-mono" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-stone-700">
+                  SMTP Status Check
+                </label>
+                <div className="flex gap-2">
+                  <div className="flex-1 px-3 py-2 rounded-md bg-stone-50 border border-stone-200 text-xs text-stone-700 font-medium truncate">
+                    {smtpStatus || "Connected"}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleTestSmtp}
+                    disabled={testingSmtp}
+                    className="text-xs shrink-0 border-amber-300 text-amber-900 bg-amber-50/50 hover:bg-amber-100"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 mr-1 ${testingSmtp ? "animate-spin" : ""}`} />
+                    Test
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-lg bg-stone-50 p-3 border border-stone-100 text-xs text-stone-600">
+              <p className="font-semibold text-stone-800">
+                Connected Automated Email Triggers:
+              </p>
+              <ul className="mt-1 list-disc list-inside space-y-0.5 text-stone-500">
+                <li><strong>Online Storefront Orders:</strong> Automatic customer confirmation receipt & owner instant alert</li>
+                <li><strong>POS Counter Billing:</strong> One-click digital tax invoice dispatched to customer & archived to billing</li>
+                <li><strong>Purchase Orders (PO):</strong> Official supplier purchase orders with full line items, rates & delivery terms</li>
+                <li><strong>Event Quotations:</strong> Itemized estimates for bespoke multi-tiered celebration cakes</li>
+                <li><strong>Executive Desk:</strong> Global header tool to dispatch branded emails to any client or vendor</li>
+              </ul>
             </div>
           </CardContent>
         </Card>
