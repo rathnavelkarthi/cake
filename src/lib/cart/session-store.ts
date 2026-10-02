@@ -187,7 +187,7 @@ export async function createCartSession(input: CreateSessionInput): Promise<Cart
     process.env.NEXT_PUBLIC_SITE_URL ||
     (process.env.NODE_ENV === "production" ? "https://kicheesbakeddelights.in" : "http://localhost:3000");
 
-  const cartUrl = `${baseUrl.replace(/\/$/, "")}/shop?cart=${sessionId}`;
+  const cartUrl = `${baseUrl.replace(/\/$/, "")}/checkout?cart=${sessionId}`;
 
   const session: CartSessionData = {
     id: sessionId,
@@ -303,7 +303,7 @@ export async function getCartSession(sessionId: string): Promise<CartSessionData
       reminderSent: Boolean(data.reminder_sent),
       isCompleted: Boolean(data.is_completed),
       convertedOrderId: data.converted_order_id,
-      cartUrl: `https://kicheesbakeddelights.in/shop?cart=${data.id}`,
+      cartUrl: `https://kicheesbakeddelights.in/checkout?cart=${data.id}`,
       expiresAt: data.expires_at,
       createdAt: data.created_at,
     };
