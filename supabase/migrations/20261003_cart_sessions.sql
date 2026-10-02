@@ -13,7 +13,9 @@ CREATE TABLE IF NOT EXISTS public.cart_sessions (
   total NUMERIC(10, 2) NOT NULL DEFAULT 0,
   customer_notes TEXT,
   whatsapp_sent BOOLEAN NOT NULL DEFAULT false,
+  reminder_sent BOOLEAN NOT NULL DEFAULT false,
   is_completed BOOLEAN NOT NULL DEFAULT false,
+  converted_order_id TEXT,
   expires_at TIMESTAMPTZ NOT NULL DEFAULT (now() + interval '48 hours'),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()

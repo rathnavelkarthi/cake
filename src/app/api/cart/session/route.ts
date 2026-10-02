@@ -9,7 +9,17 @@ import { createCartSession, getCartSession } from "@/lib/cart/session-store";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { customerPhone, customerName, items, customerNotes, sendWhatsApp = true } = body;
+    const {
+      customerPhone,
+      customerName,
+      items,
+      customerNotes,
+      sendWhatsApp = true,
+      addons,
+      addCandles,
+      addCard,
+      addBrownies,
+    } = body;
 
     if (!customerPhone) {
       return NextResponse.json(
@@ -31,6 +41,10 @@ export async function POST(req: NextRequest) {
       customerPhone,
       customerName,
       items,
+      addons,
+      addCandles,
+      addCard,
+      addBrownies,
       customerNotes,
       sendWhatsApp: Boolean(sendWhatsApp),
       origin,
