@@ -21,11 +21,12 @@ export default function FloatingWhatsApp() {
 
   return (
     <div
+      className="floating-whatsapp-container"
       style={{
         position: "fixed",
         bottom: "24px",
         right: "16px",
-        zIndex: 900,
+        zIndex: 45,
         display: "flex",
         flexDirection: "column",
         alignItems: "flex-end",

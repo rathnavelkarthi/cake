@@ -684,3 +684,14 @@ html.dark body {
   }
 }
 
+/* Hide floating action widgets whenever modal / cart drawer is open */
+body.cart-open .floating-whatsapp-container,
+body.cart-open .back-to-top-btn,
+body[data-modal-open="true"] .floating-whatsapp-container,
+body[data-modal-open="true"] .back-to-top-btn {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+

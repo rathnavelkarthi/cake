@@ -104,11 +104,12 @@ export default function CartDrawer() {
     }
   }, [isCartOpen]);
 
-  // Handle Escape key and body scroll lock
+  // Handle Escape key and body scroll lock + hide floating widgets
   useEffect(() => {
     if (!isCartOpen) return;
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    document.body.classList.add("cart-open");
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -119,6 +120,7 @@ export default function CartDrawer() {
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       document.body.style.overflow = originalOverflow;
+      document.body.classList.remove("cart-open");
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isCartOpen, setIsCartOpen]);
@@ -290,9 +292,10 @@ Please confirm kitchen availability and UPI payment QR code. Thank you!`;
       style={{
         position: "fixed",
         inset: 0,
-        zIndex: 100,
+        zIndex: 99999,
         display: "flex",
         justifyContent: "flex-end",
+        overflow: "hidden",
       }}
       role="dialog"
       aria-modal="true"
@@ -303,7 +306,7 @@ Please confirm kitchen availability and UPI payment QR code. Thank you!`;
         style={{
           position: "absolute",
           inset: 0,
-          backgroundColor: "rgba(30, 20, 15, 0.45)",
+          backgroundColor: "rgba(30, 20, 15, 0.5)",
           backdropFilter: "blur(8px)",
           WebkitBackdropFilter: "blur(8px)",
           opacity: isVisible ? 1 : 0,
@@ -317,56 +320,60 @@ Please confirm kitchen availability and UPI payment QR code. Thank you!`;
         className="drawer-panel"
         style={{
           position: "relative",
-          zIndex: 101,
+          zIndex: 100000,
           width: "100%",
           maxWidth: "480px",
           height: "100%",
-          backgroundColor: "#FFFFFF",
-          boxShadow: "-8px 0 32px rgba(0,0,0,0.15)",
+          backgroundColor: "#FAF7F2",
+          boxShadow: "-8px 0 32px rgba(0,0,0,0.22)",
           display: "flex",
           flexDirection: "column",
           transform: isVisible ? "translateX(0)" : "translateX(100%)",
           transition: "transform 280ms cubic-bezier(0.32, 0.72, 0, 1)",
+          overflow: "hidden",
         }}
       >
         {/* Header */}
         <div
           style={{
-            padding: "18px 24px",
-            borderBottom: "1px solid #f1ece4",
+            padding: "16px 20px",
+            borderBottom: "1px solid #ECE3D6",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            backgroundColor: "#faf7f2",
+            backgroundColor: "#FAF7F2",
+            flexShrink: 0,
           }}
         >
           <div className="flex items-center gap-2.5">
-            <ShoppingBag size={20} className="text-amber-800" />
-            <h2 className="font-serif font-bold text-lg text-stone-900">
-              Your Order Basket
-            </h2>
-            <span className="text-[11px] font-bold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full">
-              {items.reduce((acc, i) => acc + i.quantity, 0)} {items.reduce((acc, i) => acc + i.quantity, 0) === 1 ? "item" : "items"}
-            </span>
+            <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-900">
+              <ShoppingBag size={18} />
+            </div>
+            <div>
+              <h2 className="font-serif font-bold text-lg text-stone-900 leading-none">
+                Your Order Basket
+              </h2>
+              <span className="text-[11px] font-medium text-stone-500">
+                {items.reduce((acc, i) => acc + i.quantity, 0)} {items.reduce((acc, i) => acc + i.quantity, 0) === 1 ? "item" : "items"}
+              </span>
+            </div>
           </div>
 
           <button
             onClick={handleClose}
-            className="p-1.5 text-stone-400 hover:text-stone-800 hover:bg-stone-200/60 rounded-full transition-colors"
+            className="w-8 h-8 flex items-center justify-center text-stone-500 hover:text-stone-900 hover:bg-stone-200/60 rounded-full transition-colors"
             aria-label="Close Cart"
           >
-            <X size={20} />
+            <X size={19} />
           </button>
         </div>
 
-        {/* ============================================================== */}
-        {/* SUCCESS / ORDER PLACED MODAL */}
-        {/* ============================================================== */}
+        {/* Content Area */}
         {placedOrder ? (
-          <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-[#faf7f2]">
-            <div className="text-center py-4">
-              <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center mx-auto mb-3">
-                <CheckCircle2 size={32} />
+          <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5 bg-[#faf7f2]">
+            <div className="text-center py-3">
+              <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center mx-auto mb-3 shadow-xs">
+                <CheckCircle2 size={30} />
               </div>
               <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">
                 Order Received
@@ -455,54 +462,70 @@ Please confirm kitchen availability and UPI payment QR code. Thank you!`;
               </div>
             </div>
           </div>
+        ) : items.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+            <div className="w-16 h-16 rounded-full bg-stone-200/60 flex items-center justify-center text-stone-400 mb-3">
+              <ShoppingBag size={32} />
+            </div>
+            <h3 className="font-serif font-bold text-stone-800 text-lg">
+              Your basket is empty
+            </h3>
+            <p className="text-xs text-stone-500 mt-1 mb-5 max-w-xs">
+              Explore our Belgian truffle cakes, artisanal bagels, and freshly baked gateaux.
+            </p>
+            <Button
+              onClick={handleClose}
+              className="h-10 px-6 text-xs font-semibold bg-amber-950 hover:bg-black text-white rounded-xl shadow-xs"
+            >
+              Browse Bakery Menu
+            </Button>
+          </div>
         ) : (
-          /* ============================================================== */
-          /* STANDARD CART & CHECKOUT FORM */
-          /* ============================================================== */
           <>
-            {/* Fulfilment Method Toggle */}
-            <div className="p-3 px-6 bg-[#faf7f2] border-b border-stone-200">
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic("selection");
-                    setFulfilmentType("pickup");
-                  }}
-                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                    fulfilmentType === "pickup"
-                      ? "bg-white text-stone-900 shadow-sm border border-stone-200"
-                      : "text-stone-500 hover:text-stone-800"
-                  }`}
-                >
-                  <Clock size={14} className={fulfilmentType === "pickup" ? "text-amber-800" : ""} />
-                  <span>Store Pickup (Free)</span>
-                </button>
+            {/* Unified Scrollable Container: Everything scrolls smoothly */}
+            <div className="flex-1 overflow-y-auto min-h-0 p-4 sm:p-5 space-y-4 no-scrollbar">
+              {/* 1. Fulfilment Toggle & Configuration Card */}
+              <div className="bg-white rounded-2xl p-3.5 border border-stone-200/90 shadow-2xs space-y-3">
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic("selection");
+                      setFulfilmentType("pickup");
+                    }}
+                    className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                      fulfilmentType === "pickup"
+                        ? "bg-amber-950 text-white shadow-xs"
+                        : "bg-stone-100 text-stone-600 hover:bg-stone-200/80"
+                    }`}
+                  >
+                    <Clock size={14} />
+                    <span>Store Pickup (Free)</span>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic("selection");
-                    setFulfilmentType("delivery");
-                  }}
-                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                    fulfilmentType === "delivery"
-                      ? "bg-white text-stone-900 shadow-sm border border-stone-200"
-                      : "text-stone-500 hover:text-stone-800"
-                  }`}
-                >
-                  <Truck size={14} className={fulfilmentType === "delivery" ? "text-amber-800" : ""} />
-                  <span>Chennai Delivery</span>
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic("selection");
+                      setFulfilmentType("delivery");
+                    }}
+                    className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                      fulfilmentType === "delivery"
+                        ? "bg-amber-950 text-white shadow-xs"
+                        : "bg-stone-100 text-stone-600 hover:bg-stone-200/80"
+                    }`}
+                  >
+                    <Truck size={14} />
+                    <span>Chennai Delivery</span>
+                  </button>
+                </div>
 
-              {/* STORE PICKUP: BRANCH SELECTION */}
-              {fulfilmentType === "pickup" && (
-                <div className="mt-3 pt-3 border-t border-stone-200/80 space-y-2">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-amber-900 block">
-                    Select Collection Outlet:
-                  </span>
-                  <div className="grid grid-cols-1 gap-2">
+                {/* Pickup Outlet Selection */}
+                {fulfilmentType === "pickup" && (
+                  <div className="pt-1 space-y-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-900 block">
+                      Collection Outlet:
+                    </span>
                     {CHENNAI_BRANCHES.map((branch) => {
                       const isSelected = selectedBranchId === branch.id;
                       return (
@@ -514,19 +537,17 @@ Please confirm kitchen availability and UPI payment QR code. Thank you!`;
                           }}
                           className={`p-2.5 rounded-xl border cursor-pointer transition-all ${
                             isSelected
-                              ? "bg-amber-50/80 border-amber-700 shadow-xs"
-                              : "bg-white border-stone-200 hover:border-stone-300"
+                              ? "bg-amber-50/80 border-amber-800 shadow-2xs"
+                              : "bg-stone-50 border-stone-200 hover:border-stone-300"
                           }`}
                         >
                           <div className="flex items-center justify-between">
                             <span className="font-bold text-xs text-stone-900">
                               {branch.shortName}
                             </span>
-                            {isSelected && (
-                              <span className="text-[10px] bg-amber-800 text-white font-bold px-1.5 py-0.5 rounded">
-                                Selected
-                              </span>
-                            )}
+                            <span className="text-[10px] bg-amber-800 text-white font-bold px-1.5 py-0.5 rounded">
+                              Selected
+                            </span>
                           </div>
                           <p className="text-[11px] text-stone-600 mt-0.5 line-clamp-1">
                             {branch.address}
@@ -539,26 +560,24 @@ Please confirm kitchen availability and UPI payment QR code. Thank you!`;
                       );
                     })}
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* DELIVERY: DISTANCE & LOCALITY CALCULATION */}
-              {fulfilmentType === "delivery" && (
-                <div className="mt-3 pt-3 border-t border-stone-200/80 space-y-2.5 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-amber-900">
-                      Delivery Zone & Distance
-                    </span>
-                    <span className="text-[11px] font-semibold text-emerald-800">
-                      {deliveryCalc.isFree ? "Free Delivery Unlocked!" : `Fee: ₹${deliveryCalc.fee}`}
-                    </span>
-                  </div>
+                {/* Delivery Zone & Locality Calculator */}
+                {fulfilmentType === "delivery" && (
+                  <div className="pt-1 space-y-2 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-900">
+                        Delivery Zone & Distance
+                      </span>
+                      <span className="text-[11px] font-bold text-emerald-800">
+                        {deliveryCalc.isFree ? "Free Delivery Unlocked!" : `Fee: ₹${deliveryCalc.fee}`}
+                      </span>
+                    </div>
 
-                  <div className="space-y-1.5">
                     <select
                       value={customKm ? "custom" : selectedLocality}
                       onChange={handleLocalityChange}
-                      className="w-full h-9 px-2.5 rounded-lg border border-stone-200 bg-white text-xs text-stone-800 font-medium focus:outline-none focus:border-amber-800"
+                      className="w-full h-9 px-2.5 rounded-lg border border-stone-200 bg-stone-50 text-xs text-stone-800 font-medium focus:outline-none focus:border-amber-800 focus:bg-white"
                     >
                       {POPULAR_CHENNAI_LOCALITIES.map((loc) => (
                         <option key={loc.name} value={loc.name}>
@@ -582,358 +601,379 @@ Please confirm kitchen availability and UPI payment QR code. Thank you!`;
                         <span className="text-xs text-stone-500">km from Nungambakkam</span>
                       </div>
                     )}
-                  </div>
 
-                  {/* Pricing formula badge */}
-                  <div className="p-2 rounded-lg bg-amber-50/60 border border-amber-200/70 text-[11px] text-amber-950 flex items-center gap-1.5">
-                    <Info className="w-3.5 h-3.5 text-amber-800 shrink-0" />
-                    <span>{deliveryCalc.formula}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Items List */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
-              {items.length === 0 ? (
-                <div className="text-center py-12">
-                  <ShoppingBag size={36} className="text-stone-300 mx-auto mb-3" />
-                  <h3 className="font-serif font-bold text-stone-800 text-base">
-                    Your basket is empty
-                  </h3>
-                  <p className="text-xs text-stone-500 mt-1 mb-4">
-                    Explore our Belgian truffle cakes and freshly baked gateaux.
-                  </p>
-                  <Button
-                    onClick={handleClose}
-                    className="h-9 text-xs bg-amber-900 hover:bg-amber-950 text-white"
-                  >
-                    Browse Cakes
-                  </Button>
-                </div>
-              ) : (
-                items.map((item) => (
-                  <div
-                    key={item.cartItemId}
-                    className="flex gap-3 pb-3 border-b border-stone-100 items-center"
-                  >
-                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-stone-100 shrink-0">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="font-bold text-xs text-stone-900 truncate">
-                        {item.name}
-                      </div>
-                      <div className="text-[11px] text-stone-500">
-                        {item.variantLabel} {item.isEggless && "• Eggless"}
-                      </div>
-                      <div className="text-xs font-bold text-amber-900 mt-0.5 inline-flex items-center gap-0.5">
-                        <span>₹</span>
-                        <NumberFlow value={item.price * item.quantity} />
-                      </div>
-                    </div>
-
-                    {/* Steppers */}
-                    <div className="flex flex-col items-end gap-1.5">
-                      <div className="inline-flex items-center border border-stone-200 rounded-full px-1.5 py-0.5 bg-stone-50">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            triggerHaptic("selection");
-                            updateQuantity(item.cartItemId, item.quantity - 1);
-                          }}
-                          className="w-5 h-5 flex items-center justify-center text-stone-700 hover:text-stone-900"
-                        >
-                          <Minus size={11} />
-                        </button>
-                        <span className="text-xs font-bold px-2 text-stone-900 inline-flex items-center">
-                          <NumberFlow value={item.quantity} />
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            triggerHaptic("selection");
-                            updateQuantity(item.cartItemId, item.quantity + 1);
-                          }}
-                          className="w-5 h-5 flex items-center justify-center text-stone-700 hover:text-stone-900"
-                        >
-                          <Plus size={11} />
-                        </button>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          triggerHaptic("warning");
-                          removeItem(item.cartItemId);
-                        }}
-                        className="text-[10px] text-stone-400 hover:text-red-700 flex items-center gap-0.5"
-                      >
-                        <Trash2 size={10} />
-                        <span>Remove</span>
-                      </button>
+                    <div className="p-2 rounded-lg bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-950 flex items-center gap-1.5">
+                      <Info className="w-3.5 h-3.5 text-amber-800 shrink-0" />
+                      <span className="leading-tight">{deliveryCalc.formula}</span>
                     </div>
                   </div>
-                ))
-              )}
+                )}
+              </div>
 
-              {/* 1-Click Celebration Add-ons Upsell (AOV Booster) */}
-              {items.length > 0 && (
-                <div className="pt-2">
-                  <div className="p-3.5 bg-amber-50/70 rounded-2xl border border-amber-200/70 space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-amber-800" />
-                        <span className="text-xs font-bold text-amber-950">
-                          Complete the Celebration
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-amber-800 font-bold bg-amber-100/80 px-2 py-0.5 rounded-full">
-                        1-Click Add-on
-                      </span>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      {CELEBRATION_ADDONS.map((addon) => {
-                        const alreadyInCart = items.some((i) => i.productId === addon.productId);
-                        return (
-                          <div
-                            key={addon.productId}
-                            className="flex items-center justify-between p-2 bg-white rounded-xl border border-amber-100/80 text-xs shadow-2xs"
-                          >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <img
-                                src={addon.image}
-                                alt={addon.name}
-                                className="w-9 h-9 rounded-lg object-cover shrink-0 border border-stone-100"
-                              />
-                              <div className="truncate">
-                                <p className="font-bold text-stone-900 truncate leading-tight">
-                                  {addon.name}
-                                </p>
-                                <p className="text-[10px] text-stone-500 truncate">
-                                  {addon.tagline}
-                                </p>
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (alreadyInCart) return;
-                                triggerHaptic("selection");
-                                addItem({
-                                  productId: addon.productId,
-                                  variantId: addon.variantId,
-                                  name: addon.name,
-                                  variantLabel: addon.variantLabel,
-                                  price: addon.price,
-                                  quantity: 1,
-                                  image: addon.image,
-                                  isEggless: true,
-                                });
-                              }}
-                              disabled={alreadyInCart}
-                              className={`px-3 py-1.5 rounded-lg text-[11px] font-bold shrink-0 transition-all ${
-                                alreadyInCart
-                                  ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                                  : "bg-amber-900 hover:bg-amber-950 text-white shadow-xs"
-                              }`}
-                            >
-                              {alreadyInCart ? "✓ Added" : `+ ₹${addon.price}`}
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Bottom Checkout Section */}
-            {items.length > 0 && (
-              <div className="p-4 sm:p-5 border-t border-stone-200 bg-[#faf7f2] space-y-3">
-                {/* Chilled Van & Eggless Trust Banner */}
-                <div className="grid grid-cols-2 gap-2 text-[10px] p-2.5 rounded-xl bg-white border border-stone-200/90 text-stone-700 shadow-2xs">
-                  <div className="flex items-start gap-1.5">
-                    <Truck className="w-3.5 h-3.5 text-amber-800 shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="text-stone-900 block font-bold">4°C Chilled Van</strong>
-                      <span className="text-[9px] text-stone-500 leading-tight block">Zero-tilt secure delivery across Chennai</span>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="text-stone-900 block font-bold">Dedicated Eggless</strong>
-                      <span className="text-[9px] text-stone-500 leading-tight block">Cultured butter, zero synthetic icing</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Guest Details Form */}
-                <div className="space-y-2 bg-white p-3.5 rounded-xl border border-stone-200">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-stone-700 block">
-                    Contact & WhatsApp Notification
+              {/* 2. Basket Items Card */}
+              <div className="bg-white rounded-2xl p-4 border border-stone-200/90 shadow-2xs space-y-3">
+                <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-stone-700">
+                    Basket Items ({items.reduce((acc, i) => acc + i.quantity, 0)})
                   </span>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input
-                      type="text"
-                      placeholder="Your Name"
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                      className="h-8 text-xs bg-white border-stone-300 text-stone-900 placeholder:text-stone-500 font-medium"
-                      required
-                    />
-                    <Input
-                      type="tel"
-                      placeholder="WhatsApp Mobile"
-                      value={customerMobile}
-                      onChange={(e) => setCustomerMobile(e.target.value)}
-                      className="h-8 text-xs bg-white border-stone-300 text-stone-900 placeholder:text-stone-500 font-medium"
-                      required
-                    />
-                  </div>
-
-                  {fulfilmentType === "delivery" && (
-                    <Input
-                      type="text"
-                      placeholder="Complete Delivery Address & Landmark in Chennai"
-                      value={deliveryAddress}
-                      onChange={(e) => setDeliveryAddress(e.target.value)}
-                      className="h-8 text-xs bg-white border-stone-300 text-stone-900 placeholder:text-stone-500 font-medium"
-                      required
-                    />
-                  )}
-
-                  <textarea
-                    rows={2}
-                    placeholder="Cake message or Chef special instructions..."
-                    value={customerNotes}
-                    onChange={(e) => setCustomerNotes(e.target.value)}
-                    className="w-full rounded-md border border-stone-300 bg-white p-2 text-xs text-stone-900 placeholder:text-stone-500 outline-none focus:border-amber-800 focus:ring-1 focus:ring-amber-800/20 resize-none font-medium"
-                  />
-
-                  {/* NRI / Long-Distance Gifting Experience */}
-                  <div className="pt-2 border-t border-stone-100">
-                    <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-stone-800">
-                      <input
-                        type="checkbox"
-                        checked={isGift}
-                        onChange={(e) => setIsGift(e.target.checked)}
-                        className="accent-amber-800 rounded"
-                      />
-                      <Gift className="w-3.5 h-3.5 text-amber-800" />
-                      <span>Sending as a Gift to Family / Friend in Chennai?</span>
-                    </label>
-
-                    {isGift && (
-                      <div className="mt-2.5 p-2.5 rounded-lg bg-amber-50/70 border border-amber-200/80 space-y-2 animate-in fade-in duration-200">
-                        <div className="grid grid-cols-2 gap-2">
-                          <Input
-                            type="text"
-                            placeholder="Recipient's Name"
-                            value={recipientName}
-                            onChange={(e) => setRecipientName(e.target.value)}
-                            className="h-8 text-xs bg-white border-stone-300 text-stone-900 placeholder:text-stone-500 font-medium"
-                            required={isGift}
-                          />
-                          <Input
-                            type="tel"
-                            placeholder="Recipient's Phone"
-                            value={recipientPhone}
-                            onChange={(e) => setRecipientPhone(e.target.value)}
-                            className="h-8 text-xs bg-white border-stone-300 text-stone-900 placeholder:text-stone-500 font-medium"
-                            required={isGift}
-                          />
-                        </div>
-                        <textarea
-                          rows={2}
-                          placeholder="Personalized greeting note on handwritten card..."
-                          value={giftCardMessage}
-                          onChange={(e) => setGiftCardMessage(e.target.value)}
-                          className="w-full rounded-md border border-stone-300 bg-white p-2 text-xs text-stone-900 placeholder:text-stone-500 outline-none focus:border-amber-800 focus:ring-1 focus:ring-amber-800/20 resize-none font-medium"
-                        />
-                        <label className="flex items-center gap-1.5 text-[11px] text-stone-600 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={photoProofRequested}
-                            onChange={(e) => setPhotoProofRequested(e.target.checked)}
-                            className="accent-amber-800 rounded"
-                          />
-                          <Camera className="w-3 h-3 text-amber-800" />
-                          <span>Send presentation photo proof to my WhatsApp when delivered</span>
-                        </label>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Subtotal & Delivery Total */}
-                <div className="space-y-1 text-xs">
-                  <div className="flex justify-between text-stone-600">
-                    <span>Items Subtotal</span>
-                    <span className="inline-flex items-center gap-0.5">
-                      <span>₹</span>
-                      <NumberFlow value={subtotal} />
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-stone-600">
-                    <span>
-                      {fulfilmentType === "pickup"
-                        ? `Pickup @ ${selectedBranch.shortName}`
-                        : `Delivery (${deliveryDistanceKm} km)`}
-                    </span>
-                    <span>{deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`}</span>
-                  </div>
-                  <div className="flex justify-between text-stone-900 font-bold text-sm pt-1 border-t border-stone-200">
-                    <span>Total Amount</span>
-                    <span className="text-amber-900 inline-flex items-center gap-0.5">
-                      <span>₹</span>
-                      <NumberFlow value={total} />
-                    </span>
-                  </div>
-                </div>
-
-                {/* Dual Fast-Track Checkout Actions */}
-                <div className="flex flex-col gap-2">
-                  <Button
-                    onClick={handlePlaceOrder}
-                    disabled={isSubmitting}
-                    className="w-full h-11 bg-amber-950 hover:bg-black text-white font-semibold text-xs tracking-wider uppercase flex items-center justify-center gap-2 shadow-sm rounded-xl"
-                  >
-                    {isSubmitting ? (
-                      <span>Sending Invoice via WhatsApp...</span>
-                    ) : (
-                      <>
-                        <QrCode className="w-4 h-4 text-amber-400" />
-                        <span>Place Order & Pay via UPI</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </Button>
-
                   <button
                     type="button"
-                    onClick={handleOrderViaWhatsApp}
-                    className="w-full h-10 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-colors shadow-xs"
+                    onClick={() => {
+                      triggerHaptic("warning");
+                      clearCart();
+                    }}
+                    className="text-[11px] text-stone-400 hover:text-red-700 font-medium transition-colors"
                   >
-                    <MessageCircle className="w-4 h-4" />
-                    <span>Confirm & Enquire via WhatsApp</span>
+                    Clear All
                   </button>
                 </div>
 
-                <p className="text-[10px] text-stone-400 text-center">
-                  Invoice & UPI QR code sent directly to your WhatsApp. Verified by kitchen manager.
-                </p>
+                <div className="space-y-3">
+                  {items.map((item) => (
+                    <div
+                      key={item.cartItemId}
+                      className="flex gap-3 pb-3 border-b border-stone-100 last:border-b-0 last:pb-0 items-center"
+                    >
+                      <div className="w-14 h-14 rounded-xl overflow-hidden bg-stone-100 shrink-0 border border-stone-200/70">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-xs text-stone-900 truncate">
+                          {item.name}
+                        </div>
+                        <div className="text-[11px] text-stone-500 truncate">
+                          {item.variantLabel} {item.isEggless && "• Eggless"}
+                        </div>
+                        <div className="text-xs font-bold text-amber-900 mt-1 inline-flex items-center gap-0.5">
+                          <span>₹</span>
+                          <NumberFlow value={item.price * item.quantity} />
+                        </div>
+                      </div>
+
+                      {/* Steppers & Remove */}
+                      <div className="flex flex-col items-end gap-1.5 shrink-0">
+                        <div className="inline-flex items-center border border-stone-200 rounded-full px-1.5 py-0.5 bg-stone-50 shadow-2xs">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              triggerHaptic("selection");
+                              updateQuantity(item.cartItemId, item.quantity - 1);
+                            }}
+                            className="w-6 h-6 flex items-center justify-center text-stone-700 hover:text-stone-900 active:scale-90"
+                            aria-label="Decrease quantity"
+                          >
+                            <Minus size={12} />
+                          </button>
+                          <span className="text-xs font-bold px-2 text-stone-900 inline-flex items-center min-w-[18px] justify-center">
+                            <NumberFlow value={item.quantity} />
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              triggerHaptic("selection");
+                              updateQuantity(item.cartItemId, item.quantity + 1);
+                            }}
+                            className="w-6 h-6 flex items-center justify-center text-stone-700 hover:text-stone-900 active:scale-90"
+                            aria-label="Increase quantity"
+                          >
+                            <Plus size={12} />
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            triggerHaptic("warning");
+                            removeItem(item.cartItemId);
+                          }}
+                          className="text-[10px] text-stone-400 hover:text-red-700 flex items-center gap-0.5 transition-colors"
+                        >
+                          <Trash2 size={10} />
+                          <span>Remove</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            )}
+
+              {/* 3. 1-Click Celebration Add-ons Upsell */}
+              <div className="p-3.5 bg-amber-50/70 rounded-2xl border border-amber-200/70 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-800" />
+                    <span className="text-xs font-bold text-amber-950">
+                      Complete the Celebration
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-amber-800 font-bold bg-amber-100/80 px-2 py-0.5 rounded-full">
+                    1-Click Add-on
+                  </span>
+                </div>
+
+                <div className="space-y-1.5">
+                  {CELEBRATION_ADDONS.map((addon) => {
+                    const alreadyInCart = items.some((i) => i.productId === addon.productId);
+                    return (
+                      <div
+                        key={addon.productId}
+                        className="flex items-center justify-between p-2 bg-white rounded-xl border border-amber-100/80 text-xs shadow-2xs"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <img
+                            src={addon.image}
+                            alt={addon.name}
+                            className="w-9 h-9 rounded-lg object-cover shrink-0 border border-stone-100"
+                          />
+                          <div className="truncate">
+                            <p className="font-bold text-stone-900 truncate leading-tight">
+                              {addon.name}
+                            </p>
+                            <p className="text-[10px] text-stone-500 truncate">
+                              {addon.tagline}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (alreadyInCart) return;
+                            triggerHaptic("selection");
+                            addItem({
+                              productId: addon.productId,
+                              variantId: addon.variantId,
+                              name: addon.name,
+                              variantLabel: addon.variantLabel,
+                              price: addon.price,
+                              quantity: 1,
+                              image: addon.image,
+                              isEggless: true,
+                            });
+                          }}
+                          disabled={alreadyInCart}
+                          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold shrink-0 transition-all ${
+                            alreadyInCart
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                              : "bg-amber-950 hover:bg-black text-white shadow-xs"
+                          }`}
+                        >
+                          {alreadyInCart ? "✓ Added" : `+ ₹${addon.price}`}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 4. Trust Banner */}
+              <div className="grid grid-cols-2 gap-2 text-[10px] p-2.5 rounded-xl bg-white border border-stone-200/90 text-stone-700 shadow-2xs">
+                <div className="flex items-start gap-1.5">
+                  <Truck className="w-3.5 h-3.5 text-amber-800 shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="text-stone-900 block font-bold">4°C Chilled Van</strong>
+                    <span className="text-[9px] text-stone-500 leading-tight block">Zero-tilt delivery across Chennai</span>
+                  </div>
+                </div>
+                <div className="flex items-start gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="text-stone-900 block font-bold">Dedicated Eggless</strong>
+                    <span className="text-[9px] text-stone-500 leading-tight block">Cultured butter, zero synthetic icing</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 5. Guest Contact Details Form */}
+              <div className="space-y-2.5 bg-white p-4 rounded-2xl border border-stone-200/90 shadow-2xs">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-stone-700 block">
+                  Contact & WhatsApp Notification
+                </span>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Your Name *"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="h-9 text-xs bg-white border-stone-300 text-stone-900 placeholder:text-stone-400 font-medium"
+                    required
+                  />
+                  <Input
+                    type="tel"
+                    placeholder="WhatsApp Mobile *"
+                    value={customerMobile}
+                    onChange={(e) => setCustomerMobile(e.target.value)}
+                    className="h-9 text-xs bg-white border-stone-300 text-stone-900 placeholder:text-stone-400 font-medium"
+                    required
+                  />
+                </div>
+
+                {fulfilmentType === "delivery" && (
+                  <Input
+                    type="text"
+                    placeholder="Complete Delivery Address & Landmark in Chennai *"
+                    value={deliveryAddress}
+                    onChange={(e) => setDeliveryAddress(e.target.value)}
+                    className="h-9 text-xs bg-white border-stone-300 text-stone-900 placeholder:text-stone-400 font-medium"
+                    required
+                  />
+                )}
+
+                <textarea
+                  rows={2}
+                  placeholder="Cake message (e.g. 'Happy Birthday Priya') or Chef instructions..."
+                  value={customerNotes}
+                  onChange={(e) => setCustomerNotes(e.target.value)}
+                  className="w-full rounded-md border border-stone-300 bg-white p-2.5 text-xs text-stone-900 placeholder:text-stone-400 outline-none focus:border-amber-800 focus:ring-1 focus:ring-amber-800/20 resize-none font-medium"
+                />
+
+                {/* Gifting Section */}
+                <div className="pt-2 border-t border-stone-100">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-stone-800">
+                    <input
+                      type="checkbox"
+                      checked={isGift}
+                      onChange={(e) => setIsGift(e.target.checked)}
+                      className="accent-amber-800 rounded"
+                    />
+                    <Gift className="w-3.5 h-3.5 text-amber-800" />
+                    <span>Sending as a Gift to Family / Friend in Chennai?</span>
+                  </label>
+
+                  {isGift && (
+                    <div className="mt-2.5 p-3 rounded-xl bg-amber-50/70 border border-amber-200/80 space-y-2 animate-in fade-in duration-200">
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          type="text"
+                          placeholder="Recipient's Name *"
+                          value={recipientName}
+                          onChange={(e) => setRecipientName(e.target.value)}
+                          className="h-8 text-xs bg-white border-stone-300 text-stone-900 font-medium"
+                          required={isGift}
+                        />
+                        <Input
+                          type="tel"
+                          placeholder="Recipient's Phone *"
+                          value={recipientPhone}
+                          onChange={(e) => setRecipientPhone(e.target.value)}
+                          className="h-8 text-xs bg-white border-stone-300 text-stone-900 font-medium"
+                          required={isGift}
+                        />
+                      </div>
+                      <textarea
+                        rows={2}
+                        placeholder="Personalized greeting note on handwritten card..."
+                        value={giftCardMessage}
+                        onChange={(e) => setGiftCardMessage(e.target.value)}
+                        className="w-full rounded-md border border-stone-300 bg-white p-2 text-xs text-stone-900 placeholder:text-stone-400 outline-none focus:border-amber-800 resize-none font-medium"
+                      />
+                      <label className="flex items-center gap-1.5 text-[11px] text-stone-600 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={photoProofRequested}
+                          onChange={(e) => setPhotoProofRequested(e.target.checked)}
+                          className="accent-amber-800 rounded"
+                        />
+                        <Camera className="w-3 h-3 text-amber-800" />
+                        <span>Send presentation photo proof to my WhatsApp when delivered</span>
+                      </label>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 6. Detailed Bill Breakdown */}
+              <div className="bg-white rounded-2xl p-4 border border-stone-200/90 shadow-2xs space-y-1.5 text-xs">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-stone-700 block mb-2">
+                  Bill Details
+                </span>
+                <div className="flex justify-between text-stone-600">
+                  <span>Items Subtotal</span>
+                  <span className="inline-flex items-center gap-0.5 font-medium">
+                    <span>₹</span>
+                    <NumberFlow value={subtotal} />
+                  </span>
+                </div>
+                <div className="flex justify-between text-stone-600">
+                  <span>
+                    {fulfilmentType === "pickup"
+                      ? `Pickup @ ${selectedBranch.shortName}`
+                      : `Delivery (${deliveryDistanceKm} km)`}
+                  </span>
+                  <span className="font-medium">{deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`}</span>
+                </div>
+                <div className="flex justify-between text-stone-900 font-bold text-sm pt-2 border-t border-stone-200">
+                  <span>Total Payable</span>
+                  <span className="text-amber-900 inline-flex items-center gap-0.5 text-base">
+                    <span>₹</span>
+                    <NumberFlow value={total} />
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* STICKY BOTTOM CHECKOUT ACTION BAR */}
+            <div
+              className="shrink-0 border-t border-stone-200/90 bg-white/98 backdrop-blur-md p-3.5 sm:p-4 space-y-2 shadow-[0_-8px_24px_rgba(0,0,0,0.06)]"
+              style={{
+                paddingBottom: "max(14px, env(safe-area-inset-bottom, 14px))",
+              }}
+            >
+              <div className="flex items-center justify-between text-xs px-0.5">
+                <div>
+                  <span className="text-stone-500 block text-[10px] uppercase font-bold tracking-wider leading-none">
+                    Total Amount
+                  </span>
+                  <span className="text-base font-bold font-serif text-stone-900 inline-flex items-center gap-0.5 mt-0.5">
+                    <span>₹</span>
+                    <NumberFlow value={total} />
+                  </span>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/60 inline-block">
+                    {fulfilmentType === "pickup" ? "Free Pickup" : deliveryFee === 0 ? "Free Delivery" : `₹${deliveryFee} Delivery`}
+                  </span>
+                </div>
+              </div>
+
+              {/* Dual Fast-Track Checkout Actions */}
+              <div className="flex flex-col gap-2 pt-0.5">
+                <Button
+                  onClick={handlePlaceOrder}
+                  disabled={isSubmitting}
+                  className="w-full h-11 bg-amber-950 hover:bg-black text-white font-semibold text-xs tracking-wider uppercase flex items-center justify-center gap-2 shadow-sm rounded-xl cursor-pointer"
+                >
+                  {isSubmitting ? (
+                    <span>Sending Invoice via WhatsApp...</span>
+                  ) : (
+                    <>
+                      <QrCode className="w-4 h-4 text-amber-400" />
+                      <span>Place Order & Pay via UPI</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </Button>
+
+                <button
+                  type="button"
+                  onClick={handleOrderViaWhatsApp}
+                  className="w-full h-9 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-colors shadow-2xs cursor-pointer"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Confirm & Enquire via WhatsApp</span>
+                </button>
+              </div>
+
+              <p className="text-[9.5px] text-stone-400 text-center leading-tight">
+                Invoice & UPI QR code sent directly to your WhatsApp • Verified by kitchen
+              </p>
+            </div>
           </>
         )}
       </div>

@@ -33,11 +33,12 @@ export default function BackToTop() {
       type="button"
       onClick={scrollToTop}
       aria-label="Back to top of page"
+      className="back-to-top-btn hover:scale-110 active:scale-95 hover:bg-stone-50"
       style={{
         position: "fixed",
         bottom: "84px",
         right: "24px",
-        zIndex: 900,
+        zIndex: 45,
         width: "44px",
         height: "44px",
         borderRadius: "50%",
@@ -51,7 +52,6 @@ export default function BackToTop() {
         cursor: "pointer",
         transition: "all 200ms cubic-bezier(0.16, 1, 0.3, 1)",
       }}
-      className="hover:scale-110 active:scale-95 hover:bg-stone-50"
     >
       <ArrowUp size={20} />
     </button>
