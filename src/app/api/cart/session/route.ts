@@ -28,7 +28,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!items || !Array.isArray(items) || items.length === 0) {
+    // Agent tools may send items as a JSON string — coerce before validating
+    const parsedItems: unknown = typeof items === "string"
+      ? (() => { try { return JSON.parse(items); } catch { return items; } })()
+      : items;
+
+    if (!parsedItems || !Array.isArray(parsedItems) || parsedItems.length === 0) {
       return NextResponse.json(
         { error: "items array with at least one item is required" },
         { status: 400 }
@@ -40,7 +45,7 @@ export async function POST(req: NextRequest) {
     const session = await createCartSession({
       customerPhone,
       customerName,
-      items,
+      items: parsedItems,
       addons,
       addCandles,
       addCard,
