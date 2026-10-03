@@ -102,14 +102,19 @@ export async function POST(req: NextRequest) {
       name: string;
     }
 
+    const { data: sampleRows } = await supabaseAdmin
+      .from("products")
+      .select("*")
+      .limit(1);
+
+    const firstRow = sampleRows?.[0] as Record<string, unknown> | undefined;
+    const hasProductType = Boolean(firstRow && "product_type" in firstRow);
+    const hasOutletColumns = Boolean(
+      firstRow && "available_branches" in firstRow && "branch_ids" in firstRow
+    );
     const bySku = new Map<string, ProductRef>();
     const bySlug = new Map<string, ProductRef>();
     const byName = new Map<string, ProductRef>();
-    // Detected from a real row, because the outlet columns are added by a later
-    // migration and may not exist on every project.
-    const hasOutletColumns = (current ?? []).some(
-      (row) => "available_branches" in row && "branch_ids" in row
-    );
     const takenSlugs = new Set<string>();
     const takenSkus = new Set<string>();
 
@@ -231,9 +236,12 @@ export async function POST(req: NextRequest) {
         is_bestseller: Boolean(item.isBestSeller),
         is_eggless: item.isEggless !== false,
         recipe: Array.isArray(item.recipe) ? item.recipe : [],
-        product_type: item.productType || "FINISHED_PRODUCT",
         updated_at: new Date().toISOString(),
       };
+
+      if (hasProductType) {
+        row.product_type = item.productType || "FINISHED_PRODUCT";
+      }
 
       // Outlet columns live in the 20260927 branches migration and are absent on
       // projects where it has not been applied yet. Including them only when the

@@ -76,6 +76,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: readError.message }, { status: 500 });
     }
 
+    const firstRow = existingRows?.[0] as Record<string, unknown> | undefined;
+    const hasProductType = Boolean(firstRow && "product_type" in firstRow);
+    const hasOutletColumns = Boolean(
+      firstRow && "available_branches" in firstRow && "branch_ids" in firstRow
+    );
+
     const byId = new Map<string, any>();
     const bySku = new Map<string, any>();
     const bySlug = new Map<string, any>();
@@ -193,17 +199,17 @@ export async function POST(req: NextRequest) {
         changedFields.push("imageUrl");
       }
 
-      if (item.productType !== undefined && item.productType.trim() !== "") {
+      if (hasProductType && item.productType !== undefined && item.productType.trim() !== "") {
         patch.product_type = item.productType.trim();
         changedFields.push("productType");
       }
 
-      if (item.availableBranches !== undefined) {
+      if (hasOutletColumns && item.availableBranches !== undefined) {
         patch.available_branches = item.availableBranches;
         changedFields.push("availableBranches");
       }
 
-      if (Array.isArray(item.branchIds) && item.branchIds.length > 0) {
+      if (hasOutletColumns && Array.isArray(item.branchIds) && item.branchIds.length > 0) {
         patch.branch_ids = item.branchIds;
         changedFields.push("branchIds");
       }

@@ -96,7 +96,16 @@ export async function POST(req: NextRequest) {
 
     if (readError) {
       console.error("Error reading existing raw materials:", readError);
-      return NextResponse.json({ error: readError.message }, { status: 500 });
+      const isMissingTable =
+        readError.code === "PGRST205" ||
+        readError.message?.toLowerCase().includes("schema cache") ||
+        readError.message?.toLowerCase().includes("does not exist");
+
+      const errorMsg = isMissingTable
+        ? "The 'raw_materials' table does not exist in your database yet. Run the setup SQL script in your Supabase SQL Editor to enable raw materials inventory."
+        : readError.message;
+
+      return NextResponse.json({ error: errorMsg }, { status: 500 });
     }
 
     const bySku = new Map<string, { id: number; name: string }>();
