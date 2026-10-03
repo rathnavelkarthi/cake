@@ -24,6 +24,8 @@ import {
   ActionBadge,
   Banner,
   CheckOption,
+  ErrorReportButton,
+  FieldDiffList,
   IssueList,
   ProgressNote,
   SectionCard,
@@ -32,6 +34,7 @@ import {
   TemplateBar,
 } from "./shared";
 import { parseClipboard, parseDelimited, toRecords } from "@/lib/bulk-import/csv";
+import { readSpreadsheetFile } from "@/lib/bulk-import/xlsx";
 import {
   parseProductSheet,
   summarise,
@@ -39,8 +42,9 @@ import {
   type ParsedRow,
   type ParseSheetResult,
 } from "@/lib/bulk-import/schemas";
-import { downloadInstructions, downloadTemplate } from "@/lib/bulk-import/template";
+import { downloadInstructions, downloadTemplate, generateAndDownloadErrorReport } from "@/lib/bulk-import/template";
 import { IMAGE_ACCEPT, matchImages, type ImageMatch } from "@/lib/bulk-import/image-match";
+import { SEED_200_PRODUCTS } from "@/data/seed-200-products";
 import {
   bulkImportProducts,
   getInventoryProducts,
@@ -141,11 +145,56 @@ export default function BulkProductsImport() {
   };
 
   const handleFile = async (file: File) => {
-    if (file.size > 8 * 1024 * 1024) {
-      setError("That file is over 8MB. Split it into smaller files and upload again.");
+    if (file.size > 25 * 1024 * 1024) {
+      setError("That file is over 25MB. Split it into smaller files and upload again.");
       return;
     }
-    handleText(await file.text(), file.name);
+    try {
+      const { records } = await readSpreadsheetFile(file);
+      if (records.length === 0) {
+        setError("No data rows found in spreadsheet. Check that row 1 contains headers.");
+        return;
+      }
+      setError(null);
+      setSourceName(file.name);
+      setSourceRecords(records);
+      setParsed(runValidation(records, autoCreateIngredients));
+      setFiles([]);
+      setMatches([]);
+      setStage("review");
+    } catch (err) {
+      console.error("Error reading spreadsheet file:", err);
+      setError("Could not parse file. Please verify it is a valid Excel or CSV file.");
+    }
+  };
+
+  const handleLoadSeedProducts = () => {
+    const records = SEED_200_PRODUCTS.map((p) => ({
+      name: p.name,
+      sku: p.sku,
+      category: p.category,
+      price: String(p.price),
+      sale_price: p.salePrice ? String(p.salePrice) : "",
+      stock: String(p.stock),
+      low_stock_threshold: String(p.lowStockThreshold),
+      description: p.description,
+      is_eggless: p.isEggless ? "veg" : "non-veg",
+      is_active: p.isActive ? "yes" : "no",
+      is_featured: p.isFeatured ? "yes" : "no",
+      is_bestseller: p.isBestSeller ? "yes" : "no",
+      image: p.image,
+      product_type: p.productType,
+      outlet: p.availableBranches,
+      recipe: p.recipe || "",
+    }));
+
+    setError(null);
+    setSourceName("200 Products Master Catalogue (Kichee's Bakery)");
+    setSourceRecords(records);
+    setParsed(runValidation(records, autoCreateIngredients));
+    setFiles([]);
+    setMatches([]);
+    setStage("review");
   };
 
   /* ---------------------------------------------------------------------- */
@@ -577,6 +626,11 @@ export default function BulkProductsImport() {
                 </>
               )}
             </Button>
+            <ErrorReportButton
+              onDownload={() => generateAndDownloadErrorReport("products", rows)}
+              errorCount={stats.errors}
+              warningCount={stats.warnings}
+            />
             <Button variant="outline" onClick={startOver} disabled={busy} className="text-xs">
               Start over
             </Button>
@@ -603,6 +657,25 @@ export default function BulkProductsImport() {
         onTemplate={() => downloadTemplate("products")}
         onInstructions={() => downloadInstructions("products")}
       />
+
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-300 bg-amber-50/80 p-4">
+        <div>
+          <h3 className="text-sm font-bold text-amber-950 flex items-center gap-1.5">
+            <span>✨</span>
+            Preloaded Master Catalogue (200 Finished Products)
+          </h3>
+          <p className="mt-0.5 text-xs text-amber-900/80">
+            Load all 200 handcrafted items (cakes, pastries, brownies, savories, pizzas & bistro items) pre-configured with pricing, categories and matching photo hints from your store.
+          </p>
+        </div>
+        <Button
+          type="button"
+          onClick={handleLoadSeedProducts}
+          className="bg-amber-900 text-xs font-semibold text-white hover:bg-amber-950 shadow-xs"
+        >
+          Load 200 Products Catalogue
+        </Button>
+      </div>
 
       <SectionCard
         title="Upload your products"

@@ -101,4 +101,5 @@ supabase/.temp/
 brag-output*
 skills/
 data/skills/
+*.zip
 

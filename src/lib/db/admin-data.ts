@@ -39,6 +39,7 @@ export interface RawMaterialItem {
   unit: "kg" | "l" | "pcs";
   minThreshold: number;
   costPerUnit: number;
+  supplier?: string;
 }
 
 export interface AdminOrderItem {
@@ -420,6 +421,7 @@ export interface BulkProductInput {
   isFeatured?: boolean;
   isBestSeller?: boolean;
   imageUrl?: string;
+  productType?: string;
   availableBranches?: string;
   branchIds?: string[];
   recipe?: RecipeIngredient[];
@@ -489,6 +491,61 @@ export async function bulkImportProducts(
     summary: data.summary ?? summariseRows(data.results),
     results: data.results ?? [],
   };
+}
+
+/** Updates products in bulk with PATCH semantics (only updates provided fields). */
+export async function bulkUpdateProducts(
+  items: Partial<BulkProductInput>[],
+  fileName?: string
+): Promise<BulkImportOutcome> {
+  if (items.length === 0) {
+    return { summary: { ...EMPTY_SUMMARY }, results: [] };
+  }
+
+  const res = await fetch("/api/products/bulk-update", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ items, fileName }),
+  });
+
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new Error(data?.error || `Bulk update failed (${res.status})`);
+  }
+
+  await syncAdminProductsFromSupabase();
+  return {
+    summary: data.summary ?? summariseRows(data.results),
+    results: data.results ?? [],
+  };
+}
+
+export interface BulkImportJobRecord {
+  id: string;
+  mode: string;
+  file_name?: string;
+  total_rows: number;
+  created_count: number;
+  updated_count: number;
+  skipped_count: number;
+  error_count: number;
+  warning_count: number;
+  status: "completed" | "failed" | "partial";
+  summary?: Record<string, unknown>;
+  error_log?: unknown[];
+  created_at: string;
+}
+
+export async function getBulkImportJobs(): Promise<BulkImportJobRecord[]> {
+  try {
+    const res = await fetch("/api/bulk-import-jobs", { cache: "no-store" });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data.jobs) ? data.jobs : [];
+  } catch (err) {
+    console.warn("Failed to fetch bulk import jobs:", err);
+    return [];
+  }
 }
 
 /** Upload one image to Supabase storage and return its public URL. */

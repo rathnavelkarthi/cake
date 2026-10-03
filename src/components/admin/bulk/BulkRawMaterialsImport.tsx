@@ -15,6 +15,8 @@ import {
 import {
   ActionBadge,
   Banner,
+  ErrorReportButton,
+  FieldDiffList,
   IssueList,
   ProgressNote,
   SectionCard,
@@ -23,6 +25,7 @@ import {
   TemplateBar,
 } from "./shared";
 import { parseClipboard, parseDelimited, toRecords } from "@/lib/bulk-import/csv";
+import { readSpreadsheetFile } from "@/lib/bulk-import/xlsx";
 import {
   parseRawMaterialSheet,
   summarise,
@@ -30,7 +33,8 @@ import {
   type ParsedRawMaterial,
   type ParseSheetResult,
 } from "@/lib/bulk-import/schemas";
-import { downloadInstructions, downloadTemplate } from "@/lib/bulk-import/template";
+import { downloadInstructions, downloadTemplate, generateAndDownloadErrorReport } from "@/lib/bulk-import/template";
+import { SEED_RAW_MATERIALS } from "@/data/seed-raw-materials-template";
 import {
   bulkImportRawMaterials,
   localRawMaterials,
@@ -88,11 +92,42 @@ export default function BulkRawMaterialsImport() {
   };
 
   const handleFile = async (file: File) => {
-    if (file.size > 8 * 1024 * 1024) {
-      setError("That file is over 8MB. Split it into smaller files and upload again.");
+    if (file.size > 25 * 1024 * 1024) {
+      setError("That file is over 25MB. Split it into smaller files and upload again.");
       return;
     }
-    handleText(await file.text(), file.name);
+    try {
+      const { records } = await readSpreadsheetFile(file);
+      if (records.length === 0) {
+        setError("No data rows found in spreadsheet. Check that row 1 contains headers.");
+        return;
+      }
+      setError(null);
+      setSourceName(file.name);
+      setParsed(parseRawMaterialSheet(records, { existingMaterials: catalogue }));
+      setStage("review");
+    } catch (err) {
+      console.error("Error parsing raw material spreadsheet:", err);
+      setError("Could not parse file. Please verify it is a valid Excel or CSV file.");
+    }
+  };
+
+  const handleLoadSeedRawMaterials = () => {
+    const records = SEED_RAW_MATERIALS.map((m) => ({
+      name: m.name,
+      sku: m.sku,
+      category: m.category,
+      stock: String(m.stock),
+      unit: m.unit,
+      min_threshold: String(m.minThreshold),
+      cost_per_unit: String(m.costPerUnit),
+      supplier: m.supplier,
+    }));
+
+    setError(null);
+    setSourceName("Master Raw Materials Catalogue (40+ Bakery & Kitchen Items)");
+    setParsed(parseRawMaterialSheet(records, { existingMaterials: catalogue }));
+    setStage("review");
   };
 
   const handleImport = async () => {
@@ -234,6 +269,9 @@ export default function BulkRawMaterialsImport() {
                           matches “{row.existingLabel}”
                         </span>
                       )}
+                      {row.diffs && row.diffs.length > 0 && (
+                        <FieldDiffList diffs={row.diffs} className="mt-1" />
+                      )}
                     </TableCell>
                     <TableCell className="text-[11px] text-stone-600">
                       {row.value?.category}
@@ -285,6 +323,11 @@ export default function BulkRawMaterialsImport() {
                 </>
               )}
             </Button>
+            <ErrorReportButton
+              onDownload={() => generateAndDownloadErrorReport("raw-materials", rows)}
+              errorCount={stats.errors}
+              warningCount={stats.warnings}
+            />
             <Button variant="outline" onClick={startOver} disabled={importing} className="text-xs">
               Start over
             </Button>
@@ -311,6 +354,25 @@ export default function BulkRawMaterialsImport() {
         onTemplate={() => downloadTemplate("raw-materials")}
         onInstructions={() => downloadInstructions("raw-materials")}
       />
+
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-300 bg-amber-50/80 p-4">
+        <div>
+          <h3 className="text-sm font-bold text-amber-950 flex items-center gap-1.5">
+            <span>✨</span>
+            Preloaded Master Raw Materials Catalogue (40+ Bakery & Kitchen Items)
+          </h3>
+          <p className="mt-0.5 text-xs text-amber-900/80">
+            Load flours, Callebaut chocolates, sugars, dairy, yeasts, vanilla extracts, meats, produce and oils ready to stock your kitchen inventory.
+          </p>
+        </div>
+        <Button
+          type="button"
+          onClick={handleLoadSeedRawMaterials}
+          className="bg-amber-900 text-xs font-semibold text-white hover:bg-amber-950 shadow-xs"
+        >
+          Load 40+ Raw Materials
+        </Button>
+      </div>
 
       <SectionCard
         title="Upload your raw materials"

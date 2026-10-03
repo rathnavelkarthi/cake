@@ -29,6 +29,7 @@ interface IncomingProduct {
   isFeatured?: boolean;
   isBestSeller?: boolean;
   imageUrl?: string;
+  productType?: string;
   availableBranches?: string;
   branchIds?: string[];
   recipe?: unknown[];
@@ -230,6 +231,7 @@ export async function POST(req: NextRequest) {
         is_bestseller: Boolean(item.isBestSeller),
         is_eggless: item.isEggless !== false,
         recipe: Array.isArray(item.recipe) ? item.recipe : [],
+        product_type: item.productType || "FINISHED_PRODUCT",
         updated_at: new Date().toISOString(),
       };
 

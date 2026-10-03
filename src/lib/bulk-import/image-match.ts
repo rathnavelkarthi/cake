@@ -47,12 +47,23 @@ function baseName(fileName: string): string {
 }
 
 /**
- * Tolerates the suffixes cameras and design tools append, so "cake (1)" and
- * "cake-final" still resolve to a product called "Cake".
+ * Tolerates the suffixes cameras and design tools append, timestamps, and studio descriptors,
+ * so "Chicken_65_food_photography_20261003131006.jpg" and "001-veg-puff.jpg"
+ * cleanly resolve to "Chicken 65" and "Veg Puff".
  */
-function looseKey(value: string): string {
+export function cleanDescriptorKey(value: string): string {
   return normaliseKey(value)
-    .replace(/\b(copy|final|edited|small|new|resized)\b/g, "")
+    .replace(/\b\d{8,16}\b/g, "") // timestamps like 20261003131006
+    .replace(/\b(food photography|photography|tabletop|on tabletop|on table|prepared|in studio|freshly prepared|displayed|photography|slice|dish|served|recipe story|with sauce)\b/g, "")
+    .replace(/\b(copy|final|edited|small|new|resized|preview|thumb|thumbnail)\b/g, "")
+    .replace(/^\s*\d{1,4}[-_.\s]+/, "") // leading number prefix like "001-" or "12 "
+    .replace(/^[a-z]{2,5}[-_]\d{1,5}[-_.\s]+/i, "") // SKU prefix like "KCH-1001-"
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function looseKey(value: string): string {
+  return cleanDescriptorKey(value)
     .replace(/\s*\d+\s*$/, "")
     .replace(/\s+/g, " ")
     .trim();

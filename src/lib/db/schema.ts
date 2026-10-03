@@ -82,6 +82,7 @@ export const products = pgTable("products", {
   salePrice: numeric("sale_price", { precision: 10, scale: 2 }),
   stockQuantity: integer("stock_quantity").default(0).notNull(),
   lowStockThreshold: integer("low_stock_threshold").default(5).notNull(),
+  productType: text("product_type").default("FINISHED_PRODUCT").notNull(),
   status: statusEnum("status").default("active").notNull(),
   featured: boolean("featured").default(false).notNull(),
   bestSeller: boolean("best_seller").default(false).notNull(),
@@ -187,9 +188,28 @@ export const auditLogs = pgTable("audit_logs", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// 10. Bulk Import Jobs
+export const bulkImportJobs = pgTable("bulk_import_jobs", {
+  id: text("id").primaryKey(),
+  mode: text("mode").notNull(),
+  fileName: text("file_name"),
+  totalRows: integer("total_rows").default(0).notNull(),
+  createdCount: integer("created_count").default(0).notNull(),
+  updatedCount: integer("updated_count").default(0).notNull(),
+  skippedCount: integer("skipped_count").default(0).notNull(),
+  errorCount: integer("error_count").default(0).notNull(),
+  warningCount: integer("warning_count").default(0).notNull(),
+  status: text("status").default("completed").notNull(),
+  summary: text("summary"), // JSON stringified
+  errorLog: text("error_log"), // JSON stringified
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export type Product = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
 export type Order = typeof orders.$inferSelect;
 export type Customer = typeof customers.$inferSelect;
 export type InventoryMovement = typeof inventoryMovements.$inferSelect;
 export type User = typeof users.$inferSelect;
+export type BulkImportJob = typeof bulkImportJobs.$inferSelect;
+export type NewBulkImportJob = typeof bulkImportJobs.$inferInsert;

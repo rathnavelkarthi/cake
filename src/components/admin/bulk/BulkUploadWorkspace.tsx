@@ -1,14 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { Images, Package, Upload } from "lucide-react";
+import { History, Images, Package, RefreshCw, Upload } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import BulkProductsImport from "./BulkProductsImport";
 import BulkRawMaterialsImport from "./BulkRawMaterialsImport";
 import BulkPhotoAssignment from "./BulkPhotoAssignment";
+import BulkUpdateImport from "./BulkUpdateImport";
+import ImportHistory from "./ImportHistory";
 import { cn } from "@/lib/utils";
 
-export type BulkTab = "raw-materials" | "products" | "photos";
+export type BulkTab = "raw-materials" | "products" | "bulk-update" | "photos" | "history";
 
 const TABS: { value: BulkTab; label: string; icon: React.ComponentType<{ className?: string }>; blurb: string }[] = [
   {
@@ -19,15 +21,27 @@ const TABS: { value: BulkTab; label: string; icon: React.ComponentType<{ classNa
   },
   {
     value: "products",
-    label: "Products",
+    label: "Products Upload",
     icon: Upload,
-    blurb: "Your whole menu at once, with prices, stock, recipes and photos.",
+    blurb: "Upload menu products with prices, stock, recipes, and photo matching.",
+  },
+  {
+    value: "bulk-update",
+    label: "Bulk Update",
+    icon: RefreshCw,
+    blurb: "Update prices, stock levels, or details for existing items using Excel or CSV.",
   },
   {
     value: "photos",
-    label: "Photos only",
+    label: "Photos Only",
     icon: Images,
     blurb: "Attach product photos to items you have already added.",
+  },
+  {
+    value: "history",
+    label: "Import History",
+    icon: History,
+    blurb: "Audit log of previous catalog imports, updates, and error logs.",
   },
 ];
 
@@ -35,7 +49,7 @@ const TABS: { value: BulkTab; label: string; icon: React.ComponentType<{ classNa
  * Which order to do things in. Raw materials first, because product recipes
  * reference them and unmatched names become new ingredients otherwise.
  */
-const SUGGESTED_ORDER: BulkTab[] = ["raw-materials", "products", "photos"];
+const SUGGESTED_ORDER: BulkTab[] = ["raw-materials", "products", "bulk-update", "photos"];
 
 export default function BulkUploadWorkspace({ initialTab }: { initialTab: BulkTab }) {
   const [tab, setTab] = useState<BulkTab>(initialTab);
@@ -104,7 +118,9 @@ export default function BulkUploadWorkspace({ initialTab }: { initialTab: BulkTa
             <p className="text-xs text-stone-500">{item.blurb}</p>
             {item.value === "raw-materials" && <BulkRawMaterialsImport />}
             {item.value === "products" && <BulkProductsImport />}
+            {item.value === "bulk-update" && <BulkUpdateImport />}
             {item.value === "photos" && <BulkPhotoAssignment />}
+            {item.value === "history" && <ImportHistory />}
           </TabsContent>
         ))}
       </Tabs>

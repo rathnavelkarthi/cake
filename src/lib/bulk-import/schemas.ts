@@ -19,6 +19,13 @@ export interface RowIssue {
   severity: RowSeverity;
 }
 
+export interface FieldDiffItem {
+  field: string;
+  label: string;
+  oldValue: string;
+  newValue: string;
+}
+
 export interface ParsedRow<T> {
   /** 1-based row number in the sheet, header included. */
   rowNumber: number;
@@ -31,6 +38,8 @@ export interface ParsedRow<T> {
   /** Set for updates: the id of the record that will be overwritten. */
   existingId?: string | number;
   existingLabel?: string;
+  /** Field-level differences for updates, e.g. "Price ₹40 → ₹45" */
+  diffs?: FieldDiffItem[];
   /** Raw material names in the recipe that do not exist yet. */
   unknownIngredients: string[];
 }
@@ -358,6 +367,13 @@ export const PRODUCT_COLUMNS: ColumnSpec[] = [
     help: "Optional. Matches a selected photo by filename or by product name.",
   },
   {
+    key: "product_type",
+    label: "Product Type",
+    aliases: ["product_type", "type", "item_type"],
+    example: "FINISHED_PRODUCT",
+    help: "FINISHED_PRODUCT or RAW_MATERIAL. Defaults to FINISHED_PRODUCT.",
+  },
+  {
     key: "outlet",
     label: "Outlet",
     aliases: ["outlet", "branch", "branch_ids", "available_branches", "location"],
@@ -387,6 +403,7 @@ export interface ParsedProduct {
   isFeatured: boolean;
   isBestSeller: boolean;
   image?: string;
+  productType?: "FINISHED_PRODUCT" | "RAW_MATERIAL" | "SEMI_FINISHED";
   availableBranches: string;
   branchIds: string[];
   recipe: RecipeIngredient[];
@@ -410,26 +427,65 @@ export function canonicalise(
   return out;
 }
 
+export interface ProductRefInfo {
+  id: string;
+  name: string;
+  sku: string | null;
+  slug: string;
+  price?: number;
+  salePrice?: number;
+  stock?: number;
+  lowStockThreshold?: number;
+  category?: string;
+  description?: string;
+  isActive?: boolean;
+  isEggless?: boolean;
+  isFeatured?: boolean;
+  isBestSeller?: boolean;
+  productType?: string;
+  imageUrl?: string;
+}
+
 export interface ProductParseContext {
   rowNumber: number;
   raw: Record<string, string>;
   catalogue: RawMaterialItem[];
-  existingProducts: { id: string; name: string; sku: string | null; slug: string }[];
+  existingProducts: ProductRefInfo[];
   autoCreateIngredients: boolean;
+  mode?: "all" | "update-only" | "create-only";
 }
 
 export function parseProductRow(context: ProductParseContext): ParsedRow<ParsedProduct> {
-  const { rowNumber, raw, catalogue, existingProducts, autoCreateIngredients } = context;
+  const { rowNumber, raw, catalogue, existingProducts, autoCreateIngredients, mode = "all" } = context;
   const record = canonicalise(raw, PRODUCT_ALIAS);
   const issues: RowIssue[] = [];
 
-  const name = record.name?.trim() ?? "";
+  const rawSku = record.sku?.trim();
+  const rawName = record.name?.trim() ?? "";
+
+  // Find existing product by SKU first, then by slug, then by name
+  let match: ProductRefInfo | undefined;
+  if (rawSku) {
+    match = existingProducts.find((p) => p.sku && p.sku.toLowerCase() === rawSku.toLowerCase());
+  }
+  if (!match && rawName) {
+    const slug = slugify(rawName);
+    match = existingProducts.find(
+      (p) => p.slug === slug || p.name.toLowerCase() === rawName.toLowerCase()
+    );
+  }
+
+  // In update-only mode, if name is missing but SKU matched an existing product, inherit the existing name
+  const name = rawName || (mode === "update-only" && match ? match.name : "");
   if (!name) {
     issues.push({ field: "name", message: "Product Name is required", severity: "error" });
   }
 
-  const price = parseNumber(record.price, 0);
-  if (price.invalid || record.price === undefined) {
+  // Handle price: in update-only mode with a match, default to existing price if not provided
+  let price = parseNumber(record.price, match?.price ?? 0);
+  if (record.price === undefined && mode === "update-only" && match?.price !== undefined) {
+    price = { value: match.price, invalid: false };
+  } else if (price.invalid || (record.price === undefined && mode !== "update-only")) {
     issues.push({
       field: "price",
       message: record.price === undefined
@@ -441,7 +497,7 @@ export function parseProductRow(context: ProductParseContext): ParsedRow<ParsedP
     issues.push({ field: "price", message: "Selling Price cannot be negative", severity: "error" });
   }
 
-  const salePrice = parseNumber(record.sale_price, 0);
+  const salePrice = parseNumber(record.sale_price, match?.salePrice ?? 0);
   if (record.sale_price !== undefined && salePrice.invalid) {
     issues.push({
       field: "sale_price",
@@ -457,7 +513,7 @@ export function parseProductRow(context: ProductParseContext): ParsedRow<ParsedP
     });
   }
 
-  const stock = parseNumber(record.stock, 0);
+  const stock = parseNumber(record.stock, match?.stock ?? 0);
   if (stock.invalid || stock.value < 0) {
     issues.push({
       field: "stock",
@@ -468,7 +524,7 @@ export function parseProductRow(context: ProductParseContext): ParsedRow<ParsedP
     });
   }
 
-  const threshold = parseNumber(record.low_stock_threshold, 5);
+  const threshold = parseNumber(record.low_stock_threshold, match?.lowStockThreshold ?? 5);
   if (threshold.invalid) {
     issues.push({
       field: "low_stock_threshold",
@@ -477,7 +533,7 @@ export function parseProductRow(context: ProductParseContext): ParsedRow<ParsedP
     });
   }
 
-  const eggless = parseBoolean(record.is_eggless, true);
+  const eggless = parseBoolean(record.is_eggless, match?.isEggless ?? true);
   if (eggless === null) {
     issues.push({
       field: "is_eggless",
@@ -486,7 +542,7 @@ export function parseProductRow(context: ProductParseContext): ParsedRow<ParsedP
     });
   }
 
-  const active = parseBoolean(record.is_active, true);
+  const active = parseBoolean(record.is_active, match?.isActive ?? true);
   if (active === null) {
     issues.push({
       field: "is_active",
@@ -531,7 +587,7 @@ export function parseProductRow(context: ProductParseContext): ParsedRow<ParsedP
     }
   }
 
-  const slug = slugify(name);
+  const slug = match?.slug || slugify(name);
   if (name && !slug) {
     issues.push({
       field: "name",
@@ -540,29 +596,99 @@ export function parseProductRow(context: ProductParseContext): ParsedRow<ParsedP
     });
   }
 
-  // Decide create vs update the same way the server will.
-  const sku = record.sku?.trim();
-  let existingId: string | undefined;
-  let existingLabel: string | undefined;
-  const match = sku
-    ? existingProducts.find((p) => p.sku && p.sku.toLowerCase() === sku.toLowerCase())
-    : existingProducts.find(
-        (p) => p.slug === slug || p.name.toLowerCase() === name.toLowerCase()
-      );
+  // Parse product_type
+  let productType: "FINISHED_PRODUCT" | "RAW_MATERIAL" | "SEMI_FINISHED" = "FINISHED_PRODUCT";
+  if (record.product_type) {
+    const rawType = record.product_type.trim().toUpperCase().replace(/[\s-]/g, "_");
+    if (rawType.includes("RAW") || rawType.includes("INGREDIENT")) {
+      productType = "RAW_MATERIAL";
+    } else if (rawType.includes("SEMI")) {
+      productType = "SEMI_FINISHED";
+    } else {
+      productType = "FINISHED_PRODUCT";
+    }
+  }
+
+  const sku = rawSku || match?.sku || undefined;
+  const existingId = match?.id;
+  const existingLabel = match?.name;
+
+  // Mode restrictions
+  if (mode === "update-only" && !existingId) {
+    issues.push({
+      field: "sku",
+      message: `No existing product matched SKU "${rawSku || ""}" or Name "${rawName}". Updates only apply to existing items.`,
+      severity: "error",
+    });
+  } else if (mode === "create-only" && existingId) {
+    issues.push({
+      field: "name",
+      message: `Product "${existingLabel}" already exists (SKU: ${match?.sku || "none"}). Skipped in create-only mode.`,
+      severity: "warning",
+    });
+  }
+
+  // Calculate field-level diffs if updating an existing record
+  const diffs: FieldDiffItem[] = [];
   if (match) {
-    existingId = match.id;
-    existingLabel = match.name;
+    if (record.price !== undefined && Number(price.value) !== Number(match.price)) {
+      diffs.push({
+        field: "price",
+        label: "Selling Price",
+        oldValue: match.price !== undefined ? `₹${match.price}` : "—",
+        newValue: `₹${price.value}`,
+      });
+    }
+    if (record.stock !== undefined && Number(stock.value) !== Number(match.stock)) {
+      diffs.push({
+        field: "stock",
+        label: "Stock",
+        oldValue: match.stock !== undefined ? String(match.stock) : "—",
+        newValue: String(stock.value),
+      });
+    }
+    if (record.sale_price !== undefined) {
+      const oldSale = match.salePrice ? `₹${match.salePrice}` : "None";
+      const newSale = salePrice.value > 0 ? `₹${salePrice.value}` : "None";
+      if (oldSale !== newSale) {
+        diffs.push({ field: "sale_price", label: "Sale Price", oldValue: oldSale, newValue: newSale });
+      }
+    }
+    if (record.category && match.category && record.category.trim().toLowerCase() !== match.category.toLowerCase()) {
+      diffs.push({
+        field: "category",
+        label: "Category",
+        oldValue: match.category,
+        newValue: record.category.trim(),
+      });
+    }
+    if (record.is_active !== undefined && match.isActive !== undefined && (active ?? true) !== match.isActive) {
+      diffs.push({
+        field: "is_active",
+        label: "Visibility",
+        oldValue: match.isActive ? "Visible" : "Hidden",
+        newValue: active ? "Visible" : "Hidden",
+      });
+    }
+    if (record.is_eggless !== undefined && match.isEggless !== undefined && (eggless ?? true) !== match.isEggless) {
+      diffs.push({
+        field: "is_eggless",
+        label: "Veg Mark",
+        oldValue: match.isEggless ? "Veg" : "Non-Veg",
+        newValue: eggless ? "Veg" : "Non-Veg",
+      });
+    }
   }
 
   const hasError = issues.some((issue) => issue.severity === "error");
   if (hasError) {
-    return { rowNumber, raw, value: null, issues, action: "skip", unknownIngredients };
+    return { rowNumber, raw, value: null, issues, action: "skip", unknownIngredients, diffs };
   }
 
   const value: ParsedProduct = {
     name,
-    sku: sku || undefined,
-    category: record.category?.trim() || "Signature Cakes",
+    sku,
+    category: record.category?.trim() || match?.category || "Signature Cakes",
     price: price.value,
     salePrice: !salePrice.invalid && salePrice.value > 0 && salePrice.value < price.value
       ? salePrice.value
@@ -571,26 +697,33 @@ export function parseProductRow(context: ProductParseContext): ParsedRow<ParsedP
     lowStockThreshold: Number.isFinite(threshold.value)
       ? Math.max(0, Math.round(threshold.value))
       : 5,
-    description: record.description?.trim() || undefined,
+    description: record.description?.trim() || match?.description || undefined,
     isEggless: eggless ?? true,
     isActive: active ?? true,
-    isFeatured: parseBoolean(record.is_featured, false) ?? false,
-    isBestSeller: parseBoolean(record.is_bestseller, false) ?? false,
-    image: record.image?.trim() || undefined,
+    isFeatured: parseBoolean(record.is_featured, match?.isFeatured ?? false) ?? false,
+    isBestSeller: parseBoolean(record.is_bestseller, match?.isBestSeller ?? false) ?? false,
+    image: record.image?.trim() || match?.imageUrl || undefined,
+    productType,
     availableBranches: branch.value,
     branchIds: ["nungambakkam"],
     recipe,
     slug,
   };
 
+  let action: "create" | "update" | "skip" = existingId ? "update" : "create";
+  if (mode === "create-only" && existingId) {
+    action = "skip";
+  }
+
   return {
     rowNumber,
     raw,
     value,
     issues,
-    action: existingId ? "update" : "create",
+    action,
     existingId,
     existingLabel,
+    diffs,
     unknownIngredients,
   };
 }
@@ -678,21 +811,27 @@ export interface RawMaterialParseContext {
   rowNumber: number;
   raw: Record<string, string>;
   existingMaterials: RawMaterialItem[];
+  mode?: "all" | "update-only" | "create-only";
 }
 
 export function parseRawMaterialRow(
   context: RawMaterialParseContext
 ): ParsedRow<ParsedRawMaterial> {
-  const { rowNumber, raw, existingMaterials } = context;
+  const { rowNumber, raw, existingMaterials, mode = "all" } = context;
   const record = canonicalise(raw, RAW_ALIAS);
   const issues: RowIssue[] = [];
 
-  const name = record.name?.trim() ?? "";
+  const rawSku = record.sku?.trim();
+  const rawName = record.name?.trim() ?? "";
+
+  const existing = rawSku
+    ? existingMaterials.find((m) => m.sku && m.sku.toLowerCase() === rawSku.toLowerCase())
+    : existingMaterials.find((m) => m.name.toLowerCase() === rawName.toLowerCase());
+
+  const name = rawName || (mode === "update-only" && existing ? existing.name : "");
   if (!name) {
     issues.push({ field: "name", message: "Material Name is required", severity: "error" });
-  } else if (
-    existingMaterials.some((m) => m.name.toLowerCase() === name.toLowerCase())
-  ) {
+  } else if (existing && mode === "all") {
     issues.push({
       field: "name",
       message: `"${name}" already exists - this row will update it`,
@@ -700,7 +839,7 @@ export function parseRawMaterialRow(
     });
   }
 
-  const unit = parseUnit(record.unit, "kg");
+  const unit = parseUnit(record.unit, (existing?.unit as RawUnit) ?? "kg");
   if (unit === null) {
     issues.push({
       field: "unit",
@@ -709,7 +848,7 @@ export function parseRawMaterialRow(
     });
   }
 
-  const stock = parseNumber(record.stock, 0);
+  const stock = parseNumber(record.stock, existing?.stock ?? 0);
   if (stock.invalid || stock.value < 0) {
     issues.push({
       field: "stock",
@@ -720,7 +859,7 @@ export function parseRawMaterialRow(
     });
   }
 
-  const threshold = parseNumber(record.min_threshold, 5);
+  const threshold = parseNumber(record.min_threshold, existing?.minThreshold ?? 5);
   if (threshold.invalid || threshold.value < 0) {
     issues.push({
       field: "min_threshold",
@@ -729,7 +868,7 @@ export function parseRawMaterialRow(
     });
   }
 
-  const cost = parseNumber(record.cost_per_unit, 0);
+  const cost = parseNumber(record.cost_per_unit, existing?.costPerUnit ?? 0);
   if (cost.invalid || cost.value < 0) {
     issues.push({
       field: "cost_per_unit",
@@ -738,35 +877,88 @@ export function parseRawMaterialRow(
     });
   }
 
-  const sku = record.sku?.trim();
-  const existing = sku
-    ? existingMaterials.find((m) => m.sku && m.sku.toLowerCase() === sku.toLowerCase())
-    : existingMaterials.find((m) => m.name.toLowerCase() === name.toLowerCase());
+  const sku = rawSku || existing?.sku || undefined;
+
+  if (mode === "update-only" && !existing) {
+    issues.push({
+      field: "sku",
+      message: `No existing raw material found matching "${rawSku || rawName}". Updates only apply to existing items.`,
+      severity: "error",
+    });
+  } else if (mode === "create-only" && existing) {
+    issues.push({
+      field: "name",
+      message: `Raw material "${existing.name}" already exists. Skipped in create-only mode.`,
+      severity: "warning",
+    });
+  }
+
+  const diffs: FieldDiffItem[] = [];
+  if (existing) {
+    if (record.stock !== undefined && Number(stock.value) !== Number(existing.stock)) {
+      diffs.push({
+        field: "stock",
+        label: "Stock",
+        oldValue: `${existing.stock} ${existing.unit}`,
+        newValue: `${stock.value} ${unit ?? existing.unit}`,
+      });
+    }
+    if (record.cost_per_unit !== undefined && Number(cost.value) !== Number(existing.costPerUnit)) {
+      diffs.push({
+        field: "cost_per_unit",
+        label: "Cost / Unit",
+        oldValue: `₹${existing.costPerUnit}`,
+        newValue: `₹${cost.value}`,
+      });
+    }
+    if (record.min_threshold !== undefined && Number(threshold.value) !== Number(existing.minThreshold)) {
+      diffs.push({
+        field: "min_threshold",
+        label: "Min Threshold",
+        oldValue: `${existing.minThreshold}`,
+        newValue: `${threshold.value}`,
+      });
+    }
+    if (record.supplier && existing.supplier && record.supplier.trim() !== existing.supplier) {
+      diffs.push({
+        field: "supplier",
+        label: "Supplier",
+        oldValue: existing.supplier,
+        newValue: record.supplier.trim(),
+      });
+    }
+  }
 
   const hasError = issues.some((issue) => issue.severity === "error");
   if (hasError) {
-    return { rowNumber, raw, value: null, issues, action: "skip", unknownIngredients: [] };
+    return { rowNumber, raw, value: null, issues, action: "skip", unknownIngredients: [], diffs };
   }
 
   const value: ParsedRawMaterial = {
     name,
-    sku: sku || undefined,
-    category: record.category?.trim() || "General",
+    sku,
+    category: record.category?.trim() || existing?.category || "General",
     stock: Number.isFinite(stock.value) ? Math.max(0, stock.value) : 0,
     unit: unit ?? "kg",
     minThreshold: Number.isFinite(threshold.value) ? Math.max(0, threshold.value) : 5,
     costPerUnit: Number.isFinite(cost.value) ? Math.max(0, cost.value) : 0,
-    supplier: record.supplier?.trim() || undefined,
+    supplier: record.supplier?.trim() || existing?.supplier || undefined,
   };
+
+  let action: "create" | "update" | "skip" = existing ? "update" : "create";
+  if (mode === "create-only" && existing) {
+    action = "skip";
+  }
 
   return {
     rowNumber,
     raw,
     value,
     issues,
-    action: existing ? "update" : "create",
+    action,
     existingId: existing?.id,
     existingLabel: existing?.name,
+    diffs,
     unknownIngredients: [],
   };
 }

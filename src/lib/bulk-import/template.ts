@@ -150,13 +150,107 @@ function instructionsText(mode: "products" | "raw-materials"): string {
   ].join("\n");
 }
 
-export function downloadTemplate(mode: "products" | "raw-materials"): void {
-  const csv = mode === "products" ? productCsv() : rawMaterialCsv();
-  triggerDownload(csv, `kichees-${mode}-template.csv`, "text/csv;charset=utf-8");
+export function downloadTemplate(mode: "products" | "raw-materials", format: "csv" | "xlsx" = "csv"): void {
+  const isProducts = mode === "products";
+  const columns = isProducts ? PRODUCT_COLUMNS : RAW_MATERIAL_COLUMNS;
+  const headers = columns.map((c) => c.label);
+  const examples = isProducts
+    ? [PRODUCT_EXAMPLE, PRODUCT_EXAMPLE_2]
+    : [RAW_EXAMPLE, RAW_EXAMPLE_2];
+  const rows = examples.map((ex) =>
+    columns.map((c) => (ex as Record<string, string>)[c.key] ?? "")
+  );
+
+  if (format === "xlsx") {
+    // Dynamic import / call to xlsx helper
+    import("./xlsx").then(({ exportToXlsx }) => {
+      exportToXlsx(headers, rows, `kichees-${mode}-template.xlsx`, mode === "products" ? "Products" : "RawMaterials");
+    }).catch(() => {
+      const csv = isProducts ? productCsv() : rawMaterialCsv();
+      triggerDownload(csv, `kichees-${mode}-template.csv`, "text/csv;charset=utf-8");
+    });
+  } else {
+    const csv = isProducts ? productCsv() : rawMaterialCsv();
+    triggerDownload(csv, `kichees-${mode}-template.csv`, "text/csv;charset=utf-8");
+  }
+}
+
+export function downloadUpdateTemplate(
+  mode: "products" | "raw-materials",
+  existingItems?: { sku?: string; name: string; price?: number; stock?: number; costPerUnit?: number; unit?: string }[],
+  format: "csv" | "xlsx" = "csv"
+): void {
+  if (mode === "products") {
+    const headers = ["SKU", "Product Name", "Selling Price", "Stock Quantity", "Sale Price", "Visible on Site"];
+    const rows = (existingItems && existingItems.length > 0)
+      ? existingItems.map((p) => [
+          p.sku || "",
+          p.name,
+          p.price !== undefined ? String(p.price) : "",
+          p.stock !== undefined ? String(p.stock) : "0",
+          "",
+          "yes",
+        ])
+      : [
+          ["KCH-1001", "Belgian Chocolate Truffle", "750", "10", "699", "yes"],
+          ["KCH-1002", "Fudge Brownie", "480", "24", "", "yes"],
+        ];
+
+    if (format === "xlsx") {
+      import("./xlsx").then(({ exportToXlsx }) => {
+        exportToXlsx(headers, rows, `kichees-products-update.xlsx`, "ProductUpdates");
+      });
+    } else {
+      triggerDownload(toCsv(headers, rows), `kichees-products-update.csv`, "text/csv;charset=utf-8");
+    }
+  } else {
+    const headers = ["SKU", "Material Name", "Stock Quantity", "Cost Per Unit", "Low Stock Alert"];
+    const rows = (existingItems && existingItems.length > 0)
+      ? existingItems.map((m) => [
+          m.sku || "",
+          m.name,
+          m.stock !== undefined ? String(m.stock) : "0",
+          m.costPerUnit !== undefined ? String(m.costPerUnit) : "0",
+          "5",
+        ])
+      : [
+          ["RAW-FLOUR-01", "Refined Wheat Flour (Maida)", "50", "48", "15"],
+          ["RAW-CREAM-01", "Heavy Dairy Whipping Cream", "20", "220", "5"],
+        ];
+
+    if (format === "xlsx") {
+      import("./xlsx").then(({ exportToXlsx }) => {
+        exportToXlsx(headers, rows, `kichees-raw-materials-update.xlsx`, "MaterialUpdates");
+      });
+    } else {
+      triggerDownload(toCsv(headers, rows), `kichees-raw-materials-update.csv`, "text/csv;charset=utf-8");
+    }
+  }
 }
 
 export function downloadInstructions(mode: "products" | "raw-materials"): void {
   triggerDownload(instructionsText(mode), `kichees-${mode}-how-to.txt`, "text/plain;charset=utf-8");
+}
+
+export function generateAndDownloadErrorReport(
+  mode: "products" | "raw-materials",
+  rows: { rowNumber: number; raw: Record<string, string>; issues: { field: string; message: string; severity: string }[] }[]
+): void {
+  const errorRows = rows.filter((r) => r.issues && r.issues.length > 0);
+  if (errorRows.length === 0) return;
+
+  // Collect all raw keys from the first row or across rows
+  const rawKeys = Array.from(new Set(errorRows.flatMap((r) => Object.keys(r.raw))));
+  const headers = ["Row #", "Errors & Warnings", ...rawKeys];
+
+  const body = errorRows.map((r) => {
+    const issuesSummary = r.issues.map((i) => `[${i.severity.toUpperCase()}] ${i.field}: ${i.message}`).join(" | ");
+    const rowValues = rawKeys.map((k) => r.raw[k] ?? "");
+    return [r.rowNumber, issuesSummary, ...rowValues];
+  });
+
+  const csv = toCsv(headers, body);
+  triggerDownload(csv, `kichees-${mode}-error-report.csv`, "text/csv;charset=utf-8");
 }
 
 export function downloadErrorReport(
@@ -183,3 +277,4 @@ export function triggerDownload(content: string, fileName: string, mime: string)
 /** Header labels -> machine keys, used to build the error report download. */
 export const PRODUCT_HEADER_LABELS = PRODUCT_COLUMNS.map((c) => c.label);
 export const RAW_HEADER_LABELS = RAW_MATERIAL_COLUMNS.map((c) => c.label);
+

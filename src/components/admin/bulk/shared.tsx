@@ -71,7 +71,7 @@ export function SourcePicker({
         <input
           ref={fileRef}
           type="file"
-          accept=".csv,.txt,text/csv,text/plain"
+          accept=".xlsx,.xls,.csv,.txt,.tsv,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0];
@@ -221,6 +221,61 @@ export function IssueList({
         </li>
       ))}
     </ul>
+  );
+}
+
+export function FieldDiffList({
+  diffs,
+  className,
+}: {
+  diffs?: { field: string; label: string; oldValue: string; newValue: string }[];
+  className?: string;
+}) {
+  if (!diffs || diffs.length === 0) return null;
+  return (
+    <div className={cn("space-y-1 text-[11px]", className)}>
+      <span className="font-semibold text-stone-500 uppercase text-[9px] tracking-wider block">
+        Modified fields ({diffs.length}):
+      </span>
+      <div className="flex flex-wrap gap-1.5">
+        {diffs.map((d, i) => (
+          <span
+            key={i}
+            className="inline-flex items-center gap-1 rounded bg-amber-50/90 px-2 py-0.5 border border-amber-200 text-amber-950 font-mono text-[10px]"
+          >
+            <span className="font-semibold text-stone-800">{d.label}:</span>
+            <span className="line-through text-stone-400">{d.oldValue}</span>
+            <span className="text-amber-800 font-bold">→</span>
+            <span className="font-bold text-emerald-800">{d.newValue}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function ErrorReportButton({
+  onDownload,
+  errorCount,
+  warningCount,
+}: {
+  onDownload: () => void;
+  errorCount: number;
+  warningCount: number;
+}) {
+  if (errorCount === 0 && warningCount === 0) return null;
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      onClick={onDownload}
+      className="h-8 gap-1.5 border-red-300 bg-red-50 text-[11px] font-semibold text-red-900 hover:bg-red-100 hover:text-red-950"
+    >
+      <Download className="h-3.5 w-3.5 text-red-700" />
+      Download error report ({errorCount} error{errorCount === 1 ? "" : "s"}
+      {warningCount > 0 ? `, ${warningCount} warning${warningCount === 1 ? "" : "s"}` : ""})
+    </Button>
   );
 }
 
