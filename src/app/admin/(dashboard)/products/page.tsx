@@ -202,6 +202,11 @@ export default function AdminProductsPage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [createdSuccessProduct, setCreatedSuccessProduct] = useState<AdminProductItem | null>(null);
   const [isCreatedSuccessOpen, setIsCreatedSuccessOpen] = useState(false);
+  const [viewingProduct, setViewingProduct] = useState<AdminProductItem | null>(null);
+
+  const handleViewProduct = (product: AdminProductItem) => {
+    setViewingProduct(product);
+  };
 
   const getProductUrl = (prod: AdminProductItem | { slug?: string; id: string | number; name: string }) => {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
@@ -1352,35 +1357,52 @@ export default function AdminProductsPage() {
             ) : (
               filteredProducts.map((product) => (
                 <TableRow key={product.id} className="hover:bg-stone-50/50">
-                  {/* Thumbnail with 1-Click Camera Upload Overlay */}
+                  {/* Thumbnail with Click to View & Photo Upload */}
                   <TableCell>
-                    <div
-                      className="group relative h-11 w-11 rounded-lg overflow-hidden border border-stone-200 bg-stone-100 cursor-pointer shadow-2xs"
-                      onClick={() => handleRowUploadClick(product)}
-                      title="Click to upload new photo for this product"
-                    >
-                      <Image
-                        src={product.imageUrl || "/images/hero-truffle.jpg"}
-                        alt={product.name}
-                        fill
-                        sizes="44px"
-                        className="object-cover group-hover:opacity-75 transition-opacity"
-                      />
-                      {uploadingRowProductId === product.id ? (
-                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                          <Loader2 className="h-4 w-4 text-white animate-spin" />
-                        </div>
-                      ) : (
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <Camera className="h-4 w-4 text-white" />
-                        </div>
-                      )}
+                    <div className="relative group/thumb flex items-center">
+                      <div
+                        className="group relative h-11 w-11 rounded-lg overflow-hidden border border-stone-200 bg-stone-100 cursor-pointer shadow-2xs hover:ring-2 hover:ring-amber-800/40 transition-all"
+                        onClick={() => handleViewProduct(product)}
+                        title="Click to view product details"
+                      >
+                        <Image
+                          src={product.imageUrl || "/images/hero-truffle.jpg"}
+                          alt={product.name}
+                          fill
+                          sizes="44px"
+                          className="object-cover group-hover/thumb:scale-105 transition-transform"
+                        />
+                        {uploadingRowProductId === product.id ? (
+                          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                            <Loader2 className="h-4 w-4 text-white animate-spin" />
+                          </div>
+                        ) : (
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center">
+                            <Eye className="h-4 w-4 text-white drop-shadow" />
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRowUploadClick(product);
+                        }}
+                        title="Upload new photo"
+                        className="absolute -bottom-1 -right-1 z-10 w-5 h-5 rounded-full bg-stone-900/90 text-white flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity hover:bg-amber-900 shadow-xs"
+                      >
+                        <Camera className="h-2.5 w-2.5" />
+                      </button>
                     </div>
                   </TableCell>
 
-                  {/* Name and SKU */}
-                  <TableCell>
-                    <div className="font-semibold text-stone-900 text-xs flex items-center gap-1.5">
+                  {/* Name and SKU - Click to View */}
+                  <TableCell
+                    className="cursor-pointer group/cell"
+                    onClick={() => handleViewProduct(product)}
+                    title="Click to view product details"
+                  >
+                    <div className="font-semibold text-stone-900 text-xs flex items-center gap-1.5 group-hover/cell:text-amber-900 transition-colors">
                       {product.isEggless !== false ? (
                         <span
                           className="inline-flex items-center justify-center w-3.5 h-3.5 border border-emerald-600 rounded-[2px] bg-white p-[1px] shrink-0"
@@ -1396,7 +1418,7 @@ export default function AdminProductsPage() {
                           <span className="w-1.5 h-1.5 rounded-full bg-amber-800"></span>
                         </span>
                       )}
-                      <span>{product.name}</span>
+                      <span className="group-hover/cell:underline decoration-amber-800/40 underline-offset-2">{product.name}</span>
                     </div>
                     <div className="text-[10px] font-mono text-stone-400 pl-5">
                       {product.sku}
@@ -1511,6 +1533,18 @@ export default function AdminProductsPage() {
                   {/* Actions */}
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
+                      {/* Direct View Product Details Button */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleViewProduct(product)}
+                        title="View Product Details"
+                        className="h-8 w-8 text-stone-600 hover:text-amber-900 hover:bg-amber-50"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        <span className="sr-only">View Product</span>
+                      </Button>
+
                       {/* Quick Copy Product URL Button */}
                       <Button
                         variant="ghost"
@@ -1551,6 +1585,14 @@ export default function AdminProductsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-52 text-xs">
                           <DropdownMenuLabel>Product Controls</DropdownMenuLabel>
+                          <DropdownMenuItem
+                            onClick={() => handleViewProduct(product)}
+                            className="cursor-pointer font-medium text-amber-900 focus:bg-amber-50"
+                          >
+                            <Eye className="mr-2 h-3.5 w-3.5 text-amber-800" />
+                            <span>View Product Details</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => handleCopyProductUrl(product)}
                             className="cursor-pointer"
@@ -1623,6 +1665,253 @@ export default function AdminProductsPage() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Product Quick View Modal */}
+      <Dialog open={Boolean(viewingProduct)} onOpenChange={(open) => !open && setViewingProduct(null)}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0 overflow-hidden rounded-2xl border-stone-200">
+          {viewingProduct && (
+            <div>
+              {/* Header Banner */}
+              <div className="relative bg-gradient-to-r from-stone-900 via-stone-800 to-amber-950 p-6 text-white">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1.5 pr-6">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {viewingProduct.isEggless !== false ? (
+                        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 rounded-full px-2.5 py-0.5 shadow-xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                          100% Eggless (Pure Veg)
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold bg-amber-950/80 text-amber-300 border border-amber-500/40 rounded-full px-2.5 py-0.5 shadow-xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                          Contains Egg (Non-Veg)
+                        </span>
+                      )}
+
+                      <span className="text-[10px] font-medium bg-white/10 text-stone-200 border border-white/10 rounded-full px-2.5 py-0.5">
+                        {viewingProduct.category}
+                      </span>
+
+                      {viewingProduct.status === "active" ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full px-2 py-0.5">
+                          <CheckCircle2 className="w-3 h-3" /> Live
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-stone-500/20 text-stone-300 border border-stone-500/30 rounded-full px-2 py-0.5">
+                          <EyeOff className="w-3 h-3" /> Hidden
+                        </span>
+                      )}
+
+                      {viewingProduct.bestSeller && (
+                        <span className="text-[10px] font-bold bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-full px-2 py-0.5">
+                          ★ Best Seller
+                        </span>
+                      )}
+
+                      {viewingProduct.featured && (
+                        <span className="text-[10px] font-bold bg-purple-500/30 text-purple-200 border border-purple-500/40 rounded-full px-2 py-0.5">
+                          Featured
+                        </span>
+                      )}
+                    </div>
+
+                    <DialogTitle className="text-xl font-bold tracking-tight text-white mt-2">
+                      {viewingProduct.name}
+                    </DialogTitle>
+                    <p className="text-xs text-stone-300 font-mono flex items-center gap-2">
+                      <span>SKU: {viewingProduct.sku}</span>
+                      <span>•</span>
+                      <span className="text-amber-300 flex items-center gap-1 font-sans">
+                        <MapPin className="w-3 h-3" /> Casablanca Studio (Dr. Thirumoorthy Nagar)
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Body Content */}
+              <div className="p-6 space-y-6 bg-white">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                  {/* Left Column: Image & Photo Controls */}
+                  <div className="md:col-span-5 space-y-3">
+                    <div className="relative aspect-square w-full rounded-xl overflow-hidden border border-stone-200 bg-stone-100 shadow-xs">
+                      <Image
+                        src={viewingProduct.imageUrl || "/images/hero-truffle.jpg"}
+                        alt={viewingProduct.name}
+                        fill
+                        sizes="320px"
+                        className="object-cover"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const target = viewingProduct;
+                        setViewingProduct(null);
+                        handleRowUploadClick(target);
+                      }}
+                      className="w-full text-xs h-8 gap-1.5 text-stone-700 hover:text-amber-900 border-stone-200"
+                    >
+                      <Camera className="w-3.5 h-3.5" />
+                      Upload New Photo
+                    </Button>
+                  </div>
+
+                  {/* Right Column: Pricing, Inventory & Details */}
+                  <div className="md:col-span-7 space-y-4">
+                    {/* Price & Stock Stats */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-3.5 rounded-xl border border-stone-100 bg-stone-50/80">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-stone-500">
+                          Selling Price
+                        </span>
+                        <div className="text-xl font-extrabold text-stone-900 mt-0.5">
+                          ₹{viewingProduct.price.toLocaleString("en-IN")}
+                        </div>
+                        {viewingProduct.salePrice && viewingProduct.salePrice < viewingProduct.price ? (
+                          <div className="text-[11px] text-stone-400 line-through">
+                            MRP ₹{viewingProduct.salePrice.toLocaleString("en-IN")}
+                          </div>
+                        ) : null}
+                      </div>
+
+                      <div className="p-3.5 rounded-xl border border-stone-100 bg-stone-50/80">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-stone-500">
+                          Current Stock
+                        </span>
+                        <div
+                          className={`text-xl font-extrabold mt-0.5 ${
+                            viewingProduct.stock === 0
+                              ? "text-red-600"
+                              : viewingProduct.stock <= (viewingProduct.lowStockThreshold || 5)
+                              ? "text-amber-700"
+                              : "text-emerald-700"
+                          }`}
+                        >
+                          {viewingProduct.stock} units
+                        </div>
+                        <div className="text-[10px] text-stone-400">
+                          Low alert at {viewingProduct.lowStockThreshold || 5} units
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Description / Story */}
+                    <div className="space-y-1">
+                      <h4 className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
+                        Description & Story
+                      </h4>
+                      <p className="text-xs text-stone-700 leading-relaxed bg-stone-50/50 p-3 rounded-xl border border-stone-100">
+                        {viewingProduct.description || "Freshly baked handcrafted item made with premium ingredients."}
+                      </p>
+                    </div>
+
+                    {/* Outlet Availability */}
+                    <div className="space-y-1">
+                      <h4 className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
+                        Kitchen & Outlet Location
+                      </h4>
+                      <div className="text-xs text-stone-800 bg-stone-50/50 p-2.5 rounded-xl border border-stone-100 flex items-center gap-2">
+                        <MapPin className="w-3.5 h-3.5 text-amber-800 shrink-0" />
+                        <span>Kichee's @ Casablanca Studio, Dr. Thirumoorthy Nagar, Nungambakkam</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recipe / Bill of Materials (if any) */}
+                {viewingProduct.recipe && viewingProduct.recipe.length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-stone-100">
+                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-stone-500 flex items-center gap-1.5">
+                      <Scale className="w-3.5 h-3.5 text-amber-800" />
+                      Recipe / Bill of Materials (Per 1 Unit Baked)
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {viewingProduct.recipe.map((ing, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between p-2 rounded-lg border border-stone-100 bg-stone-50 text-xs"
+                        >
+                          <span className="font-medium text-stone-800 truncate mr-2">
+                            {ing.rawMaterialName}
+                          </span>
+                          <span className="font-mono text-stone-600 bg-white px-2 py-0.5 rounded border border-stone-200 shrink-0">
+                            {ing.amount} {ing.unit}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons Footer */}
+              <div className="p-4 bg-stone-50 border-t border-stone-200 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(getProductUrl(viewingProduct), "_blank")}
+                    className="h-8 text-xs gap-1.5 bg-white text-stone-700 hover:text-amber-900 border-stone-300 font-medium"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    Open Storefront
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleCopyProductUrl(viewingProduct)}
+                    className="h-8 text-xs gap-1.5 bg-white text-stone-700 hover:text-amber-900 border-stone-300 font-medium"
+                  >
+                    {copiedProductId === String(viewingProduct.id) ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="text-emerald-700">Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copy URL</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => {
+                      const target = viewingProduct;
+                      setViewingProduct(null);
+                      handleOpenEditProduct(target);
+                    }}
+                    className="h-8 text-xs gap-1.5 bg-amber-900 hover:bg-amber-950 text-white font-semibold shadow-xs"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                    Edit Product
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setViewingProduct(null)}
+                    className="h-8 text-xs text-stone-500 hover:text-stone-900"
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Product Modal */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
