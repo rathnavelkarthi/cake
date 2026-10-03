@@ -182,9 +182,16 @@ export async function createCartSession(input: CreateSessionInput): Promise<Cart
   const now = new Date();
   const expiresAt = new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString();
 
+  // Prefer explicit env var over request origin — agent/internal calls
+  // often arrive with the server's bind address (0.0.0.0, 127.0.0.1).
+  const safeOrigin =
+    origin && !/0\.0\.0\.0|127\.0\.0\.1|localhost/.test(origin)
+      ? origin
+      : undefined;
+
   const baseUrl =
-    origin ||
     process.env.NEXT_PUBLIC_SITE_URL ||
+    safeOrigin ||
     (process.env.NODE_ENV === "production" ? "https://kicheesbakeddelights.in" : "http://localhost:3000");
 
   const cartUrl = `${baseUrl.replace(/\/$/, "")}/checkout?cart=${sessionId}`;
