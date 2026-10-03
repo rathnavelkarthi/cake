@@ -1,8 +1,19 @@
 "use client";
 
 import React, { useState } from "react";
-import { History, Images, Package, RefreshCw, Upload } from "lucide-react";
+import { Download, FileSpreadsheet, FileText, History, Images, Package, RefreshCw, Upload } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { exportProducts, exportRawMaterials } from "@/lib/bulk-import/export";
+import { getInventoryProducts, localRawMaterials } from "@/lib/db/admin-data";
 import BulkProductsImport from "./BulkProductsImport";
 import BulkRawMaterialsImport from "./BulkRawMaterialsImport";
 import BulkPhotoAssignment from "./BulkPhotoAssignment";
@@ -57,12 +68,64 @@ export default function BulkUploadWorkspace({ initialTab }: { initialTab: BulkTa
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-stone-900">Bulk Upload</h1>
-        <p className="text-sm text-stone-500">
-          Add or update a whole spreadsheet of products and raw materials in one go, instead of one
-          form at a time.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-stone-900">Bulk Upload & Export System</h1>
+          <p className="text-sm text-stone-500">
+            Add, update, or export your full catalogue of finished products and raw materials in Excel or CSV.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Quick Export Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-1.5 border-stone-300 bg-white text-xs font-semibold text-stone-800 shadow-sm hover:bg-stone-50"
+              >
+                <Download className="h-4 w-4 text-stone-600" />
+                Export Live Catalog
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 text-xs">
+              <DropdownMenuLabel>Finished Products</DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => exportProducts(getInventoryProducts(), "xlsx")}
+                className="cursor-pointer"
+              >
+                <FileSpreadsheet className="mr-2 h-4 w-4 text-emerald-600" />
+                <span>Export Products as Excel (.xlsx)</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => exportProducts(getInventoryProducts(), "csv")}
+                className="cursor-pointer"
+              >
+                <FileText className="mr-2 h-4 w-4 text-blue-600" />
+                <span>Export Products as CSV (.csv)</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+
+              <DropdownMenuLabel>Raw Materials</DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => exportRawMaterials(localRawMaterials, "xlsx")}
+                className="cursor-pointer"
+              >
+                <FileSpreadsheet className="mr-2 h-4 w-4 text-emerald-600" />
+                <span>Export Materials as Excel (.xlsx)</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => exportRawMaterials(localRawMaterials, "csv")}
+                className="cursor-pointer"
+              >
+                <FileText className="mr-2 h-4 w-4 text-blue-600" />
+                <span>Export Materials as CSV (.csv)</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Guided order hint */}

@@ -27,7 +27,11 @@ import {
   BookOpen,
   Camera,
   Loader2,
+  Download,
+  FileSpreadsheet,
+  FileText,
 } from "lucide-react";
+import { exportProducts } from "@/lib/bulk-import/export";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -688,7 +692,38 @@ export default function AdminProductsPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Export All Products to Excel / CSV */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-1.5 border-stone-300 bg-white text-xs font-semibold text-stone-800 shadow-sm hover:bg-stone-50"
+              >
+                <Download className="h-4 w-4 text-stone-600" />
+                Export Products ({productsList.length})
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52 text-xs">
+              <DropdownMenuLabel>Export All Products</DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => exportProducts(productsList, "xlsx")}
+                className="cursor-pointer"
+              >
+                <FileSpreadsheet className="mr-2 h-4 w-4 text-emerald-600" />
+                <span>Export as Excel (.xlsx)</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => exportProducts(productsList, "csv")}
+                className="cursor-pointer"
+              >
+                <FileText className="mr-2 h-4 w-4 text-blue-600" />
+                <span>Export as CSV (.csv)</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {/* Bulk upload is the fast path for a whole menu or stock list. */}
           <Link
             href="/admin/bulk-upload?tab=products"

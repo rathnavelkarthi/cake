@@ -15,7 +15,19 @@ import {
   Sparkles,
   ArrowRight,
   Upload,
+  Download,
+  FileSpreadsheet,
+  FileText,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { exportProducts, exportRawMaterials } from "@/lib/bulk-import/export";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -284,8 +296,57 @@ export default function AdminInventoryPage() {
           </p>
         </div>
 
-        {/* Kitchen Bake Production Action */}
-        <div className="flex items-center gap-2.5">
+        {/* Actions: Export, Bulk Upload, Bake Batch */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Export Inventory Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-1.5 border-stone-300 bg-white text-xs font-semibold text-stone-800 shadow-sm hover:bg-stone-50"
+              >
+                <Download className="h-4 w-4 text-stone-600" />
+                Export Inventory
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 text-xs">
+              <DropdownMenuLabel>Raw Materials Inventory</DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => exportRawMaterials(rawMaterials, "xlsx")}
+                className="cursor-pointer"
+              >
+                <FileSpreadsheet className="mr-2 h-4 w-4 text-emerald-600" />
+                <span>Export Materials as Excel (.xlsx)</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => exportRawMaterials(rawMaterials, "csv")}
+                className="cursor-pointer"
+              >
+                <FileText className="mr-2 h-4 w-4 text-blue-600" />
+                <span>Export Materials as CSV (.csv)</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+
+              <DropdownMenuLabel>Finished Products Stock</DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => exportProducts(products, "xlsx")}
+                className="cursor-pointer"
+              >
+                <FileSpreadsheet className="mr-2 h-4 w-4 text-emerald-600" />
+                <span>Export Products as Excel (.xlsx)</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => exportProducts(products, "csv")}
+                className="cursor-pointer"
+              >
+                <FileText className="mr-2 h-4 w-4 text-blue-600" />
+                <span>Export Products as CSV (.csv)</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Link
             href="/admin/bulk-upload?tab=raw-materials"
             className="inline-flex h-9 items-center gap-2 rounded-md border border-stone-300 bg-white px-3 text-xs font-semibold text-stone-800 shadow-sm transition-colors hover:bg-stone-50"
