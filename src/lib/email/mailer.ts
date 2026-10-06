@@ -115,10 +115,10 @@ function wrapInEmailLayout(contentHtml: string, title = "Kichee's Baked Delights
 
       <!-- Footer -->
       <div class="footer" style="background-color: #faf6f0; padding: 20px 24px; text-align: center; border-top: 1px solid #eee4da; color: #78716c; font-size: 11.5px;">
-        <p style="margin: 0 0 6px 0; font-weight: 600; color: #44403c;">Kichee's Baked Delights Pvt. Ltd.</p>
-        <p style="margin: 0 0 6px 0;">No. 18/4, Wheatcrofts Road, Nungambakkam, Chennai - 600034</p>
-        <p style="margin: 0 0 8px 0;"><strong>GSTIN:</strong> 33AAECP8821M1Z4 · <strong>FSSAI:</strong> 12423002001550 · <strong>Tel:</strong> +91 98400 12345</p>
-        <p style="margin: 0; color: #a8a29e;">This email was sent from the official billing system (billing@kicheesbakeddelights.in).</p>
+        <p style="margin: 0 0 6px 0; font-weight: 600; color: #44403c;">${BUSINESS_CONFIG.billingName} (${BUSINESS_CONFIG.name})</p>
+        <p style="margin: 0 0 6px 0;">${BUSINESS_CONFIG.address.full}</p>
+        <p style="margin: 0 0 8px 0;"><strong>GSTIN:</strong> ${BUSINESS_CONFIG.taxIdentity.gstin} · <strong>Tel:</strong> ${BUSINESS_CONFIG.phoneDisplay}</p>
+        <p style="margin: 0; color: #a8a29e;">This email was sent from the official billing system (${BUSINESS_CONFIG.email}).</p>
       </div>
     </div>
   </center>
@@ -228,7 +228,7 @@ export function generateOrderConfirmationEmail(order: {
     </div>
 
     <p style="font-size: 12px; color: #a8a29e; text-align: center; margin-top: 16px;">
-      Need adjustments or have special baking instructions? WhatsApp us directly at +91 98400 12345 with your order ID #${order.orderNumber}.
+      Need adjustments or have special baking instructions? WhatsApp us directly at ${BUSINESS_CONFIG.phoneDisplay} with your order ID #${order.orderNumber}.
     </p>
   `;
 
@@ -393,12 +393,12 @@ export function generateBillingInvoiceEmail(invoice: {
     </table>
 
     <div style="background-color: #f5f5f4; border-radius: 6px; padding: 12px; font-size: 11.5px; color: #78716c; text-align: center; margin-top: 20px;">
-      This is a system generated computer invoice issued by Kichee's Baked Delights POS. Thank you for your patronage!
+      This is a system generated computer invoice issued by ${BUSINESS_CONFIG.billingName} POS. Thank you for your patronage!
     </div>
   `;
 
   return {
-    subject: `Tax Invoice #${invoice.invoiceNumber} - Kichee's Baked Delights`,
+    subject: `Tax Invoice #${invoice.invoiceNumber} - ${BUSINESS_CONFIG.billingName}`,
     html: wrapInEmailLayout(content, `Invoice #${invoice.invoiceNumber}`),
   };
 }
@@ -480,8 +480,8 @@ export function generatePurchaseOrderEmail(po: {
           <h4 style="margin: 0 0 6px 0; font-size: 12px; text-transform: uppercase; color: #78350f;">Delivery & Invoicing Terms:</h4>
           <p style="margin: 0 0 3px 0;"><strong>Ship To:</strong> ${po.deliveryLocation}</p>
           <p style="margin: 0 0 3px 0;"><strong>Payment Terms:</strong> ${po.paymentTerms}</p>
-          <p style="margin: 0 0 3px 0;"><strong>Bill To:</strong> Kichee's Baked Delights</p>
-          <p style="margin: 0;"><strong>Buyer GSTIN:</strong> 33AAECP8821M1Z4</p>
+          <p style="margin: 0 0 3px 0;"><strong>Bill To:</strong> ${BUSINESS_CONFIG.billingName}</p>
+          <p style="margin: 0;"><strong>Buyer GSTIN:</strong> ${BUSINESS_CONFIG.taxIdentity.gstin}</p>
         </td>
       </tr>
     </table>
@@ -537,7 +537,7 @@ export function generatePurchaseOrderEmail(po: {
   `;
 
   return {
-    subject: `Purchase Order ${po.poNumber} - Kichee's Baked Delights to ${po.supplier.name}`,
+    subject: `Purchase Order ${po.poNumber} - ${BUSINESS_CONFIG.billingName} to ${po.supplier.name}`,
     html: wrapInEmailLayout(content, `Purchase Order ${po.poNumber}`),
   };
 }

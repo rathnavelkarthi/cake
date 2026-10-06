@@ -50,6 +50,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { BUSINESS_CONFIG } from "@/lib/config/business";
 import {
   PurchaseOrder,
   PurchaseOrderItem,
@@ -64,6 +65,14 @@ import {
   subscribePurchaseOrders,
 } from "@/lib/purchase-orders/po-store";
 import { localRawMaterials } from "@/lib/db/admin-data";
+
+function WhatsAppIcon({ className = "h-3.5 w-3.5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+    </svg>
+  );
+}
 
 export default function AdminPurchaseOrdersPage() {
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
@@ -83,11 +92,17 @@ export default function AdminPurchaseOrdersPage() {
   const [emailCustomNote, setEmailCustomNote] = useState("");
   const [isSendingEmail, setIsSendingEmail] = useState(false);
 
+  // WhatsApp sending state (Evolution API)
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+  const [whatsappRecipientPhone, setWhatsappRecipientPhone] = useState("");
+  const [whatsappCustomNote, setWhatsappCustomNote] = useState("");
+  const [isSendingWhatsApp, setIsSendingWhatsApp] = useState(false);
+
   // New PO Form State
   const [selectedSupplierId, setSelectedSupplierId] = useState<string>("");
   const [expectedDate, setExpectedDate] = useState<string>("");
   const [deliveryLocation, setDeliveryLocation] = useState(
-    "Kichee's Central Kitchen, 18/4 Wheatcrofts Rd, Nungambakkam, Chennai - 600034"
+    `${BUSINESS_CONFIG.billingName} Central Kitchen, 18/4 Wheatcrofts Rd, Nungambakkam, Chennai - 600034`
   );
   const [paymentTerms, setPaymentTerms] = useState("Net 30 Days");
   const [poNotes, setPoNotes] = useState("");
@@ -316,9 +331,89 @@ export default function AdminPurchaseOrdersPage() {
     setSelectedPO(po);
     setEmailRecipient(po.supplier.email || "");
     setEmailCustomNote(
-      `Please find attached our official Purchase Order ${po.poNumber} for Kichee's Baked Delights. Kindly confirm dispatch schedule.`
+      `Please find attached our official Purchase Order ${po.poNumber} for ${BUSINESS_CONFIG.billingName}. Kindly confirm dispatch schedule.`
     );
     setIsEmailModalOpen(true);
+  };
+
+  // Open WhatsApp Dialog (Evolution API)
+  const handleOpenWhatsAppModal = (po: PurchaseOrder) => {
+    setSelectedPO(po);
+    setWhatsappRecipientPhone(po.supplier.phone || "");
+    setWhatsappCustomNote(
+      `Please find our official Purchase Order ${po.poNumber} from ${BUSINESS_CONFIG.billingName}. Kindly confirm order acceptance and dispatch schedule.`
+    );
+    setIsWhatsAppModalOpen(true);
+  };
+
+  // Send PO via Evolution API WhatsApp
+  const handleSendPOWhatsApp = async () => {
+    if (!selectedPO || !whatsappRecipientPhone.trim()) {
+      toast.error("Please enter a valid recipient WhatsApp phone number");
+      return;
+    }
+
+    setIsSendingWhatsApp(true);
+    const toastId = toast.loading(`Dispatching PO ${selectedPO.poNumber} via Evolution API...`);
+
+    try {
+      const res = await fetch("/api/whatsapp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "purchase_order",
+          phone: whatsappRecipientPhone,
+          payload: {
+            poNumber: selectedPO.poNumber,
+            date: selectedPO.date,
+            expectedDate: selectedPO.expectedDeliveryDate,
+            supplier: selectedPO.supplier,
+            deliveryLocation: selectedPO.deliveryLocation,
+            paymentTerms: selectedPO.paymentTerms,
+            items: selectedPO.items,
+            subtotal: selectedPO.subtotal,
+            taxTotal: selectedPO.taxTotal,
+            shippingFee: selectedPO.shippingFee,
+            grandTotal: selectedPO.grandTotal,
+            notes: whatsappCustomNote || selectedPO.notes,
+          },
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.dismiss(toastId);
+        toast.success(`Purchase Order ${selectedPO.poNumber} sent to ${whatsappRecipientPhone} via WhatsApp!`);
+        updatePOStatus(selectedPO.id, "SENT_TO_SUPPLIER", {
+          sentAt: new Date().toISOString(),
+        });
+        setIsWhatsAppModalOpen(false);
+      } else {
+        toast.dismiss(toastId);
+        toast.error(data.error || "Evolution WhatsApp dispatch failed. You can use Open Web Chat fallback.");
+      }
+    } catch (err: any) {
+      toast.dismiss(toastId);
+      toast.error(err.message || "WhatsApp dispatch failed");
+    } finally {
+      setIsSendingWhatsApp(false);
+    }
+  };
+
+  // WhatsApp Web Fallback
+  const handleOpenPOWhatsAppWeb = () => {
+    if (!selectedPO || !whatsappRecipientPhone.trim()) return;
+    const clean = whatsappRecipientPhone.replace(/[^0-9]/g, "");
+    const fullNumber = clean.startsWith("91") ? clean : `91${clean}`;
+    const text = encodeURIComponent(
+      `*PURCHASE ORDER: ${selectedPO.poNumber}*\n` +
+      `From: ${BUSINESS_CONFIG.billingName}\n` +
+      `Supplier: ${selectedPO.supplier.name}\n` +
+      `Total: ₹${selectedPO.grandTotal.toLocaleString("en-IN")}\n` +
+      `Delivery Date: ${selectedPO.expectedDeliveryDate}\n\n` +
+      `${whatsappCustomNote || "Kindly confirm dispatch schedule."}`
+    );
+    window.open(`https://wa.me/${fullNumber}?text=${text}`, "_blank");
   };
 
   // Send Email via Hostinger SMTP
@@ -336,7 +431,7 @@ export default function AdminPurchaseOrdersPage() {
         body: JSON.stringify({
           type: "purchase_order",
           recipientEmail: emailRecipient,
-          subject: `Purchase Order ${selectedPO.poNumber} - Kichee's Baked Delights`,
+          subject: `Purchase Order ${selectedPO.poNumber} - ${BUSINESS_CONFIG.billingName}`,
           payload: {
             poNumber: selectedPO.poNumber,
             date: selectedPO.date,
@@ -652,6 +747,17 @@ export default function AdminPurchaseOrdersPage() {
                           className="h-7 w-7 text-amber-800 hover:text-amber-950 hover:bg-amber-50"
                         >
                           <Mail className="h-3.5 w-3.5" />
+                        </Button>
+
+                        {/* WhatsApp to Supplier (Evolution API) */}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="Send PO on WhatsApp (Evolution API)"
+                          onClick={() => handleOpenWhatsAppModal(po)}
+                          className="h-7 w-7 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                        >
+                          <WhatsAppIcon className="h-3.5 w-3.5" />
                         </Button>
 
                         {/* Mark Received & Update Stock */}
@@ -1017,6 +1123,112 @@ export default function AdminPurchaseOrdersPage() {
             >
               {isSendingEmail ? "Sending PO..." : "Send PO to Supplier"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* WhatsApp Supplier Modal (Evolution API) */}
+      <Dialog open={isWhatsAppModalOpen} onOpenChange={setIsWhatsAppModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-stone-900 flex items-center gap-2">
+              <div className="h-7 w-7 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700">
+                <WhatsAppIcon className="h-4 w-4" />
+              </div>
+              <span>Send PO #{selectedPO?.poNumber} via WhatsApp</span>
+            </DialogTitle>
+            <DialogDescription className="text-xs text-stone-500">
+              Dispatches the branded purchase order directly to the supplier using Evolution API.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3.5 py-2 text-xs">
+            <div className="space-y-1">
+              <label className="font-semibold text-stone-700">Vendor / Supplier</label>
+              <div className="p-2.5 rounded-lg bg-stone-50 border border-stone-200 font-medium flex justify-between items-center">
+                <span>{selectedPO?.supplier.name}</span>
+                <span className="text-[11px] text-stone-500">{selectedPO?.supplier.contactPerson}</span>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-semibold text-stone-700 flex justify-between items-center">
+                <span>Recipient WhatsApp Phone *</span>
+                <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                  Evolution API Active
+                </span>
+              </label>
+              <Input
+                type="tel"
+                value={whatsappRecipientPhone}
+                onChange={(e) => setWhatsappRecipientPhone(e.target.value)}
+                placeholder="+91 98201 55210"
+                className="text-xs font-mono"
+              />
+              <p className="text-[10px] text-stone-400">
+                Include country code or 10-digit mobile number (e.g. +91 98201 55210)
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-semibold text-stone-700">Accompanying Note</label>
+              <Input
+                value={whatsappCustomNote}
+                onChange={(e) => setWhatsappCustomNote(e.target.value)}
+                placeholder="Message for supplier..."
+                className="text-xs"
+              />
+            </div>
+
+            <div className="p-3 rounded-lg bg-emerald-50/70 border border-emerald-200 text-emerald-950 space-y-1">
+              <div className="font-bold flex items-center gap-1.5 text-emerald-900">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                <span>PO Details to be dispatched:</span>
+              </div>
+              <div className="text-[11px] space-y-0.5 pt-1 text-emerald-900/90 max-h-32 overflow-y-auto pr-1">
+                {selectedPO?.items.map((item, idx) => (
+                  <div key={idx} className="flex justify-between">
+                    <span>• {item.quantity} {item.unit} {item.name}</span>
+                    <span className="font-semibold">₹{(item.quantity * item.unitPrice).toLocaleString("en-IN")}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t border-emerald-200 pt-1.5 mt-1.5 text-xs flex justify-between font-bold text-emerald-950">
+                <span>Grand Total:</span>
+                <span>₹{selectedPO?.grandTotal.toLocaleString("en-IN")}</span>
+              </div>
+              <div className="text-[10px] text-emerald-800 pt-1">
+                Expected: <strong>{selectedPO?.expectedDeliveryDate}</strong> · Terms: <strong>{selectedPO?.paymentTerms}</strong>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={handleOpenPOWhatsAppWeb}
+              className="text-stone-700 text-xs border-stone-200 hover:bg-stone-50"
+              title="Open chat directly in WhatsApp Web"
+            >
+              Open Web Chat
+            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsWhatsAppModalOpen(false)}
+                className="text-stone-600 text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSendPOWhatsApp}
+                disabled={isSendingWhatsApp}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs gap-1.5"
+              >
+                <WhatsAppIcon className="h-3.5 w-3.5" />
+                {isSendingWhatsApp ? "Sending via Evolution..." : "Send via Evolution API"}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

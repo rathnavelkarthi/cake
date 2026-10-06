@@ -113,7 +113,7 @@ export async function sendWhatsAppMedia(
 
 export function generateUpiDetails(orderNumber: string, amount: number) {
   const upiId = process.env.NEXT_PUBLIC_UPI_ID || "kichees@upi";
-  const payeeName = process.env.NEXT_PUBLIC_UPI_NAME || "Kichees Baked Delights";
+  const payeeName = process.env.NEXT_PUBLIC_UPI_NAME || BUSINESS_CONFIG.billingName;
   
   // Standard UPI URI format
   const upiUri = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(
@@ -334,5 +334,290 @@ Tag us in your cake-cutting photos or reply with your feedback right here ❤️
   }
 
   return await sendWhatsAppMessage(order.customerMobile, message);
+}
+
+// ----------------------------------------------------
+// Purchase Order WhatsApp Dispatch (Evolution API)
+// ----------------------------------------------------
+
+export function generatePurchaseOrderWhatsAppText(po: {
+  poNumber: string;
+  date: string;
+  expectedDeliveryDate?: string;
+  deliveryLocation?: string;
+  paymentTerms?: string;
+  notes?: string;
+  supplier: {
+    name: string;
+    contactPerson?: string;
+    phone?: string;
+  };
+  items: Array<{
+    name: string;
+    quantity: number;
+    unit: string;
+    unitPrice: number;
+    totalPrice: number;
+  }>;
+  subtotal: number;
+  taxTotal: number;
+  shippingFee?: number;
+  grandTotal: number;
+}): string {
+  const itemsText = (po.items || [])
+    .map(
+      (it, idx) =>
+        `  ${idx + 1}. *${it.name}*\n     • Qty: ${it.quantity} ${it.unit} @ ₹${Number(it.unitPrice).toLocaleString("en-IN")}/${it.unit} = *₹${Number(it.totalPrice).toLocaleString("en-IN")}*`
+    )
+    .join("\n\n");
+
+  return `📋 *OFFICIAL PURCHASE ORDER: ${po.poNumber}*
+*${BUSINESS_CONFIG.billingName}* (${BUSINESS_CONFIG.name})
+
+Dear *${po.supplier?.contactPerson || po.supplier?.name || "Vendor Partner"}*,
+
+Please find our purchase order details below:
+
+🏢 *Vendor:* ${po.supplier?.name || "Vendor Partner"}
+📅 *PO Date:* ${po.date}
+🚚 *Expected Delivery:* ${po.expectedDeliveryDate || "Earliest business dispatch"}
+📍 *Delivery Destination:* ${po.deliveryLocation || BUSINESS_CONFIG.address.full}
+💳 *Payment Terms:* ${po.paymentTerms || "Net 30 Days"}
+
+━━━━━━━━━━━━━━━━━━━━
+📦 *ORDERED MATERIALS / SUPPLIES:*
+${itemsText}
+━━━━━━━━━━━━━━━━━━━━
+
+💰 *FINANCIAL SUMMARY:*
+• Subtotal: ₹${Number(po.subtotal || 0).toLocaleString("en-IN")}
+• Applicable GST: ₹${Number(po.taxTotal || 0).toLocaleString("en-IN")}
+${po.shippingFee ? `• Freight / Shipping: ₹${Number(po.shippingFee).toLocaleString("en-IN")}\n` : ""}• *GRAND TOTAL: ₹${Number(po.grandTotal || 0).toLocaleString("en-IN")}*
+
+${po.notes ? `📝 *Special Instructions / Notes:*\n${po.notes}\n\n` : ""}Kindly acknowledge receipt and confirm expected delivery dispatch.
+
+*Procurement Desk - ${BUSINESS_CONFIG.billingName}*
+📞 Phone: ${BUSINESS_CONFIG.phone}
+✉️ Email: ${BUSINESS_CONFIG.email}`;
+}
+
+export async function sendPurchaseOrderWhatsApp(po: {
+  poNumber: string;
+  date: string;
+  expectedDeliveryDate?: string;
+  deliveryLocation?: string;
+  paymentTerms?: string;
+  notes?: string;
+  supplier: {
+    name: string;
+    contactPerson?: string;
+    phone?: string;
+  };
+  items: Array<{
+    name: string;
+    quantity: number;
+    unit: string;
+    unitPrice: number;
+    totalPrice: number;
+  }>;
+  subtotal: number;
+  taxTotal: number;
+  shippingFee?: number;
+  grandTotal: number;
+}, customPhone?: string): Promise<EvolutionSendResult> {
+  const targetPhone = customPhone || po.supplier?.phone;
+  if (!targetPhone) {
+    return { success: false, error: "Supplier phone number is required" };
+  }
+  const message = generatePurchaseOrderWhatsAppText(po);
+  return await sendWhatsAppMessage(targetPhone, message);
+}
+
+// ----------------------------------------------------
+// POS / Billing Tax Invoice WhatsApp Dispatch
+// ----------------------------------------------------
+
+export function generateBillingInvoiceWhatsAppText(invoice: {
+  invoiceNumber: string;
+  date: string;
+  customerName: string;
+  customerMobile?: string;
+  paymentMethod: string;
+  items: Array<{
+    name: string;
+    quantity: number;
+    price: number;
+    isEggless?: boolean;
+    notes?: string;
+  }>;
+  subtotal: number;
+  tax: number;
+  gstRate?: number;
+  deliveryFee?: number;
+  discount?: number;
+  grandTotal: number;
+}): string {
+  const itemsText = (invoice.items || [])
+    .map(
+      (item) =>
+        `• ${item.quantity}x ${item.name} (${item.isEggless !== false ? "100% Eggless" : "Standard"}) @ ₹${item.price} = *₹${item.price * item.quantity}*${
+          item.notes ? `\n  _${item.notes}_` : ""
+        }`
+    )
+    .join("\n");
+
+  const lines = [
+    `🍰 *${BUSINESS_CONFIG.billingName} - TAX INVOICE*`,
+    `_${BUSINESS_CONFIG.name}_`,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `*Invoice Number:* #${invoice.invoiceNumber}`,
+    `*Customer:* ${invoice.customerName}`,
+    `*Date:* ${invoice.date}`,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `*Ordered Items:*`,
+    itemsText,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `Subtotal: ₹${Number(invoice.subtotal || 0).toLocaleString("en-IN")}`,
+    invoice.tax > 0 ? `GST (${invoice.gstRate || 5}%): ₹${Number(invoice.tax).toLocaleString("en-IN")}` : null,
+    invoice.deliveryFee && invoice.deliveryFee > 0 ? `Delivery Fee: ₹${invoice.deliveryFee}` : null,
+    invoice.discount && invoice.discount > 0 ? `Discount: -₹${invoice.discount}` : null,
+    `*GRAND TOTAL: ₹${Number(invoice.grandTotal || 0).toLocaleString("en-IN")}*`,
+    `*Payment Status:* PAID via ${invoice.paymentMethod}`,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `Thank you for celebrating with ${BUSINESS_CONFIG.name}! 🎂`,
+    `📍 ${BUSINESS_CONFIG.address.full}`,
+    `📞 ${BUSINESS_CONFIG.phone}`,
+  ].filter(Boolean);
+
+  return lines.join("\n");
+}
+
+export async function sendBillingInvoiceWhatsApp(invoice: {
+  invoiceNumber: string;
+  date: string;
+  customerName: string;
+  customerMobile: string;
+  paymentMethod: string;
+  items: Array<{
+    name: string;
+    quantity: number;
+    price: number;
+    isEggless?: boolean;
+    notes?: string;
+  }>;
+  subtotal: number;
+  tax: number;
+  gstRate?: number;
+  deliveryFee?: number;
+  discount?: number;
+  grandTotal: number;
+}): Promise<EvolutionSendResult> {
+  const message = generateBillingInvoiceWhatsAppText(invoice);
+  return await sendWhatsAppMessage(invoice.customerMobile, message);
+}
+
+// ----------------------------------------------------
+// Bespoke Cake Quotation WhatsApp Dispatch
+// ----------------------------------------------------
+
+export function generateQuotationWhatsAppText(quote: {
+  quotationNumber: string;
+  customerName: string;
+  occasion?: string;
+  eventDate?: string;
+  eventVenue?: string;
+  validUntil?: string;
+  paymentTerms?: string;
+  specialInstructions?: string;
+  items: Array<{
+    name: string;
+    description?: string;
+    flavour?: string;
+    weightKg?: string;
+    quantity: number;
+    unitPrice: number;
+    totalPrice: number;
+    isEggless?: boolean;
+  }>;
+  subtotal: number;
+  tax: number;
+  deliveryFee?: number;
+  setupFee?: number;
+  discount?: number;
+  grandTotal: number;
+  advanceAmount?: number;
+}): string {
+  const itemsText = (quote.items || [])
+    .map(
+      (it, idx) =>
+        `  ${idx + 1}. *${it.name || "Bespoke Celebration Cake"}* (${it.weightKg || "Custom"} • ${it.flavour || "Selected flavour"})\n     • Qty: ${it.quantity} @ ₹${Number(it.unitPrice).toLocaleString("en-IN")} = *₹${Number(it.totalPrice).toLocaleString("en-IN")}*${
+          it.description ? `\n     _${it.description}_` : ""
+        }`
+    )
+    .join("\n\n");
+
+  const lines = [
+    `✨ *BESPOKE CELEBRATION QUOTATION*`,
+    `*${BUSINESS_CONFIG.billingName}* (${BUSINESS_CONFIG.name})`,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `*Quotation Ref:* ${quote.quotationNumber}`,
+    `*Client:* ${quote.customerName}`,
+    quote.occasion ? `*Occasion:* ${quote.occasion}` : null,
+    quote.eventDate ? `*Event Date:* ${quote.eventDate}` : null,
+    quote.eventVenue ? `*Venue:* ${quote.eventVenue}` : null,
+    quote.validUntil ? `*Valid Until:* ${quote.validUntil}` : null,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `🎂 *ESTIMATED CREATIONS:*`,
+    itemsText,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `Subtotal: ₹${Number(quote.subtotal || 0).toLocaleString("en-IN")}`,
+    quote.tax > 0 ? `GST: ₹${Number(quote.tax).toLocaleString("en-IN")}` : null,
+    quote.setupFee && quote.setupFee > 0 ? `Venue Setup & Structural Support: ₹${quote.setupFee}` : null,
+    quote.deliveryFee && quote.deliveryFee > 0 ? `Cold Storage Delivery: ₹${quote.deliveryFee}` : null,
+    quote.discount && quote.discount > 0 ? `Special Discount: -₹${quote.discount}` : null,
+    `*ESTIMATED TOTAL: ₹${Number(quote.grandTotal || 0).toLocaleString("en-IN")}*`,
+    quote.advanceAmount && quote.advanceAmount > 0
+      ? `*Advance Required to Confirm Kitchen Slot:* ₹${Number(quote.advanceAmount).toLocaleString("en-IN")}`
+      : null,
+    quote.paymentTerms ? `\n💳 *Payment Terms:*\n${quote.paymentTerms}` : null,
+    quote.specialInstructions ? `\n📝 *Notes:*\n${quote.specialInstructions}` : null,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `To accept this quote or request changes, reply directly to this message!`,
+    `📞 ${BUSINESS_CONFIG.phone} | ✉️ ${BUSINESS_CONFIG.email}`,
+  ].filter(Boolean);
+
+  return lines.join("\n");
+}
+
+export async function sendQuotationWhatsApp(quote: {
+  quotationNumber: string;
+  customerName: string;
+  customerMobile: string;
+  occasion?: string;
+  eventDate?: string;
+  eventVenue?: string;
+  validUntil?: string;
+  paymentTerms?: string;
+  specialInstructions?: string;
+  items: Array<{
+    name: string;
+    description?: string;
+    flavour?: string;
+    weightKg?: string;
+    quantity: number;
+    unitPrice: number;
+    totalPrice: number;
+    isEggless?: boolean;
+  }>;
+  subtotal: number;
+  tax: number;
+  deliveryFee?: number;
+  setupFee?: number;
+  discount?: number;
+  grandTotal: number;
+  advanceAmount?: number;
+}): Promise<EvolutionSendResult> {
+  const message = generateQuotationWhatsAppText(quote);
+  return await sendWhatsAppMessage(quote.customerMobile, message);
 }
 

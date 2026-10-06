@@ -6,6 +6,7 @@ export interface OpeningHour {
 
 export interface BusinessConfig {
   name: string;
+  billingName: string;
   tagline: string;
   shortDescription: string;
   foundedYear: number;
@@ -56,13 +57,14 @@ export interface BusinessConfig {
 
 export const BUSINESS_CONFIG: BusinessConfig = {
   name: "Kichees Baked Delights",
+  billingName: "Home Made Connexions",
   tagline: "Artisanal Bakes & Bespoke Celebrations",
   shortDescription: "Handcrafted cakes, fudge brownies, and European pastries baked fresh daily in Nungambakkam, Chennai.",
   foundedYear: 2021,
-  phone: "+919840823145",
-  phoneDisplay: "044 2827 4912",
-  whatsapp: "+919840823145",
-  whatsappDisplay: "+91 98408 23145",
+  phone: "+919884631078",
+  phoneDisplay: "+91 98846 31078",
+  whatsapp: "+919884631078",
+  whatsappDisplay: "+91 98846 31078",
   email: "orders@kichees.in",
   // Single registered place of business. The former Harrisons Hotel counter is
   // no longer a separate outlet, so it must not appear on invoices.
@@ -94,7 +96,7 @@ export const BUSINESS_CONFIG: BusinessConfig = {
   },
   socialLinks: {
     instagram: "https://instagram.com/kicheesbakeddelights",
-    whatsapp: "https://wa.me/919840823145",
+    whatsapp: "https://wa.me/919884631078",
   },
   orderPolicies: {
     customCakeAdvanceHours: 24,

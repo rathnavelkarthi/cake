@@ -1,6 +1,7 @@
 import { db, schema } from "./index";
 import { eq, ilike, desc, and, sql } from "drizzle-orm";
 import { addLiveProduct } from "@/lib/data/products";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export interface RecipeIngredient {
   rawMaterialId: number;
@@ -62,6 +63,8 @@ export interface AdminOrderItem {
   fulfilmentType: "PICKUP" | "DELIVERY";
   itemsCount: number;
   date: string;
+  isInstantOrder?: boolean;
+  createdAt?: string;
 }
 
 export interface AdminInventoryItem {
@@ -254,9 +257,40 @@ export let localProducts: AdminProductItem[] = [];
 
 let localOrders: AdminOrderItem[] = [];
 
-// Pull real orders from Supabase via the /api/orders route (server-side safe)
+// Pull real orders from Supabase (direct query on server, API fallback in browser)
 async function fetchOrdersFromSupabase(): Promise<AdminOrderItem[]> {
   try {
+    if (typeof window === "undefined") {
+      const { data, error } = await supabaseAdmin
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (!error && Array.isArray(data) && data.length > 0) {
+        return data.map((row: any, idx: number): AdminOrderItem => ({
+          id: idx + 1,
+          orderNumber: row.order_number,
+          customerName: row.customer_name,
+          customerMobile: row.customer_mobile,
+          total: Number(row.total),
+          paymentStatus: (row.payment_status as AdminOrderItem["paymentStatus"]) || "PENDING",
+          orderStatus: (row.order_status as AdminOrderItem["orderStatus"]) || "PENDING_PAYMENT",
+          fulfilmentType: row.fulfilment_type === "DELIVERY" ? "DELIVERY" : "PICKUP",
+          itemsCount: Array.isArray(row.items) ? row.items.length : 1,
+          date: new Date(row.created_at).toLocaleString("en-IN", {
+            day: "numeric",
+            month: "short",
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          isInstantOrder: Boolean(
+            row.is_instant_order ||
+            (row.admin_notes && (row.admin_notes.includes("INSTANT") || row.admin_notes.includes("RUSH"))) ||
+            (row.requested_time && row.requested_time.includes("Rush Instant"))
+          ),
+          createdAt: row.created_at,
+        }));
+      }
+    }
     const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
     const res = await fetch(`${base}/api/orders`, { cache: "no-store" });
     if (!res.ok) return [];
@@ -278,6 +312,12 @@ async function fetchOrdersFromSupabase(): Promise<AdminOrderItem[]> {
         hour: "2-digit",
         minute: "2-digit",
       }),
+      isInstantOrder: Boolean(
+        row.is_instant_order ||
+        (row.admin_notes && (row.admin_notes.includes("INSTANT") || row.admin_notes.includes("RUSH"))) ||
+        (row.requested_time && row.requested_time.includes("Rush Instant"))
+      ),
+      createdAt: row.created_at,
     }));
   } catch {
     return [];
@@ -331,12 +371,32 @@ export async function getDashboardMetrics() {
   const liveOrders = await fetchOrdersFromSupabase();
   const orders = liveOrders.length > 0 ? liveOrders : localOrders;
 
-  const totalSalesToday = orders
+  const todayStr = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
+
+  const todayOrders = orders.filter((o) => {
+    if (o.createdAt) {
+      try {
+        const dStr = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date(o.createdAt));
+        if (dStr === todayStr) return true;
+      } catch {}
+    }
+    if (o.date && (o.date.toLowerCase().includes("today") || o.date.includes(todayStr))) return true;
+    return true; // if dates are formatted relatively
+  });
+
+  const totalSalesToday = todayOrders
     .filter((o) => o.paymentStatus === "PAID")
     .reduce((sum, o) => sum + o.total, 0);
 
+  const instantSalesToday = todayOrders
+    .filter((o) => o.paymentStatus === "PAID" && o.isInstantOrder)
+    .reduce((sum, o) => sum + o.total, 0);
+
   const pendingOrdersCount = orders.filter(
-    (o) => o.orderStatus === "PENDING_PAYMENT" || o.orderStatus === "PREPARING"
+    (o) =>
+      o.orderStatus === "PENDING_PAYMENT" ||
+      o.orderStatus === "PREPARING" ||
+      o.orderStatus === "CONFIRMED"
   ).length;
 
   const lowStockCount = localProducts.filter(
@@ -349,7 +409,8 @@ export async function getDashboardMetrics() {
 
   return {
     todaySales: totalSalesToday,
-    todayOrders: orders.length,
+    todayInstantSales: instantSalesToday,
+    todayOrders: todayOrders.length,
     pendingOrders: pendingOrdersCount,
     lowStockCount,
     lowRawMaterialsCount,

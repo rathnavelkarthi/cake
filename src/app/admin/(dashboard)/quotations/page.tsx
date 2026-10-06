@@ -377,12 +377,67 @@ export default function QuotationsPage() {
     }
   };
 
-  // Share via WhatsApp
-  const handleWhatsApp = (quote: Quotation) => {
-    const url = getWhatsAppShareUrl(quote);
-    window.open(url, "_blank");
-    updateQuotationStatus(quote.id, "SENT");
-    toast.success("Quotation opened in WhatsApp. Status marked as SENT.");
+  // Dispatch via Evolution API WhatsApp (with WhatsApp Web Fallback)
+  const handleWhatsApp = async (quote: Quotation) => {
+    const cleanPhone = quote.customerMobile ? quote.customerMobile.replace(/[^0-9]/g, "") : "";
+    if (!cleanPhone || cleanPhone.length < 10) {
+      toast.error("Customer mobile number is missing or invalid. Opening WhatsApp Web fallback...");
+      const url = getWhatsAppShareUrl(quote);
+      window.open(url, "_blank");
+      updateQuotationStatus(quote.id, "SENT");
+      return;
+    }
+
+    const toastId = toast.loading(`Dispatching quotation ${quote.quotationNumber} via Evolution API...`);
+    try {
+      const res = await fetch("/api/whatsapp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "quotation",
+          phone: cleanPhone,
+          payload: {
+            quotationNumber: quote.quotationNumber,
+            date: quote.date,
+            validUntil: quote.validUntil,
+            customerName: quote.customerName,
+            customerMobile: cleanPhone,
+            items: quote.items,
+            subtotal: quote.subtotal,
+            tax: quote.tax,
+            deliveryFee: quote.deliveryFee,
+            setupFee: quote.setupFee,
+            discount: quote.discount,
+            grandTotal: quote.grandTotal,
+            specialInstructions: quote.specialInstructions,
+            occasion: quote.occasion,
+            eventDate: quote.eventDate,
+            eventVenue: quote.eventVenue,
+            advanceAmount: quote.advanceAmount,
+            advanceRequiredPercentage: quote.advanceRequiredPercentage,
+          },
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.dismiss(toastId);
+        toast.success(`Quotation ${quote.quotationNumber} sent to ${cleanPhone} via WhatsApp! Status marked as SENT.`);
+        updateQuotationStatus(quote.id, "SENT");
+      } else {
+        toast.dismiss(toastId);
+        toast.error(data.error || "Evolution WhatsApp dispatch failed. Opening WhatsApp Web fallback...");
+        const url = getWhatsAppShareUrl(quote);
+        window.open(url, "_blank");
+        updateQuotationStatus(quote.id, "SENT");
+      }
+    } catch (err: any) {
+      toast.dismiss(toastId);
+      toast.error(err.message || "Failed to dispatch WhatsApp. Opening WhatsApp Web fallback...");
+      const url = getWhatsAppShareUrl(quote);
+      window.open(url, "_blank");
+      updateQuotationStatus(quote.id, "SENT");
+    }
   };
 
   // Email Quotation to Client via Hostinger SMTP
@@ -402,7 +457,7 @@ export default function QuotationsPage() {
           type: "custom",
           recipientEmail: recipient,
           recipientName: quote.customerName,
-          subject: `Bespoke Cake Quotation ${quote.quotationNumber} - Kichee's Baked Delights`,
+          subject: `Bespoke Cake Quotation ${quote.quotationNumber} - ${BUSINESS_CONFIG.billingName}`,
           customMessage: generateQuotationHtml(quote),
           ccOwner: true,
         }),

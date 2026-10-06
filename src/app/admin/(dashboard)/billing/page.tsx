@@ -65,11 +65,12 @@ import { toast } from "sonner";
  * two of them were placeholders. Changing a detail here updates every bill.
  */
 const BILLING_IDENTITY = {
+  billingName: BUSINESS_CONFIG.billingName,
   address: BUSINESS_CONFIG.address.full,
   gstin: BUSINESS_CONFIG.taxIdentity.gstin,
   stateCode: BUSINESS_CONFIG.taxIdentity.stateCode,
   stateName: BUSINESS_CONFIG.taxIdentity.stateName,
-  phone: `${BUSINESS_CONFIG.phoneDisplay} / ${BUSINESS_CONFIG.whatsappDisplay}`,
+  phone: BUSINESS_CONFIG.phoneDisplay,
   email: BUSINESS_CONFIG.email,
 } as const;
 
@@ -210,8 +211,8 @@ function generateInvoiceHtml(data: InvoicePrintData): string {
 </head>
 <body>
   <div class="text-center">
-    <div style="font-size: 15px; font-weight: bold; letter-spacing: 0.5px;">KICHEE'S BAKED DELIGHTS</div>
-    <div style="font-size: 9.5px;">Artisanal Cakes & Patisserie</div>
+    <div style="font-size: 15px; font-weight: bold; letter-spacing: 0.5px;">${BILLING_IDENTITY.billingName}</div>
+    <div style="font-size: 9.5px;">${BUSINESS_CONFIG.name} · Artisanal Cakes & Patisserie</div>
     <div style="font-size: 9px; margin-top: 2px;">${BILLING_IDENTITY.address}</div>
     <div style="font-size: 9px;">GSTIN: ${BILLING_IDENTITY.gstin}</div>
     <div style="font-size: 9px;">Ph: ${BILLING_IDENTITY.phone}</div>
@@ -441,8 +442,8 @@ function generateInvoiceHtml(data: InvoicePrintData): string {
     <table class="header-table">
       <tr>
         <td style="width: 62%;">
-          <div class="brand-title">Kichee's Baked Delights</div>
-          <div class="brand-subtitle">Artisanal Patisserie & Bespoke Cake Studio</div>
+          <div class="brand-title">${BILLING_IDENTITY.billingName}</div>
+          <div class="brand-subtitle">${BUSINESS_CONFIG.name} · Artisanal Patisserie & Bespoke Cake Studio</div>
           <div class="brand-address">
             <strong>Address:</strong> ${BILLING_IDENTITY.address}<br>
             <strong>Phone:</strong> ${BILLING_IDENTITY.phone} | <strong>Email:</strong> ${BILLING_IDENTITY.email}
@@ -586,7 +587,7 @@ function generateInvoiceHtml(data: InvoicePrintData): string {
       <div class="signature-col">
         <div class="sign-space"></div>
         <div class="sign-line">
-          For Kichee's Baked Delights<br>
+          For ${BILLING_IDENTITY.billingName}<br>
           <span style="font-size: 9.5px; font-weight: normal; color: #666;">Authorized Signatory</span>
         </div>
       </div>
@@ -632,6 +633,7 @@ export default function AdminBillingPage() {
   const [customerEmail, setCustomerEmail] = useState("");
   const [isEmailInvoiceModalOpen, setIsEmailInvoiceModalOpen] = useState(false);
   const [isSendingInvoiceEmail, setIsSendingInvoiceEmail] = useState(false);
+  const [isSendingInvoiceWhatsApp, setIsSendingInvoiceWhatsApp] = useState(false);
   const [invoiceEmailRecipient, setInvoiceEmailRecipient] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<
     "UPI" | "CASH" | "CARD" | "ONLINE"
@@ -891,8 +893,8 @@ export default function AdminBillingPage() {
   const getWhatsAppShareUrl = () => {
     const cleanPhone = customerMobile.replace(/[^0-9]/g, "");
     const lines = [
-      `*KICHEE'S BAKED DELIGHTS* 🎂`,
-      `_Artisanal Cakes & Patisserie_`,
+      `*${BILLING_IDENTITY.billingName}* 🎂`,
+      `_${BUSINESS_CONFIG.name} · Artisanal Cakes & Patisserie_`,
       `--------------------------------`,
       `*Bill / Tax Invoice:* #${invoiceSuccess || "INV"}`,
       `*Customer:* ${customerName}`,
@@ -915,13 +917,72 @@ export default function AdminBillingPage() {
       `*GRAND TOTAL: ₹${grandTotal.toLocaleString("en-IN")}*`,
       `*Payment Method:* ${paymentMethod} (Paid)`,
       `--------------------------------`,
-      `Thank you for baking sweet memories with Kichee's!`,
+      `Thank you for baking sweet memories with ${BILLING_IDENTITY.billingName}!`,
       `📍 ${BILLING_IDENTITY.address}`,
       `GSTIN: ${BILLING_IDENTITY.gstin}`,
     ].filter(Boolean);
 
     const text = encodeURIComponent(lines.join("\n"));
     return `https://wa.me/${cleanPhone.startsWith("91") ? cleanPhone : `91${cleanPhone}`}?text=${text}`;
+  };
+
+  // Evolution API WhatsApp Dispatch for Billing Invoice
+  const handleSendInvoiceWhatsApp = async () => {
+    const cleanPhone = customerMobile.replace(/[^0-9]/g, "");
+    if (!cleanPhone || cleanPhone.length < 10) {
+      toast.error("Please enter a valid customer mobile number for WhatsApp");
+      return;
+    }
+
+    setIsSendingInvoiceWhatsApp(true);
+    const toastId = toast.loading(`Sending Tax Invoice #${invoiceSuccess || "INV"} via Evolution API...`);
+
+    try {
+      const res = await fetch("/api/whatsapp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "billing_invoice",
+          phone: cleanPhone,
+          payload: {
+            invoiceNumber: invoiceSuccess || "INV",
+            date: invoiceDate || new Date().toLocaleString("en-IN"),
+            customerName: customerName || "Valued Patron",
+            customerMobile: cleanPhone,
+            paymentMethod,
+            items: billItems.map((b) => ({
+              name: b.name,
+              quantity: b.quantity,
+              price: b.price,
+              isEggless: b.isEggless,
+              notes: b.notes,
+            })),
+            subtotal,
+            tax,
+            gstRate: effectiveGstRate,
+            deliveryFee,
+            discount,
+            grandTotal,
+          },
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.dismiss(toastId);
+        toast.success(`Tax invoice successfully sent to +91 ${cleanPhone.slice(-10)} via WhatsApp!`);
+      } else {
+        toast.dismiss(toastId);
+        toast.error(data.error || "Evolution WhatsApp dispatch failed. Opening WhatsApp Web fallback...");
+        window.open(getWhatsAppShareUrl(), "_blank");
+      }
+    } catch (err: any) {
+      toast.dismiss(toastId);
+      toast.error(err.message || "Failed to dispatch WhatsApp. Opening WhatsApp Web fallback...");
+      window.open(getWhatsAppShareUrl(), "_blank");
+    } finally {
+      setIsSendingInvoiceWhatsApp(false);
+    }
   };
 
   // Direct Hostinger SMTP Email Dispatch for Billing Invoice
@@ -940,7 +1001,7 @@ export default function AdminBillingPage() {
         body: JSON.stringify({
           type: "pos_invoice",
           recipientEmail: recipient,
-          subject: `Tax Invoice #${invoiceSuccess || "INV"} - Kichee's Baked Delights`,
+          subject: `Tax Invoice #${invoiceSuccess || "INV"} - ${BILLING_IDENTITY.billingName}`,
           payload: {
             invoiceNumber: invoiceSuccess || "INV",
             date: invoiceDate || new Date().toLocaleString("en-IN"),
@@ -1069,11 +1130,12 @@ export default function AdminBillingPage() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => window.open(getWhatsAppShareUrl(), "_blank")}
+                onClick={handleSendInvoiceWhatsApp}
+                disabled={isSendingInvoiceWhatsApp}
                 className="bg-white border-emerald-300 text-emerald-800 hover:bg-emerald-100 text-xs gap-1.5 h-8 font-semibold"
               >
                 <Share2 className="h-3.5 w-3.5 text-emerald-600" />
-                WhatsApp Bill
+                {isSendingInvoiceWhatsApp ? "Sending via Evolution..." : "WhatsApp Bill"}
               </Button>
 
               <Button
@@ -1712,10 +1774,10 @@ export default function AdminBillingPage() {
                 <div className={printFormat === "thermal" ? "text-center mb-3" : "flex justify-between items-start mb-6"}>
                   <div>
                     <h2 className="text-xl font-extrabold text-amber-950 tracking-tight uppercase">
-                      Kichee&apos;s Baked Delights
+                      {BILLING_IDENTITY.billingName}
                     </h2>
                     <p className="text-[10px] uppercase tracking-wider font-semibold text-stone-500">
-                      Artisanal Oven-Fresh Patisserie & Bespoke Cake Studio
+                      {BUSINESS_CONFIG.name} · Artisanal Oven-Fresh Patisserie & Bespoke Cake Studio
                     </p>
                     <div className="text-[11px] text-stone-600 mt-1 space-y-0.5">
                       <p>{BILLING_IDENTITY.address}</p>
@@ -1864,7 +1926,7 @@ export default function AdminBillingPage() {
                     <p>Follow our pastry updates @kicheesdelights</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-stone-800">For Kichee&apos;s Baked Delights</p>
+                    <p className="font-bold text-stone-800">For {BILLING_IDENTITY.billingName}</p>
                     <p className="text-[9px] text-stone-400">Authorized Signatory</p>
                   </div>
                 </div>
@@ -1893,11 +1955,12 @@ export default function AdminBillingPage() {
 
                 <Button
                   variant="outline"
-                  onClick={() => window.open(getWhatsAppShareUrl(), "_blank")}
+                  onClick={handleSendInvoiceWhatsApp}
+                  disabled={isSendingInvoiceWhatsApp}
                   className="bg-emerald-50 border-emerald-300 text-emerald-800 hover:bg-emerald-100 text-xs gap-1.5 h-9 font-semibold"
                 >
                   <Share2 className="h-4 w-4 text-emerald-600" />
-                  Send WhatsApp Bill
+                  {isSendingInvoiceWhatsApp ? "Sending via Evolution..." : "Send WhatsApp Bill"}
                 </Button>
 
                 <Button

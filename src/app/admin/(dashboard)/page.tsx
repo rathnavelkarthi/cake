@@ -93,7 +93,11 @@ export default async function AdminDashboardPage() {
             </div>
             <p className="text-xs text-stone-500 mt-1 flex items-center gap-1">
               <TrendingUp className="h-3 w-3 text-emerald-600" />
-              <span>Paid online & storefront orders</span>
+              <span>
+                {metrics.todayInstantSales > 0
+                  ? `Incl. ₹${metrics.todayInstantSales.toLocaleString("en-IN")} instant orders`
+                  : "Paid online, counter & instant orders"}
+              </span>
             </p>
           </CardContent>
         </Card>

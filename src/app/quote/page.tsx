@@ -156,7 +156,7 @@ Venue: *${eventVenue || "Chennai"}*
 
 Looking forward to your bespoke design proposal and quotation!`;
 
-      const whatsappUrl = `https://wa.me/919840823145?text=${encodeURIComponent(msg)}`;
+      const whatsappUrl = `https://wa.me/${BUSINESS_CONFIG.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`;
 
       setSubmittedQuote({
         quoteNumber: newQuote.quotationNumber,

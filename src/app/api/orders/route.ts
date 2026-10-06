@@ -100,8 +100,8 @@ export async function POST(req: NextRequest) {
     const branchAddress = branch.address;
 
     const timestamp = Date.now().toString().slice(-4);
-    const orderNumber = `KCH-${new Date().getFullYear()}-${timestamp}`;
-    const orderId = `ord-${Date.now()}`;
+    const orderNumber = body.orderNumber || `KCH-${new Date().getFullYear()}-${timestamp}`;
+    const orderId = body.orderId || `ord-${Date.now()}`;
 
     const calculatedTotal = Number(total || (Number(subtotal || 0) + Number(deliveryFee || 0)));
 
@@ -125,16 +125,16 @@ export async function POST(req: NextRequest) {
       subtotal: Number(subtotal || calculatedTotal),
       delivery_fee: Number(deliveryFee || 0),
       total: calculatedTotal,
-      payment_status: "PENDING",
-      payment_method: "UPI",
-      order_status: "PENDING_PAYMENT",
+      payment_status: body.paymentStatus || "PENDING",
+      payment_method: body.paymentMethod || "UPI",
+      order_status: body.orderStatus || "PENDING_PAYMENT",
       fulfilment_type: fulfilmentType === "DELIVERY" ? "DELIVERY" : "PICKUP",
       delivery_address: deliveryAddress || null,
       requested_date: requestedDate || null,
       requested_time: requestedTime || null,
       customer_notes: customerNotes || null,
       items: items,
-      admin_notes: `Branch: ${branch.shortName} | Distance: ${deliveryDistanceKm} km`,
+      admin_notes: body.adminNotes || `Branch: ${branch.shortName} | Distance: ${deliveryDistanceKm} km`,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };

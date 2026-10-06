@@ -338,10 +338,9 @@ const CMS_SETTINGS = [
       brand_name: "Kichee's Baked Delights",
       tagline: "Pure Callebaut Chocolate & Slow European Baking",
       address: "14/2, Sterling Road, Nungambakkam, Chennai - 600034",
-      phone: "+91 98402 12345",
+      phone: "+91 98846 31078",
       email: "support@kicheesbakeddelights.in",
       hours: "Mon - Sun: 8:00 AM - 10:30 PM",
-      fssai_lic: "12423008000456",
       announcement_enabled: true,
       announcement_text: "🌟 Fresh Morning Bakes Now Available • Free Delivery on Orders Above ₹999 Across Chennai",
     },
@@ -457,7 +456,7 @@ const EMAIL_TEMPLATES = [
             <td style="padding: 24px 32px; background-color: #2b1a10; color: #d6c6b9; text-align: center; font-size: 12px; line-height: 1.6;">
               <p style="margin: 0 0 6px; font-weight: 700; color: #ffffff;">Kichee's Baked Delights</p>
               <p style="margin: 0 0 6px;">14/2, Sterling Road, Nungambakkam, Chennai - 600034</p>
-              <p style="margin: 0 0 12px;">Call / WhatsApp: +91 98402 12345 • Mon - Sun: 8:00 AM - 10:30 PM</p>
+              <p style="margin: 0 0 12px;">Call / WhatsApp: +91 98846 31078 • Mon - Sun: 8:00 AM - 10:30 PM</p>
               <p style="margin: 0; color: #9c8a7d; font-size: 11px;">&copy; 2026 Kichee's Baked Delights. All rights reserved.</p>
             </td>
           </tr>
@@ -557,7 +556,7 @@ const EMAIL_TEMPLATES = [
             <td style="padding: 20px 32px; background-color: #2b1a10; color: #d6c6b9; text-align: center; font-size: 12px; line-height: 1.6;">
               <p style="margin: 0 0 4px; font-weight: 700; color: #ffffff;">Kichee's Kitchen Counter</p>
               <p style="margin: 0 0 4px;">14/2, Sterling Road, Nungambakkam, Chennai - 600034</p>
-              <p style="margin: 0;">Order helpline: +91 98402 12345 • support@kicheesbakeddelights.in</p>
+              <p style="margin: 0;">Order helpline: +91 98846 31078 • support@kicheesbakeddelights.in</p>
             </td>
           </tr>
 

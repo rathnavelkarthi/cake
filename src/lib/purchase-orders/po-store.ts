@@ -451,12 +451,12 @@ export function generatePOHtml(po: PurchaseOrder): string {
 <body>
   <div class="header">
     <div>
-      <div class="brand-title">KICHEE'S BAKED DELIGHTS</div>
-      <div class="brand-sub">Artisanal Cakes, Patisserie & Fine Bakes</div>
+      <div class="brand-title">${BUSINESS_CONFIG.billingName}</div>
+      <div class="brand-sub">${BUSINESS_CONFIG.name} · Artisanal Cakes, Patisserie & Fine Bakes</div>
       <div class="company-details">
-        No. 18/4, Wheatcrofts Road, Nungambakkam, Chennai - 600034<br>
-        <strong>GSTIN:</strong> 33AAECP8821M1Z4 · <strong>FSSAI Lic:</strong> 12423002001550<br>
-        <strong>Email:</strong> billing@kicheesbakeddelights.in · <strong>Phone:</strong> +91 98400 12345
+        ${BUSINESS_CONFIG.address.full}<br>
+        <strong>GSTIN:</strong> ${BUSINESS_CONFIG.taxIdentity.gstin}<br>
+        <strong>Email:</strong> ${BUSINESS_CONFIG.email} · <strong>Phone:</strong> ${BUSINESS_CONFIG.phoneDisplay}
       </div>
     </div>
     <div class="po-title">
@@ -482,8 +482,8 @@ export function generatePOHtml(po: PurchaseOrder): string {
       <h4>Shipping & Invoicing Instructions</h4>
       <p><strong>Ship To:</strong> ${po.deliveryLocation}</p>
       <p><strong>Payment Terms:</strong> ${po.paymentTerms}</p>
-      <p><strong>Invoice To:</strong> Kichee's Baked Delights Pvt. Ltd.</p>
-      <p><strong>Tax ID (GST):</strong> 33AAECP8821M1Z4</p>
+      <p><strong>Invoice To:</strong> ${BUSINESS_CONFIG.billingName}</p>
+      <p><strong>Tax ID (GST):</strong> ${BUSINESS_CONFIG.taxIdentity.gstin}</p>
     </div>
   </div>
 
@@ -556,7 +556,7 @@ export function generatePOHtml(po: PurchaseOrder): string {
   <div class="signatures">
     <div class="sign-line">
       Authorized Bakery Procurement Officer<br>
-      <strong>Kichee's Baked Delights</strong>
+      <strong>${BUSINESS_CONFIG.billingName}</strong>
     </div>
     <div class="sign-line">
       Supplier Acknowledgment & Acceptance Signature<br>
@@ -565,7 +565,7 @@ export function generatePOHtml(po: PurchaseOrder): string {
   </div>
 
   <div class="footer">
-    This Purchase Order is subject to standard bakery quality and food safety compliance. Send all invoices referencing this PO to billing@kicheesbakeddelights.in.
+    This Purchase Order is subject to standard bakery quality and food safety compliance. Send all invoices referencing this PO to ${BUSINESS_CONFIG.email}.
   </div>
 </body>
 </html>`;

@@ -14,6 +14,8 @@ import {
   Zap,
   ChefHat,
   Calendar,
+  IndianRupee,
+  TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -98,10 +100,17 @@ export default function AdminOrdersPage() {
       weightKg: Array.isArray(row.items) && row.items[0]?.variantLabel
         ? row.items[0].variantLabel
         : "1 kg",
-      isEggless: false,
+      isEggless: Array.isArray(row.items) && row.items[0]?.isEggless !== undefined ? Boolean(row.items[0].isEggless) : false,
       cakeMessage: row.customer_notes || undefined,
-      assignedChef: row.assigned_chef || "Selva (Head Chef)",
-      isInstantOrder: false,
+      assignedChef: (() => {
+        const match = row.admin_notes?.match(/\[CHEF:\s*([^\]]+)\]/);
+        return match ? match[1].trim() : (row.assigned_chef || "Selva (Head Chef)");
+      })(),
+      isInstantOrder: Boolean(
+        row.is_instant_order ||
+        (row.admin_notes && (row.admin_notes.includes("INSTANT") || row.admin_notes.includes("RUSH"))) ||
+        (row.requested_time && row.requested_time.includes("Rush Instant"))
+      ),
       notes: row.admin_notes || undefined,
       items: Array.isArray(row.items)
         ? row.items.map((i: any) => (typeof i === "string" ? i : `${i.quantity || 1}x ${i.name || "Item"}`))
@@ -132,6 +141,59 @@ export default function AdminOrdersPage() {
     const localOnly = orders.filter((o) => !dbNums.has(o.orderNumber));
     return [...dbOrders, ...localOnly];
   }, [dbOrders, orders]);
+
+  // Real-time Daily Sales & Operations KPI
+  const todayMetrics = React.useMemo(() => {
+    const todayStr = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
+
+    const isTodayOrder = (o: OrderItem) => {
+      if (o.createdAt) {
+        try {
+          const dStr = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date(o.createdAt));
+          if (dStr === todayStr) return true;
+        } catch {}
+      }
+      if (o.date && (o.date.toLowerCase().includes("today") || o.date.includes(todayStr))) return true;
+      if (o.deliveryDate === todayStr || o.deliveryDate === "Today") return true;
+      return false;
+    };
+
+    const todayOrders = mergedOrders.filter(isTodayOrder);
+    const paidTodayOrders = todayOrders.filter((o) => o.paymentStatus === "PAID");
+
+    const dailySales = paidTodayOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+
+    const instantPaidOrders = paidTodayOrders.filter(
+      (o) => o.isInstantOrder || (o.notes && (o.notes.includes("INSTANT") || o.notes.includes("RUSH")))
+    );
+    const instantSales = instantPaidOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+
+    const activeKitchen = mergedOrders.filter(
+      (o) =>
+        o.orderStatus === "CONFIRMED" ||
+        o.orderStatus === "IN_OVEN" ||
+        o.orderStatus === "COOLING" ||
+        o.orderStatus === "DECORATING" ||
+        o.orderStatus === "PREPARING"
+    ).length;
+
+    const fulfilledCount = todayOrders.filter(
+      (o) =>
+        o.orderStatus === "READY_FOR_PICKUP" ||
+        o.orderStatus === "READY" ||
+        o.orderStatus === "COMPLETED" ||
+        o.orderStatus === "OUT_FOR_DELIVERY"
+    ).length;
+
+    return {
+      dailySales,
+      instantSales,
+      paidCount: paidTodayOrders.length,
+      instantCount: instantPaidOrders.length,
+      activeKitchen,
+      fulfilledCount,
+    };
+  }, [mergedOrders]);
 
   useEffect(() => {
     // Subscribe to local store for instant order changes
@@ -286,6 +348,82 @@ export default function AdminOrdersPage() {
             <Zap className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
             <span>Create Instant Order</span>
           </Button>
+        </div>
+      </div>
+
+      {/* Daily Sales & Operational KPI Cards */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Daily Sales (Today) */}
+        <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-stone-500">
+              Today's Daily Sales
+            </span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+              <IndianRupee className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="mt-2 text-2xl font-bold text-stone-900">
+            ₹{todayMetrics.dailySales.toLocaleString("en-IN")}
+          </div>
+          <p className="mt-1 flex items-center gap-1 text-[11px] text-stone-500">
+            <TrendingUp className="h-3 w-3 text-emerald-600" />
+            <span>{todayMetrics.paidCount} paid orders today (online + counter)</span>
+          </p>
+        </div>
+
+        {/* Instant / Rush Sales */}
+        <div className="rounded-xl border border-amber-200/80 bg-amber-50/40 p-4 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-amber-900">
+              Instant Order Sales
+            </span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-800">
+              <Zap className="h-4 w-4 fill-amber-500 text-amber-600" />
+            </div>
+          </div>
+          <div className="mt-2 text-2xl font-bold text-amber-950">
+            ₹{todayMetrics.instantSales.toLocaleString("en-IN")}
+          </div>
+          <p className="mt-1 text-[11px] text-amber-800 font-medium">
+            {todayMetrics.instantCount} counter / urgent dispatches today
+          </p>
+        </div>
+
+        {/* Active Kitchen Queue */}
+        <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-stone-500">
+              Active Kitchen Queue
+            </span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+              <ChefHat className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="mt-2 text-2xl font-bold text-stone-900">
+            {todayMetrics.activeKitchen}
+          </div>
+          <p className="mt-1 text-[11px] text-stone-500">
+            Baking, cooling & confectionery
+          </p>
+        </div>
+
+        {/* Fulfilled / Ready */}
+        <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-stone-500">
+              Fulfilled / Ready
+            </span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-stone-100 text-stone-700">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            </div>
+          </div>
+          <div className="mt-2 text-2xl font-bold text-stone-900">
+            {todayMetrics.fulfilledCount}
+          </div>
+          <p className="mt-1 text-[11px] text-stone-500">
+            Dispatched or completed today
+          </p>
         </div>
       </div>
 
@@ -701,6 +839,9 @@ export default function AdminOrdersPage() {
       <ManualOrderModal
         open={isManualModalOpen}
         onOpenChange={setIsManualModalOpen}
+        onOrderCreated={() => {
+          fetchFromDb(true);
+        }}
       />
     </div>
   );
