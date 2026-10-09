@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -26,20 +26,20 @@ import {
   Phone,
   ChefHat,
   Image as ImageIcon,
-  CheckCircle2,
   Sparkles,
   Search,
   X,
   Check,
-  ChevronDown,
-  Layers,
+  Plus,
+  Trash2,
+  Minus,
+  ShoppingBag,
 } from "lucide-react";
 import { addInstantOrder, OrderItem } from "@/lib/orders/order-store";
 import { SAMPLE_CAKES } from "@/data/sample-cakes";
 import {
   getInventoryProducts,
   subscribeInventory,
-  AdminProductItem,
 } from "@/lib/db/admin-data";
 
 export interface ProductOption {
@@ -52,18 +52,30 @@ export interface ProductOption {
   description?: string;
 }
 
+export interface SelectedOrderItem {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  quantity: number;
+  variant: string;
+  isEggless: boolean;
+  imageUrl?: string;
+  isCustom?: boolean;
+}
+
 // Built-in baseline catalogue so dropdown is instant & robust even before DB hydration
 const DEFAULT_CATALOGUE: ProductOption[] = [
   // Signature Cakes
-  { id: "cat-1", name: "Belgian Dark Chocolate Truffle", category: "Cakes", price: 650, isEggless: true, imageUrl: "/images/hero-truffle.jpg" },
-  { id: "cat-2", name: "Classic Red Velvet Gateau", category: "Cakes", price: 708, isEggless: true, imageUrl: "/custom-cakes/cake-2.jpg" },
-  { id: "cat-3", name: "Ferrero Rocher Grandeur", category: "Cakes", price: 872, isEggless: true, imageUrl: "/custom-cakes/cake-3.jpg" },
-  { id: "cat-4", name: "Rasmalai Melts Celebration Cake", category: "Cakes", price: 817, isEggless: true, imageUrl: "/custom-cakes/cake-4.jpg" },
-  { id: "cat-5", name: "Mascarpone & Fresh Fig", category: "Cakes", price: 850, isEggless: true, imageUrl: "/custom-cakes/cake-2.jpg" },
-  { id: "cat-6", name: "Roasted Hazelnut Praline", category: "Cakes", price: 820, isEggless: true, imageUrl: "/custom-cakes/cake-1.jpg" },
-  { id: "cat-7", name: "Alphonso Mango (Seasonal)", category: "Cakes", price: 750, isEggless: true, imageUrl: "/custom-cakes/cake-4.jpg" },
-  { id: "cat-8", name: "Fresh Strawberry Chantilly", category: "Cakes", price: 800, isEggless: true, imageUrl: "/custom-cakes/cake-5.jpg" },
-  { id: "cat-9", name: "Madras Ghee Celebration Cake", category: "Cakes", price: 620, isEggless: true, imageUrl: "/images/hero-truffle.jpg" },
+  { id: "cat-1", name: "Belgian Dark Chocolate Truffle", category: "Signature Cakes", price: 650, isEggless: true, imageUrl: "/images/hero-truffle.jpg" },
+  { id: "cat-2", name: "Classic Red Velvet Gateau", category: "Signature Cakes", price: 708, isEggless: true, imageUrl: "/custom-cakes/cake-2.jpg" },
+  { id: "cat-3", name: "Ferrero Rocher Grandeur", category: "Signature Cakes", price: 872, isEggless: true, imageUrl: "/custom-cakes/cake-3.jpg" },
+  { id: "cat-4", name: "Rasmalai Melts Celebration Cake", category: "Signature Cakes", price: 817, isEggless: true, imageUrl: "/custom-cakes/cake-4.jpg" },
+  { id: "cat-5", name: "Mascarpone & Fresh Fig", category: "Signature Cakes", price: 850, isEggless: true, imageUrl: "/custom-cakes/cake-2.jpg" },
+  { id: "cat-6", name: "Roasted Hazelnut Praline", category: "Signature Cakes", price: 820, isEggless: true, imageUrl: "/custom-cakes/cake-1.jpg" },
+  { id: "cat-7", name: "Alphonso Mango (Seasonal)", category: "Signature Cakes", price: 750, isEggless: true, imageUrl: "/custom-cakes/cake-4.jpg" },
+  { id: "cat-8", name: "Fresh Strawberry Chantilly", category: "Signature Cakes", price: 800, isEggless: true, imageUrl: "/custom-cakes/cake-5.jpg" },
+  { id: "cat-9", name: "Madras Ghee Celebration Cake", category: "Signature Cakes", price: 620, isEggless: true, imageUrl: "/images/hero-truffle.jpg" },
   
   // Cheesecakes & Tarts
   { id: "cat-10", name: "Basque Burnt Cheesecake", category: "Cheesecakes & Tarts", price: 890, isEggless: false, imageUrl: "/custom-cakes/cake-3.jpg" },
@@ -71,21 +83,21 @@ const DEFAULT_CATALOGUE: ProductOption[] = [
   { id: "cat-12", name: "Belgian Dark Ganache Fruit Tart", category: "Cheesecakes & Tarts", price: 280, isEggless: true, imageUrl: "/custom-cakes/cake-2.jpg" },
 
   // Brownies & Desserts
-  { id: "cat-13", name: "Classic Molten Fudge Walnut Brownies (Box of 4)", category: "Brownies", price: 450, isEggless: true, imageUrl: "/images/fudge-brownies.jpg" },
-  { id: "cat-14", name: "Nutella Sea Salt Brownies (Box of 4)", category: "Brownies", price: 520, isEggless: true, imageUrl: "/images/fudge-brownies.jpg" },
-  { id: "cat-15", name: "Lotus Biscoff Fudgy Blondies (Box of 4)", category: "Brownies", price: 480, isEggless: true, imageUrl: "/images/fudge-brownies.jpg" },
+  { id: "cat-13", name: "Classic Molten Fudge Walnut Brownies (Box of 4)", category: "Brownies & Desserts", price: 450, isEggless: true, imageUrl: "/images/fudge-brownies.jpg" },
+  { id: "cat-14", name: "Nutella Sea Salt Brownies (Box of 4)", category: "Brownies & Desserts", price: 520, isEggless: true, imageUrl: "/images/fudge-brownies.jpg" },
+  { id: "cat-15", name: "Lotus Biscoff Fudgy Blondies (Box of 4)", category: "Brownies & Desserts", price: 480, isEggless: true, imageUrl: "/images/fudge-brownies.jpg" },
 
   // Artisanal Bagels
-  { id: "cat-16", name: "Artisanal Toasted Sesame Bagels (Pack of 4)", category: "Bagels", price: 320, isEggless: true, imageUrl: "/images/bagels.jpg" },
-  { id: "cat-17", name: "Everything Garlic & Onion Bagels (Pack of 4)", category: "Bagels", price: 340, isEggless: true, imageUrl: "/images/bagels.jpg" },
+  { id: "cat-16", name: "Artisanal Toasted Sesame Bagels (Pack of 4)", category: "Artisanal Bagels", price: 320, isEggless: true, imageUrl: "/images/bagels.jpg" },
+  { id: "cat-17", name: "Everything Garlic & Onion Bagels (Pack of 4)", category: "Artisanal Bagels", price: 340, isEggless: true, imageUrl: "/images/bagels.jpg" },
 
   // Savouries & Buns
-  { id: "cat-18", name: "Korean Cream Cheese Garlic Bun", category: "Savouries", price: 220, isEggless: true, imageUrl: "/images/korean-bun.jpg" },
-  { id: "cat-19", name: "Paneer Tikka Flaky Brioche Puff", category: "Savouries", price: 180, isEggless: true, imageUrl: "/images/korean-bun.jpg" },
+  { id: "cat-18", name: "Korean Cream Cheese Garlic Bun", category: "Savouries & Buns", price: 220, isEggless: true, imageUrl: "/images/korean-bun.jpg" },
+  { id: "cat-19", name: "Paneer Tikka Flaky Brioche Puff", category: "Savouries & Buns", price: 180, isEggless: true, imageUrl: "/images/korean-bun.jpg" },
 
   // French Pastries
-  { id: "cat-20", name: "Classic French Opera Pastry Slice", category: "Pastries", price: 280, isEggless: true, imageUrl: "/custom-cakes/cake-3.jpg" },
-  { id: "cat-21", name: "Pure Belgian Dark Truffle Pastry", category: "Pastries", price: 240, isEggless: true, imageUrl: "/images/hero-truffle.jpg" },
+  { id: "cat-20", name: "Classic French Opera Pastry Slice", category: "French Pastries", price: 280, isEggless: true, imageUrl: "/custom-cakes/cake-3.jpg" },
+  { id: "cat-21", name: "Pure Belgian Dark Truffle Pastry", category: "French Pastries", price: 240, isEggless: true, imageUrl: "/images/hero-truffle.jpg" },
 ];
 
 const WEIGHT_OPTIONS = [
@@ -126,9 +138,6 @@ export function ManualOrderModal({
   const [fulfilmentType, setFulfilmentType] = useState<"PICKUP" | "DELIVERY">("PICKUP");
   const [deliveryDate, setDeliveryDate] = useState(new Date().toISOString().split("T")[0]);
   const [deliveryTimeSlot, setDeliveryTimeSlot] = useState(TIME_SLOTS[2]);
-  const [flavour, setFlavour] = useState(DEFAULT_CATALOGUE[0].name);
-  const [customFlavour, setCustomFlavour] = useState("");
-  const [weightKg, setWeightKg] = useState("1.5 kg");
   const [isEggless, setIsEggless] = useState(true);
   const [cakeMessage, setCakeMessage] = useState("");
   const [assignedChef, setAssignedChef] = useState<
@@ -137,15 +146,35 @@ export function ManualOrderModal({
   const [isRush, setIsRush] = useState(false);
   const [notes, setNotes] = useState("");
   const [selectedReferenceSample, setSelectedReferenceSample] = useState(SAMPLE_CAKES[0].id);
-  const [customPrice, setCustomPrice] = useState("1850");
   const [loading, setLoading] = useState(false);
 
   // Products Catalogue State
   const [products, setProducts] = useState<ProductOption[]>(DEFAULT_CATALOGUE);
-  const [isProductPickerOpen, setIsProductPickerOpen] = useState(false);
   const [productSearch, setProductSearch] = useState("");
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("all");
-  const pickerContainerRef = useRef<HTMLDivElement>(null);
+
+  // Selected Order Items
+  const [selectedItems, setSelectedItems] = useState<SelectedOrderItem[]>([
+    {
+      id: "item-default",
+      name: "Belgian Dark Chocolate Truffle",
+      category: "Signature Cakes",
+      price: 1850,
+      quantity: 1,
+      variant: "1.5 kg",
+      isEggless: true,
+      imageUrl: "/images/hero-truffle.jpg",
+    },
+  ]);
+
+  // Custom Bespoke Item Draft state
+  const [showCustomItemForm, setShowCustomItemForm] = useState(false);
+  const [customItemName, setCustomItemName] = useState("");
+  const [customItemPrice, setCustomItemPrice] = useState("1850");
+  const [customItemVariant, setCustomItemVariant] = useState("1.5 kg");
+
+  // Custom Total Override
+  const [customPriceOverride, setCustomPriceOverride] = useState<string>("");
 
   // Sync Products from Inventory & Supabase
   useEffect(() => {
@@ -154,16 +183,13 @@ export function ManualOrderModal({
       if (inv && inv.length > 0) {
         setProducts((prev) => {
           const map = new Map<string, ProductOption>();
-          // Keep defaults
           DEFAULT_CATALOGUE.forEach((p) => map.set(p.name.toLowerCase().trim(), p));
-          // Overlay previous
           prev.forEach((p) => map.set(p.name.toLowerCase().trim(), p));
-          // Overlay inventory
           inv.forEach((item) => {
             map.set(item.name.toLowerCase().trim(), {
               id: item.id,
               name: item.name,
-              category: item.category || "Cakes",
+              category: item.category || "Signature Cakes",
               price: item.price,
               isEggless: item.isEggless ?? true,
               imageUrl: item.imageUrl || "/images/hero-truffle.jpg",
@@ -198,7 +224,7 @@ export function ManualOrderModal({
                   p.category_name ||
                   (p.category_id
                     ? p.category_id.charAt(0).toUpperCase() + p.category_id.slice(1)
-                    : "Cakes"),
+                    : "Signature Cakes"),
                 price: Number(p.price || 500),
                 isEggless: p.is_eggless !== false,
                 imageUrl: p.image_url || "/images/hero-truffle.jpg",
@@ -241,21 +267,66 @@ export function ManualOrderModal({
     });
   }, [products, productSearch, selectedCategoryFilter]);
 
-  // Handle Product Selection
-  const handleSelectProduct = (p: ProductOption) => {
-    setFlavour(p.name);
-    setIsEggless(p.isEggless);
+  // Calculate items subtotal
+  const itemsSubtotal = useMemo(() => {
+    return selectedItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  }, [selectedItems]);
 
-    // Auto-update price according to weight or product default
-    let calculated = p.price;
-    if (weightKg === "1.5 kg" && p.category === "Cakes" && p.price < 1200) {
-      calculated = Math.round(p.price * 1.5);
-    } else if (weightKg === "2.0 kg" && p.category === "Cakes") {
-      calculated = Math.round(p.price * 2);
+  // Final effective price (respect manual override if set, else itemsSubtotal)
+  const finalCalculatedPrice = useMemo(() => {
+    if (customPriceOverride !== "") {
+      const parsed = parseInt(customPriceOverride, 10);
+      return isNaN(parsed) ? itemsSubtotal : parsed;
     }
-    setCustomPrice(calculated.toString());
+    return itemsSubtotal;
+  }, [customPriceOverride, itemsSubtotal]);
 
-    // Sync reference sample if matches
+  // Helper to calculate price based on variant
+  const getCalculatedItemPrice = (basePrice: number, variant: string, category: string) => {
+    const isCake = category.toLowerCase().includes("cake");
+    if (!isCake) return basePrice;
+
+    if (variant === "0.5 kg") return Math.round(basePrice * 0.65);
+    if (variant === "1.0 kg") return basePrice;
+    if (variant === "1.5 kg") return Math.round(basePrice * 1.5);
+    if (variant === "2.0 kg") return Math.round(basePrice * 2.0);
+    if (variant.includes("3.0")) return Math.round(basePrice * 3.0);
+    if (variant.includes("4.0")) return Math.round(basePrice * 4.0);
+    if (variant.includes("5.0")) return Math.round(basePrice * 5.0);
+    if (variant.includes("Single")) return Math.round(basePrice * 0.4);
+    return basePrice;
+  };
+
+  // Add Product to Selected Items
+  const handleAddProduct = (p: ProductOption) => {
+    // Check if already in order
+    const existingIndex = selectedItems.findIndex((it) => it.name.toLowerCase() === p.name.toLowerCase());
+    if (existingIndex >= 0) {
+      // Increment quantity
+      setSelectedItems((prev) =>
+        prev.map((it, idx) =>
+          idx === existingIndex ? { ...it, quantity: it.quantity + 1 } : it
+        )
+      );
+    } else {
+      const defaultVariant = p.category.toLowerCase().includes("cake") ? "1.0 kg" : "Standard Box / Pack";
+      const calculatedPrice = getCalculatedItemPrice(p.price, defaultVariant, p.category);
+      setSelectedItems((prev) => [
+        ...prev,
+        {
+          id: `item-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          name: p.name,
+          category: p.category,
+          price: calculatedPrice,
+          quantity: 1,
+          variant: defaultVariant,
+          isEggless: p.isEggless,
+          imageUrl: p.imageUrl,
+        },
+      ]);
+    }
+
+    // Sync reference sample image if matches
     if (p.imageUrl) {
       const match = SAMPLE_CAKES.find(
         (c) =>
@@ -264,34 +335,98 @@ export function ManualOrderModal({
       );
       if (match) setSelectedReferenceSample(match.id);
     }
-
-    setIsProductPickerOpen(false);
-    setProductSearch("");
   };
 
-  const handleSelectCustom = () => {
-    setFlavour("Custom");
-    setIsProductPickerOpen(false);
-    setProductSearch("");
+  // Add Custom Bespoke Item
+  const handleAddCustomItem = () => {
+    if (!customItemName.trim()) return;
+    const priceNum = parseInt(customItemPrice, 10) || 1850;
+    setSelectedItems((prev) => [
+      ...prev,
+      {
+        id: `custom-${Date.now()}`,
+        name: customItemName.trim(),
+        category: "Bespoke Cake",
+        price: priceNum,
+        quantity: 1,
+        variant: customItemVariant,
+        isEggless: isEggless,
+        imageUrl: "/images/hero-truffle.jpg",
+        isCustom: true,
+      },
+    ]);
+    setCustomItemName("");
+    setCustomItemPrice("1850");
+    setShowCustomItemForm(false);
   };
 
+  // Quantity controls
+  const handleUpdateQuantity = (id: string, delta: number) => {
+    setSelectedItems((prev) =>
+      prev
+        .map((it) => {
+          if (it.id === id) {
+            const nextQty = it.quantity + delta;
+            return nextQty > 0 ? { ...it, quantity: nextQty } : null;
+          }
+          return it;
+        })
+        .filter(Boolean) as SelectedOrderItem[]
+    );
+  };
+
+  // Remove Item
+  const handleRemoveItem = (id: string) => {
+    setSelectedItems((prev) => prev.filter((it) => it.id !== id));
+  };
+
+  // Update Item Variant
+  const handleUpdateVariant = (id: string, newVariant: string) => {
+    setSelectedItems((prev) =>
+      prev.map((it) => {
+        if (it.id === id) {
+          const matchedProd = products.find((p) => p.name.toLowerCase() === it.name.toLowerCase());
+          const basePrice = matchedProd ? matchedProd.price : it.price;
+          const updatedPrice = getCalculatedItemPrice(basePrice, newVariant, it.category);
+          return {
+            ...it,
+            variant: newVariant,
+            price: updatedPrice,
+          };
+        }
+        return it;
+      })
+    );
+  };
+
+  // Submit Order Dispatch
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!customerName.trim() || !customerMobile.trim()) return;
+    if (selectedItems.length === 0) {
+      alert("Please select at least one product for the kitchen order.");
+      return;
+    }
 
     setLoading(true);
 
     const refCake = SAMPLE_CAKES.find((c) => c.id === selectedReferenceSample);
-    const chosenFlavour =
-      flavour === "Custom"
-        ? (customFlavour.trim() || "Custom Bespoke Cake")
-        : flavour;
-    const finalPrice = customPrice ? parseInt(customPrice, 10) : 1850;
+    const primaryItem = selectedItems[0];
+    const chosenFlavour = primaryItem ? primaryItem.name : "Belgian Dark Chocolate Truffle";
+    const chosenWeight = primaryItem ? primaryItem.variant : "1.5 kg";
+    const finalImage = primaryItem?.imageUrl || refCake?.image || "/images/hero-truffle.jpg";
 
-    const matchedProduct = products.find(
-      (p) => p.name.toLowerCase() === chosenFlavour.toLowerCase()
+    const formattedItemStrings = selectedItems.map(
+      (it) => `${it.quantity}x ${it.name} (${it.variant}) - ₹${it.price * it.quantity}`
     );
-    const finalImage = matchedProduct?.imageUrl || refCake?.image;
+
+    const apiItemsPayload = selectedItems.map((it) => ({
+      name: it.name,
+      quantity: it.quantity,
+      price: it.price,
+      variantLabel: it.variant,
+      isEggless: it.isEggless,
+    }));
 
     try {
       // 1. Immediately write to local order store for instant UI feedback
@@ -304,14 +439,16 @@ export function ManualOrderModal({
           ? "⚡ Rush Instant Order (Immediate Kitchen Prep)"
           : deliveryTimeSlot,
         flavour: chosenFlavour,
-        weightKg,
+        weightKg: chosenWeight,
         isEggless,
         cakeMessage: cakeMessage.trim(),
         referenceImage: finalImage,
         referenceImageName: refCake?.title || chosenFlavour,
         assignedChef,
         notes: `${isRush ? "[RUSH INSTANT ORDER] " : ""}${notes.trim()}`,
-        price: finalPrice,
+        price: finalCalculatedPrice,
+        items: formattedItemStrings,
+        itemsCount: selectedItems.length,
       });
 
       // 2. Persist to Supabase Database via POST /api/orders so daily sales count permanently
@@ -324,8 +461,8 @@ export function ManualOrderModal({
             orderNumber: order.orderNumber,
             customerName: customerName.trim(),
             customerMobile: customerMobile.trim(),
-            subtotal: finalPrice,
-            total: finalPrice,
+            subtotal: finalCalculatedPrice,
+            total: finalCalculatedPrice,
             paymentStatus: "PAID",
             paymentMethod: "CASH",
             orderStatus: "CONFIRMED",
@@ -337,15 +474,7 @@ export function ManualOrderModal({
               : deliveryTimeSlot,
             customerNotes: cakeMessage.trim() || null,
             adminNotes: `${isRush ? "[RUSH INSTANT ORDER] " : ""}[CHEF: ${assignedChef}] [INSTANT_ORDER] ${notes.trim()}`.trim(),
-            items: [
-              {
-                name: chosenFlavour,
-                quantity: 1,
-                price: finalPrice,
-                variantLabel: weightKg,
-                isEggless,
-              },
-            ],
+            items: apiItemsPayload,
           }),
         });
       } catch (dbErr) {
@@ -357,23 +486,33 @@ export function ManualOrderModal({
       }
 
       onOpenChange(false);
-      // Reset fields
+      // Reset form
       setCustomerName("");
       setCustomerMobile("+91 ");
       setCakeMessage("");
       setNotes("");
       setIsRush(false);
+      setCustomPriceOverride("");
+      setSelectedItems([
+        {
+          id: "item-default",
+          name: "Belgian Dark Chocolate Truffle",
+          category: "Signature Cakes",
+          price: 1850,
+          quantity: 1,
+          variant: "1.5 kg",
+          isEggless: true,
+          imageUrl: "/images/hero-truffle.jpg",
+        },
+      ]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Find currently selected product object if matches
-  const currentSelectedProduct = products.find((p) => p.name === flavour);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white border-stone-200 p-6 sm:p-7">
+      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto bg-white border-stone-200 p-6 sm:p-7">
         <DialogHeader className="pb-3 border-b border-stone-100">
           <div className="flex items-center gap-2 text-amber-800">
             <div className="p-1.5 rounded-lg bg-amber-100 text-amber-900">
@@ -384,7 +523,7 @@ export function ManualOrderModal({
                 Create Instant / Manual Kitchen Order
               </DialogTitle>
               <DialogDescription className="text-xs text-stone-500">
-                Manager & Admin order dispatch. Dispatches directly to Head Chef Selva and Confectionery Chef Anbu.
+                Manager & Admin order dispatch. Routes directly to Head Chef Selva and Confectionery Chef Anbu.
               </DialogDescription>
             </div>
           </div>
@@ -517,215 +656,296 @@ export function ManualOrderModal({
             </div>
           </div>
 
-          {/* Section 3: Cake & Product Selection (ALL Catalogue Products) */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="space-y-1 sm:col-span-2 relative" ref={pickerContainerRef}>
-              <div className="flex items-center justify-between">
-                <label className="block text-xs font-semibold text-stone-700 uppercase tracking-wider flex items-center gap-1.5">
-                  <Cake className="h-3.5 w-3.5 text-stone-400" /> Product / Flavour *
+          {/* Section 3: ORDER PRODUCTS & ITEMS (CORE SECTION) */}
+          <div className="rounded-xl border border-stone-200 bg-stone-50/60 p-3.5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-1 rounded bg-amber-100 text-amber-900">
+                  <ShoppingBag className="h-4 w-4" />
+                </div>
+                <label className="text-xs font-bold text-stone-900 uppercase tracking-wider">
+                  Order Items ({selectedItems.length})
                 </label>
-                <span className="text-[10px] text-stone-500 font-medium bg-stone-100 px-1.5 py-0.5 rounded">
-                  {products.length} Products in Menu
+                <span className="text-[11px] font-semibold text-amber-900 bg-amber-100/70 px-2 py-0.5 rounded-full">
+                  ₹{itemsSubtotal.toLocaleString("en-IN")} Subtotal
+                </span>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCustomItemForm(!showCustomItemForm)}
+                className="h-7 text-[11px] border-amber-300 text-amber-900 hover:bg-amber-50"
+              >
+                <Sparkles className="h-3 w-3 mr-1 text-amber-600" />
+                {showCustomItemForm ? "Close Bespoke Form" : "+ Add Custom Bespoke Cake"}
+              </Button>
+            </div>
+
+            {/* Custom Bespoke Item Entry Form */}
+            {showCustomItemForm && (
+              <div className="p-3 bg-white border border-amber-200 rounded-lg space-y-2">
+                <div className="text-xs font-bold text-amber-950 flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+                  Add Custom Bespoke Cake / Product
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <Input
+                    value={customItemName}
+                    onChange={(e) => setCustomItemName(e.target.value)}
+                    placeholder="Bespoke Cake Name (e.g. Pistachio Raspberry 3-Tier)"
+                    className="h-8 text-xs border-stone-300 sm:col-span-2"
+                  />
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      value={customItemPrice}
+                      onChange={(e) => setCustomItemPrice(e.target.value)}
+                      placeholder="Price (₹)"
+                      className="h-8 text-xs border-stone-300 w-24"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={handleAddCustomItem}
+                      className="h-8 text-xs bg-amber-900 hover:bg-amber-950 text-white shrink-0"
+                    >
+                      Add Item
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Selected Items List */}
+            {selectedItems.length === 0 ? (
+              <div className="p-4 bg-white border border-dashed border-stone-300 rounded-lg text-center text-xs text-stone-500">
+                No items added yet. Search and click &ldquo;+ Add to Order&rdquo; from the product catalogue below.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {selectedItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 p-2.5 bg-white border border-stone-200 rounded-lg shadow-2xs hover:border-amber-200 transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5 truncate w-full sm:w-auto">
+                      <div className="h-10 w-10 rounded-md bg-stone-100 overflow-hidden shrink-0 border border-stone-200">
+                        <img
+                          src={item.imageUrl || "/images/hero-truffle.jpg"}
+                          alt={item.name}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/images/hero-truffle.jpg";
+                          }}
+                        />
+                      </div>
+                      <div className="truncate">
+                        <div className="text-xs font-bold text-stone-900 truncate">
+                          {item.name}
+                        </div>
+                        <div className="text-[10px] text-stone-500 flex items-center gap-1.5 mt-0.5">
+                          <span className="bg-stone-100 px-1.5 py-0.2 rounded text-stone-600">
+                            {item.category}
+                          </span>
+                          {item.isEggless && (
+                            <span className="text-emerald-700 font-medium">🌱 Eggless</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-stone-100">
+                      {/* Weight / Variant Select */}
+                      <div className="w-32">
+                        <Select
+                          value={item.variant}
+                          onValueChange={(val) => handleUpdateVariant(item.id, val)}
+                        >
+                          <SelectTrigger className="h-7 text-[11px] border-stone-200 bg-stone-50/50">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {WEIGHT_OPTIONS.map((w) => (
+                              <SelectItem key={w} value={w} className="text-xs">
+                                {w}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Quantity Stepper */}
+                      <div className="flex items-center border border-stone-200 rounded-md bg-stone-50">
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateQuantity(item.id, -1)}
+                          className="h-7 w-6 flex items-center justify-center text-stone-600 hover:bg-stone-200 rounded-l transition-colors"
+                        >
+                          <Minus className="h-3 w-3" />
+                        </button>
+                        <span className="h-7 px-2 flex items-center justify-center text-xs font-bold text-stone-900">
+                          {item.quantity}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateQuantity(item.id, 1)}
+                          className="h-7 w-6 flex items-center justify-center text-stone-600 hover:bg-stone-200 rounded-r transition-colors"
+                        >
+                          <Plus className="h-3 w-3" />
+                        </button>
+                      </div>
+
+                      {/* Item Total Price */}
+                      <div className="w-16 text-right">
+                        <span className="text-xs font-bold text-stone-900">
+                          ₹{(item.price * item.quantity).toLocaleString("en-IN")}
+                        </span>
+                      </div>
+
+                      {/* Delete Item */}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveItem(item.id)}
+                        className="text-stone-400 hover:text-red-600 p-1 transition-colors"
+                        title="Remove item"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* BROWSE & ADD PRODUCTS SECTION */}
+            <div className="pt-2 border-t border-stone-200">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-[11px] font-bold text-stone-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <Cake className="h-3.5 w-3.5 text-stone-400" />
+                  Product Catalogue ({products.length} Items Available)
+                </label>
+                <span className="text-[10px] text-stone-500">
+                  Click any product to add to order
                 </span>
               </div>
 
-              {/* Product Selector Button Trigger */}
-              <button
-                type="button"
-                onClick={() => setIsProductPickerOpen(!isProductPickerOpen)}
-                className="w-full h-9 px-3 text-xs bg-white border border-stone-300 rounded-md flex items-center justify-between hover:border-amber-800 transition-colors text-left focus:outline-none focus:ring-1 focus:ring-amber-800"
-              >
-                <div className="flex items-center gap-2 truncate">
-                  {flavour === "Custom" ? (
-                    <span className="font-semibold text-amber-900 flex items-center gap-1.5">
-                      <Sparkles className="h-3.5 w-3.5" />
-                      {customFlavour ? customFlavour : "Custom Specified Flavour"}
-                    </span>
-                  ) : currentSelectedProduct ? (
-                    <>
-                      <span className="font-semibold text-stone-900 truncate">
-                        {currentSelectedProduct.name}
-                      </span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-stone-100 text-stone-600 font-normal">
-                        {currentSelectedProduct.category}
-                      </span>
-                      <span className="text-[11px] font-bold text-amber-900">
-                        ₹{currentSelectedProduct.price}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="font-semibold text-stone-900 truncate">{flavour}</span>
-                  )}
-                </div>
-                <ChevronDown className="h-3.5 w-3.5 text-stone-400 shrink-0 ml-1" />
-              </button>
-
-              {/* Backdrop to close picker on outside click */}
-              {isProductPickerOpen && (
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setIsProductPickerOpen(false)}
+              {/* Product Search Box */}
+              <div className="relative mb-2">
+                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-stone-400" />
+                <input
+                  type="text"
+                  value={productSearch}
+                  onChange={(e) => setProductSearch(e.target.value)}
+                  placeholder="Search products (e.g. Belgian Truffle, Red Velvet, Fudge Brownies, Bagels)..."
+                  className="w-full h-8 pl-8 pr-7 text-xs bg-white border border-stone-200 rounded-md focus:outline-none focus:ring-1 focus:ring-amber-800"
                 />
-              )}
+                {productSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setProductSearch("")}
+                    className="absolute right-2 top-2 text-stone-400 hover:text-stone-600"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
 
-              {/* Searchable Product Dropdown Menu */}
-              {isProductPickerOpen && (
-                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-stone-200 rounded-lg shadow-xl overflow-hidden flex flex-col max-h-[340px]">
-                  {/* Search Input Box */}
-                  <div className="p-2 border-b border-stone-100 bg-stone-50/80">
-                    <div className="relative">
-                      <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-stone-400" />
-                      <input
-                        type="text"
-                        autoFocus
-                        value={productSearch}
-                        onChange={(e) => setProductSearch(e.target.value)}
-                        placeholder="Search all cakes, brownies, bagels, cheesecakes..."
-                        className="w-full h-8 pl-8 pr-7 text-xs bg-white border border-stone-200 rounded-md focus:outline-none focus:ring-1 focus:ring-amber-800"
-                      />
-                      {productSearch && (
-                        <button
-                          type="button"
-                          onClick={() => setProductSearch("")}
-                          className="absolute right-2 top-2 text-stone-400 hover:text-stone-600"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                    </div>
+              {/* Category Filter Chips */}
+              <div className="flex items-center gap-1 overflow-x-auto pb-1.5 mb-2 text-[10px]">
+                {availableCategories.slice(0, 10).map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setSelectedCategoryFilter(cat)}
+                    className={`px-2.5 py-0.5 rounded-full whitespace-nowrap transition-colors ${
+                      selectedCategoryFilter === cat
+                        ? "bg-amber-900 text-white font-semibold"
+                        : "bg-white text-stone-600 hover:bg-stone-200 border border-stone-200"
+                    }`}
+                  >
+                    {cat === "all" ? "All Products" : cat}
+                  </button>
+                ))}
+              </div>
 
-                    {/* Category Filter Chips */}
-                    <div className="flex items-center gap-1 mt-1.5 overflow-x-auto pb-1 text-[10px]">
-                      {availableCategories.map((cat) => (
-                        <button
-                          key={cat}
-                          type="button"
-                          onClick={() => setSelectedCategoryFilter(cat)}
-                          className={`px-2 py-0.5 rounded-full whitespace-nowrap transition-colors ${
-                            selectedCategoryFilter === cat
-                              ? "bg-amber-900 text-white font-semibold"
-                              : "bg-white text-stone-600 hover:bg-stone-200 border border-stone-200"
-                          }`}
-                        >
-                          {cat === "all" ? "All Items" : cat}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+              {/* Scrollable Products Grid / List */}
+              <div className="max-h-52 overflow-y-auto pr-1 grid grid-cols-1 sm:grid-cols-2 gap-2 border border-stone-200 rounded-lg p-2 bg-white">
+                {filteredProducts.map((p) => {
+                  const isInCart = selectedItems.some((it) => it.name.toLowerCase() === p.name.toLowerCase());
+                  const cartItem = selectedItems.find((it) => it.name.toLowerCase() === p.name.toLowerCase());
 
-                  {/* Scrollable Product List */}
-                  <div className="overflow-y-auto p-1 divide-y divide-stone-100 flex-1">
-                    {/* Pinned Custom Flavour Option */}
-                    <button
-                      type="button"
-                      onClick={handleSelectCustom}
-                      className={`w-full flex items-center justify-between p-2 rounded-md text-xs text-left hover:bg-amber-50 transition-colors ${
-                        flavour === "Custom"
-                          ? "bg-amber-50 text-amber-950 font-bold"
-                          : "text-amber-900"
+                  return (
+                    <div
+                      key={p.id}
+                      className={`flex items-center justify-between p-2 rounded-lg border transition-all ${
+                        isInCart
+                          ? "border-amber-300 bg-amber-50/50"
+                          : "border-stone-150 hover:border-stone-300 hover:bg-stone-50/50"
                       }`}
                     >
-                      <div className="flex items-center gap-2">
-                        <div className="h-7 w-7 rounded-md bg-amber-100 flex items-center justify-center text-amber-800">
-                          <Sparkles className="h-3.5 w-3.5" />
+                      <div className="flex items-center gap-2 truncate pr-1">
+                        <div className="h-8 w-8 rounded bg-stone-100 overflow-hidden shrink-0 border border-stone-200">
+                          <img
+                            src={p.imageUrl || "/images/hero-truffle.jpg"}
+                            alt={p.name}
+                            className="h-full w-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = "/images/hero-truffle.jpg";
+                            }}
+                          />
                         </div>
-                        <div>
-                          <div className="font-semibold">+ Custom Specified Flavour / Bespoke Cake</div>
-                          <div className="text-[10px] text-stone-500 font-normal">
-                            Type any custom cake flavour or bespoke design
+                        <div className="truncate">
+                          <div className="text-xs font-semibold text-stone-900 truncate">
+                            {p.name}
+                          </div>
+                          <div className="text-[10px] text-stone-500 flex items-center gap-1.5">
+                            <span>₹{p.price}</span>
+                            <span>•</span>
+                            <span className="text-stone-400">{p.category}</span>
+                            {p.isEggless && (
+                              <span className="text-emerald-700 font-medium">🌱</span>
+                            )}
                           </div>
                         </div>
                       </div>
-                      {flavour === "Custom" && <Check className="h-4 w-4 text-amber-800" />}
-                    </button>
 
-                    {/* Filtered Catalogue Items */}
-                    {filteredProducts.map((p) => {
-                      const isSelected = flavour === p.name;
-                      return (
-                        <button
-                          key={p.id}
-                          type="button"
-                          onClick={() => handleSelectProduct(p)}
-                          className={`w-full flex items-center justify-between p-2 rounded-md text-xs text-left hover:bg-amber-50/80 transition-colors ${
-                            isSelected
-                              ? "bg-amber-50 font-semibold text-amber-950"
-                              : "text-stone-800"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5 truncate pr-2">
-                            <div className="h-8 w-8 rounded-md bg-stone-100 overflow-hidden shrink-0 border border-stone-200">
-                              <img
-                                src={p.imageUrl || "/images/hero-truffle.jpg"}
-                                alt={p.name}
-                                className="h-full w-full object-cover"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = "/images/hero-truffle.jpg";
-                                }}
-                              />
-                            </div>
-                            <div className="truncate">
-                              <div className="truncate font-medium">{p.name}</div>
-                              <div className="text-[10px] text-stone-400 flex items-center gap-1.5 font-normal">
-                                <span>{p.category}</span>
-                                {p.isEggless && (
-                                  <span className="text-emerald-700 font-medium">🌱 Eggless</span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => handleAddProduct(p)}
+                        className={`h-7 px-2.5 text-[11px] font-semibold shrink-0 ${
+                          isInCart
+                            ? "bg-amber-100 text-amber-900 hover:bg-amber-200"
+                            : "bg-stone-900 text-white hover:bg-amber-900"
+                        }`}
+                      >
+                        {isInCart ? (
+                          <>
+                            <Check className="h-3 w-3 mr-1 text-emerald-600" />
+                            Added ({cartItem?.quantity})
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="h-3 w-3 mr-0.5" />
+                            Add
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  );
+                })}
 
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span className="font-bold text-stone-900">₹{p.price}</span>
-                            {isSelected && <Check className="h-4 w-4 text-amber-800" />}
-                          </div>
-                        </button>
-                      );
-                    })}
-
-                    {filteredProducts.length === 0 && (
-                      <div className="p-4 text-center text-xs text-stone-500">
-                        No products match &ldquo;{productSearch}&rdquo;. Choose &ldquo;Custom Specified Flavour&rdquo; above.
-                      </div>
-                    )}
+                {filteredProducts.length === 0 && (
+                  <div className="col-span-2 p-4 text-center text-xs text-stone-500">
+                    No products match &ldquo;{productSearch}&rdquo;. Try another search or use &ldquo;+ Add Custom Bespoke Cake&rdquo; above.
                   </div>
-                </div>
-              )}
-
-              {/* Custom Flavour Input Field */}
-              {flavour === "Custom" && (
-                <div className="mt-1.5">
-                  <Input
-                    value={customFlavour}
-                    onChange={(e) => setCustomFlavour(e.target.value)}
-                    placeholder="Enter bespoke flavour (e.g. Pistachio Rose Raspberry / Lavender Earl Grey)..."
-                    className="h-8 text-xs border-amber-300 focus:border-amber-800"
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Weight / Variant Selection */}
-            <div className="space-y-1">
-              <label className="block text-xs font-semibold text-stone-700 uppercase tracking-wider">
-                Weight / Size *
-              </label>
-              <Select value={weightKg} onValueChange={setWeightKg}>
-                <SelectTrigger className="h-9 text-xs border-stone-300">
-                  <SelectValue placeholder="Select Weight" />
-                </SelectTrigger>
-                <SelectContent>
-                  {WEIGHT_OPTIONS.map((w) => (
-                    <SelectItem key={w} value={w} className="text-xs">
-                      {w}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Section 4: Inscription & Eggless */}
+          {/* Section 4: Inscription & Eggless Guarantee */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="block text-xs font-semibold text-stone-700 uppercase tracking-wider">
@@ -816,37 +1036,58 @@ export function ManualOrderModal({
               />
             </div>
             <div className="space-y-1">
-              <label className="block text-xs font-semibold text-stone-700 uppercase tracking-wider">
-                Total Price (₹)
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-semibold text-stone-700 uppercase tracking-wider">
+                  Total Price (₹)
+                </label>
+                {customPriceOverride !== "" && (
+                  <button
+                    type="button"
+                    onClick={() => setCustomPriceOverride("")}
+                    className="text-[10px] text-amber-800 hover:underline"
+                  >
+                    Reset Auto
+                  </button>
+                )}
+              </div>
               <Input
                 type="number"
-                value={customPrice}
-                onChange={(e) => setCustomPrice(e.target.value)}
+                value={customPriceOverride !== "" ? customPriceOverride : finalCalculatedPrice.toString()}
+                onChange={(e) => setCustomPriceOverride(e.target.value)}
+                placeholder={itemsSubtotal.toString()}
                 className="h-9 text-xs border-stone-300 font-bold text-amber-950"
               />
+              <p className="text-[10px] text-stone-400">
+                Auto-calculated from items (editable for manual discounts)
+              </p>
             </div>
           </div>
 
           {/* Modal Actions */}
-          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-stone-100">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => onOpenChange(false)}
-              className="h-9 text-xs border-stone-300"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              size="sm"
-              disabled={loading}
-              className="h-9 text-xs font-bold bg-amber-900 hover:bg-amber-950 text-white shadow-xs"
-            >
-              {loading ? "Dispatching..." : "⚡ Dispatch to Kitchen Display"}
-            </Button>
+          <div className="flex items-center justify-between pt-3 border-t border-stone-100">
+            <div className="text-xs text-stone-500">
+              <span className="font-semibold text-stone-900">{selectedItems.length} Item(s)</span> in order • Total:{" "}
+              <span className="font-bold text-amber-900">₹{finalCalculatedPrice.toLocaleString("en-IN")}</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onOpenChange(false)}
+                className="h-9 text-xs border-stone-300"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={loading || selectedItems.length === 0}
+                className="h-9 text-xs font-bold bg-amber-900 hover:bg-amber-950 text-white shadow-xs"
+              >
+                {loading ? "Dispatching..." : "⚡ Dispatch to Kitchen Display"}
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

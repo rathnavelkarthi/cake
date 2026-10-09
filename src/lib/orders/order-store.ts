@@ -260,6 +260,8 @@ export interface InstantOrderInput {
   assignedChef: "Selva (Head Chef)" | "Anbu (Confectionery Chef)" | "General Kitchen";
   notes?: string;
   price?: number;
+  items?: string[];
+  itemsCount?: number;
 }
 
 export function addInstantOrder(input: InstantOrderInput): OrderItem {
@@ -274,6 +276,10 @@ export function addInstantOrder(input: InstantOrderInput): OrderItem {
   if (input.weightKg.includes("3.0") || input.weightKg.includes("3 kg")) calculatedPrice = 3600;
   if (input.price && input.price > 0) calculatedPrice = input.price;
 
+  const formattedItems = input.items && input.items.length > 0
+    ? input.items
+    : [`1x ${input.flavour} (${input.weightKg})${input.cakeMessage ? ` - "${input.cakeMessage}"` : ""}`];
+
   const newOrder: OrderItem = {
     id: `ord-${Date.now()}`,
     orderNumber,
@@ -284,7 +290,7 @@ export function addInstantOrder(input: InstantOrderInput): OrderItem {
     paymentStatus: "PAID",
     orderStatus: "CONFIRMED", // Starts as confirmed, ready for kitchen prep
     fulfilmentType: input.fulfilmentType,
-    itemsCount: 1,
+    itemsCount: input.itemsCount || formattedItems.length || 1,
     date: `Today, ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
     deliveryDate: input.deliveryDate || new Date().toISOString().split("T")[0],
     deliveryTimeSlot: input.deliveryTimeSlot || "Evening (5:00 PM to 8:30 PM)",
@@ -297,7 +303,7 @@ export function addInstantOrder(input: InstantOrderInput): OrderItem {
     assignedChef: input.assignedChef,
     isInstantOrder: true,
     notes: input.notes,
-    items: [`1x ${input.flavour} (${input.weightKg})${input.cakeMessage ? ` - "${input.cakeMessage}"` : ""}`],
+    items: formattedItems,
     createdAt: new Date().toISOString(),
   };
 

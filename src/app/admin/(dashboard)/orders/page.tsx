@@ -16,6 +16,7 @@ import {
   Calendar,
   IndianRupee,
   TrendingUp,
+  FileSpreadsheet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +51,8 @@ import {
 } from "@/lib/orders/order-store";
 import { ManualOrderModal } from "@/components/admin/ManualOrderModal";
 import { Phone, MessageSquare, Check, AlertCircle as AlertIcon } from "lucide-react";
+import { BillingExportModal } from "@/components/admin/BillingExportModal";
+import { getBillingInvoices, BillingInvoice } from "@/lib/billing/billing-store";
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<OrderItem[]>([]);
@@ -58,6 +61,7 @@ export default function AdminOrdersPage() {
   const [activeTab, setActiveTab] = useState<string>("all");
   const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -141,6 +145,51 @@ export default function AdminOrdersPage() {
     const localOnly = orders.filter((o) => !dbNums.has(o.orderNumber));
     return [...dbOrders, ...localOnly];
   }, [dbOrders, orders]);
+
+  // Integrated billing invoices for GST and Accounts Audit Export
+  const billingInvoicesFromOrders: BillingInvoice[] = React.useMemo(() => {
+    const fromStore = getBillingInvoices();
+    const fromOrders: BillingInvoice[] = mergedOrders.map((ord) => ({
+      id: ord.id,
+      invoiceNumber: ord.orderNumber.replace("KCH-", "INV-"),
+      date: ord.date,
+      rawDate: ord.createdAt || new Date().toISOString(),
+      customerName: ord.customerName,
+      customerMobile: ord.customerMobile,
+      customerEmail: ord.customerEmail,
+      paymentMethod: "UPI" as const,
+      items: [
+        {
+          id: `${ord.id}-item`,
+          name: ord.flavour || (Array.isArray(ord.items) && ord.items[0]) || "Artisanal Cake",
+          originalPrice: Math.round(ord.total / 1.05),
+          price: Math.round(ord.total / 1.05),
+          quantity: 1,
+          isEggless: ord.isEggless,
+          category: "Cakes",
+          hsnCode: "1905",
+        },
+      ],
+      subtotal: Math.round(ord.total / 1.05),
+      tax: Math.round(ord.total - ord.total / 1.05),
+      includeGst: true,
+      gstRate: 5,
+      deliveryFee: ord.deliveryFee || 0,
+      discount: 0,
+      grandTotal: ord.total,
+      status: ord.paymentStatus === "PAID" ? "PAID" : "CANCELLED",
+      createdAt: ord.createdAt || new Date().toISOString(),
+    }));
+
+    const map = new Map<string, BillingInvoice>();
+    fromStore.forEach((b) => map.set(b.invoiceNumber, b));
+    fromOrders.forEach((o) => {
+      if (!map.has(o.invoiceNumber)) {
+        map.set(o.invoiceNumber, o);
+      }
+    });
+    return Array.from(map.values());
+  }, [mergedOrders]);
 
   // Real-time Daily Sales & Operations KPI
   const todayMetrics = React.useMemo(() => {
@@ -339,7 +388,17 @@ export default function AdminOrdersPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setIsExportModalOpen(true)}
+            className="h-9 text-xs font-semibold border-amber-900/30 text-amber-900 hover:bg-amber-50 shadow-xs flex items-center gap-1.5"
+          >
+            <FileSpreadsheet className="h-3.5 w-3.5 text-amber-800" />
+            <span>Export for GST & Accounts</span>
+          </Button>
+
           <Button
             size="sm"
             onClick={() => setIsManualModalOpen(true)}
@@ -842,6 +901,13 @@ export default function AdminOrdersPage() {
         onOrderCreated={() => {
           fetchFromDb(true);
         }}
+      />
+
+      {/* 7-Format GST & Accounting Export Settings Modal */}
+      <BillingExportModal
+        isOpen={isExportModalOpen}
+        onOpenChange={setIsExportModalOpen}
+        allInvoices={billingInvoicesFromOrders}
       />
     </div>
   );

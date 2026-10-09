@@ -27,6 +27,9 @@ import {
   X,
   Download,
   Mail,
+  FileSpreadsheet,
+  FileCode,
+  FileCheck2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,6 +58,13 @@ import {
 } from "@/lib/db/admin-data";
 import { BUSINESS_CONFIG } from "@/lib/config/business";
 import { getQuotations, Quotation } from "@/lib/quotations/quotation-store";
+import {
+  getBillingInvoices,
+  saveBillingInvoice,
+  subscribeBillingInvoices,
+  BillingInvoice,
+} from "@/lib/billing/billing-store";
+import { BillingExportModal } from "@/components/admin/BillingExportModal";
 import { toast } from "sonner";
 
 /**
@@ -653,6 +663,12 @@ export default function AdminBillingPage() {
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [printFormat, setPrintFormat] = useState<"a4" | "thermal">("a4");
 
+  // Export Settings Modal & Billing Register History State
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportTargetInvoice, setExportTargetInvoice] = useState<BillingInvoice | null>(null);
+  const [allInvoices, setAllInvoices] = useState<BillingInvoice[]>(getBillingInvoices);
+  const [historySearch, setHistorySearch] = useState("");
+
   // Product catalog search and category filter
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -705,6 +721,12 @@ export default function AdminBillingPage() {
     return subscribeInventory(() => {
       const live = getInventoryProducts();
       setProducts(live);
+    });
+  }, []);
+
+  useEffect(() => {
+    return subscribeBillingInvoices((live) => {
+      setAllInvoices(live);
     });
   }, []);
 
@@ -865,6 +887,63 @@ export default function AdminBillingPage() {
     });
     setInvoiceDate(now);
     setInvoiceSuccess(invNum);
+
+    const newRecord: BillingInvoice = {
+      id: `inv-${Date.now()}`,
+      invoiceNumber: invNum,
+      date: now,
+      rawDate: new Date().toISOString(),
+      customerName: customerName.trim() || "Walk-in Customer",
+      customerMobile: customerMobile.trim() || "+91 98400 00000",
+      customerEmail: customerEmail.trim() || undefined,
+      paymentMethod,
+      items: billItems.map((b) => ({
+        ...b,
+        hsnCode: "1905",
+      })),
+      subtotal,
+      tax,
+      includeGst,
+      gstRate: effectiveGstRate,
+      deliveryFee,
+      discount,
+      grandTotal,
+      format: printFormat,
+      status: "PAID",
+      createdAt: new Date().toISOString(),
+    };
+
+    saveBillingInvoice(newRecord);
+    setExportTargetInvoice(newRecord);
+    setIsInvoiceModalOpen(true);
+  };
+
+  // Open any historical bill for view, reprint, or export
+  const handleOpenHistoricalInvoice = (inv: BillingInvoice) => {
+    setCustomerName(inv.customerName);
+    setCustomerMobile(inv.customerMobile);
+    setCustomerEmail(inv.customerEmail || "");
+    setPaymentMethod(inv.paymentMethod);
+    setBillItems(
+      inv.items.map((i) => ({
+        id: i.id,
+        name: i.name,
+        originalPrice: i.originalPrice,
+        price: i.price,
+        quantity: i.quantity,
+        isCustom: i.isCustom,
+        notes: i.notes,
+        isEggless: i.isEggless,
+        category: i.category,
+      }))
+    );
+    setDiscount(inv.discount);
+    setDeliveryFee(inv.deliveryFee);
+    setIncludeGst(inv.includeGst);
+    setGstRate(inv.gstRate);
+    setInvoiceDate(inv.date);
+    setInvoiceSuccess(inv.invoiceNumber);
+    setExportTargetInvoice(inv);
     setIsInvoiceModalOpen(true);
   };
 
@@ -1054,7 +1133,21 @@ export default function AdminBillingPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setExportTargetInvoice(null);
+              setIsExportModalOpen(true);
+            }}
+            className="h-9 text-xs border-amber-900/40 text-amber-900 hover:bg-amber-100/60 font-semibold gap-1.5 shadow-xs"
+          >
+            <FileSpreadsheet className="h-3.5 w-3.5 text-amber-800" />
+            <span>Export for GST & Accounts</span>
+          </Button>
+
           <Button
             type="button"
             variant="outline"
@@ -1107,7 +1200,7 @@ export default function AdminBillingPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Button
                 size="sm"
                 onClick={() => setIsInvoiceModalOpen(true)}
@@ -1115,6 +1208,23 @@ export default function AdminBillingPage() {
               >
                 <Eye className="h-3.5 w-3.5" />
                 View & Print Bill
+              </Button>
+
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const target =
+                    exportTargetInvoice ||
+                    allInvoices.find((i) => i.invoiceNumber === invoiceSuccess) ||
+                    null;
+                  setExportTargetInvoice(target);
+                  setIsExportModalOpen(true);
+                }}
+                className="bg-white border-amber-400 text-amber-950 hover:bg-amber-100 text-xs gap-1.5 h-8 font-bold shadow-xs"
+              >
+                <FileCode className="h-3.5 w-3.5 text-amber-800" />
+                Export (Tally / GST)
               </Button>
 
               <Button
@@ -1708,6 +1818,145 @@ export default function AdminBillingPage() {
         </div>
       </div>
 
+      {/* Sales Register & GST Audit Journal (October 2026) */}
+      <Card className="border-stone-200 shadow-xs bg-white">
+        <CardHeader className="pb-3 border-b border-stone-100">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <CardTitle className="text-sm font-bold text-stone-900 flex items-center gap-2">
+                <FileCheck2 className="h-4 w-4 text-amber-800" />
+                <span>Sales Register & GST Audit Journal</span>
+                <Badge className="bg-amber-100 text-amber-900 border-amber-200 text-[10px] font-semibold ml-1">
+                  October 2026
+                </Badge>
+              </CardTitle>
+              <p className="text-[11px] text-stone-500 mt-0.5">
+                Auditor-ready sales journal with HSN 1905 classification and 5% GST tax calculation. Export in any of the 7 Tally / CA formats.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-stone-400" />
+                <Input
+                  type="search"
+                  placeholder="Search invoice # or customer..."
+                  value={historySearch}
+                  onChange={(e) => setHistorySearch(e.target.value)}
+                  className="pl-8 h-8 text-xs bg-stone-50 border-stone-200 w-48 text-stone-900"
+                />
+              </div>
+
+              <Button
+                type="button"
+                onClick={() => {
+                  setExportTargetInvoice(null);
+                  setIsExportModalOpen(true);
+                }}
+                className="h-8 text-xs bg-amber-900 hover:bg-amber-950 text-white font-bold gap-1.5 shadow-2xs"
+              >
+                <FileSpreadsheet className="h-3.5 w-3.5" />
+                <span>Export Sales Register</span>
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-stone-50/70">
+                <TableRow>
+                  <TableHead className="text-xs font-semibold py-2.5">Invoice #</TableHead>
+                  <TableHead className="text-xs font-semibold py-2.5">Date & Time</TableHead>
+                  <TableHead className="text-xs font-semibold py-2.5">Customer</TableHead>
+                  <TableHead className="text-xs font-semibold py-2.5">Items Summary</TableHead>
+                  <TableHead className="text-xs font-semibold py-2.5">Payment</TableHead>
+                  <TableHead className="text-right text-xs font-semibold py-2.5">Taxable (₹)</TableHead>
+                  <TableHead className="text-right text-xs font-semibold py-2.5">GST 5% (₹)</TableHead>
+                  <TableHead className="text-right text-xs font-semibold py-2.5">Total (₹)</TableHead>
+                  <TableHead className="text-center text-xs font-semibold py-2.5 w-32">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {allInvoices
+                  .filter((inv) => {
+                    const q = historySearch.toLowerCase();
+                    return (
+                      !q ||
+                      inv.invoiceNumber.toLowerCase().includes(q) ||
+                      inv.customerName.toLowerCase().includes(q) ||
+                      inv.customerMobile.includes(q)
+                    );
+                  })
+                  .slice(0, 10)
+                  .map((inv) => (
+                    <TableRow key={inv.id} className="hover:bg-amber-50/20 text-xs">
+                      <TableCell className="font-bold text-stone-900 font-mono py-2.5">
+                        {inv.invoiceNumber}
+                      </TableCell>
+                      <TableCell className="text-stone-600 text-[11px] py-2.5 whitespace-nowrap">
+                        {inv.date}
+                      </TableCell>
+                      <TableCell className="py-2.5">
+                        <div className="font-semibold text-stone-900">{inv.customerName}</div>
+                        <div className="text-[10px] text-stone-500 font-mono">{inv.customerMobile}</div>
+                      </TableCell>
+                      <TableCell
+                        className="text-stone-600 text-[11px] py-2.5 max-w-[200px] truncate"
+                        title={inv.items.map((it) => `${it.quantity}x ${it.name}`).join(", ")}
+                      >
+                        {inv.items.map((it) => `${it.quantity}x ${it.name}`).join(", ")}
+                      </TableCell>
+                      <TableCell className="py-2.5">
+                        <Badge variant="outline" className="text-[10px] bg-stone-50 text-stone-700 border-stone-200">
+                          {inv.paymentMethod}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right font-medium text-stone-800 py-2.5">
+                        ₹{inv.subtotal.toLocaleString("en-IN")}
+                      </TableCell>
+                      <TableCell className="text-right font-medium text-stone-600 text-[11px] py-2.5">
+                        ₹{inv.tax.toLocaleString("en-IN")}
+                      </TableCell>
+                      <TableCell className="text-right font-bold text-amber-950 py-2.5">
+                        ₹{inv.grandTotal.toLocaleString("en-IN")}
+                      </TableCell>
+                      <TableCell className="py-2.5">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleOpenHistoricalInvoice(inv)}
+                            className="h-7 px-2 text-[11px] text-stone-600 hover:text-stone-900"
+                            title="View & Print Bill"
+                          >
+                            <Eye className="h-3 w-3 mr-1" />
+                            View
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setExportTargetInvoice(inv);
+                              setIsExportModalOpen(true);
+                            }}
+                            className="h-7 px-2 text-[11px] border-amber-300 text-amber-900 hover:bg-amber-50 font-semibold"
+                            title="Export in 7 Formats"
+                          >
+                            <Download className="h-3 w-3 mr-1" />
+                            Export
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Dedicated Tax Invoice & Print Receipt Modal */}
       <Dialog open={isInvoiceModalOpen} onOpenChange={setIsInvoiceModalOpen}>
         <DialogContent className="sm:max-w-3xl max-h-[92vh] overflow-y-auto p-0">
@@ -1725,7 +1974,7 @@ export default function AdminBillingPage() {
               </div>
 
               {/* Print Format Switcher & Action Buttons */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <div className="inline-flex rounded-lg border border-stone-200 p-0.5 bg-stone-100">
                   <button
                     type="button"
@@ -1750,6 +1999,15 @@ export default function AdminBillingPage() {
                     80mm Thermal
                   </button>
                 </div>
+
+                <Button
+                  variant="outline"
+                  onClick={() => setIsExportModalOpen(true)}
+                  className="bg-amber-50/70 border-amber-300 text-amber-950 hover:bg-amber-100 text-xs h-8 gap-1.5 font-bold shadow-2xs"
+                >
+                  <FileSpreadsheet className="h-3.5 w-3.5 text-amber-800" />
+                  Export for GST / Accounts
+                </Button>
 
                 <Button
                   onClick={() => triggerPrintReceipt(printFormat)}
@@ -1973,6 +2231,15 @@ export default function AdminBillingPage() {
                 >
                   <Mail className="h-4 w-4 text-amber-800" />
                   Email Invoice
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => setIsExportModalOpen(true)}
+                  className="bg-amber-100/70 border-amber-400 text-amber-950 hover:bg-amber-200 text-xs gap-1.5 h-9 font-bold"
+                >
+                  <FileCode className="h-4 w-4 text-amber-900" />
+                  Export (7 Formats)
                 </Button>
               </div>
 
@@ -2267,6 +2534,39 @@ export default function AdminBillingPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* 7-Format GST & Accounting Export Settings Modal */}
+      <BillingExportModal
+        isOpen={isExportModalOpen}
+        onOpenChange={setIsExportModalOpen}
+        activeInvoice={
+          exportTargetInvoice ||
+          (invoiceSuccess
+            ? allInvoices.find((i) => i.invoiceNumber === invoiceSuccess) || {
+                id: `inv-${Date.now()}`,
+                invoiceNumber: invoiceSuccess,
+                date: invoiceDate || new Date().toLocaleString("en-IN"),
+                rawDate: new Date().toISOString(),
+                customerName: customerName || "Walk-in Customer",
+                customerMobile: customerMobile || "+91 98400 00000",
+                customerEmail: customerEmail || undefined,
+                paymentMethod,
+                items: billItems.map((b) => ({ ...b, hsnCode: "1905" })),
+                subtotal,
+                tax,
+                includeGst,
+                gstRate: effectiveGstRate,
+                deliveryFee,
+                discount,
+                grandTotal,
+                format: printFormat,
+                status: "PAID",
+                createdAt: new Date().toISOString(),
+              }
+            : null)
+        }
+        allInvoices={allInvoices}
+      />
     </div>
   );
 }
