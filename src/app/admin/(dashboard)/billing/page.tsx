@@ -76,7 +76,8 @@ import { toast } from "sonner";
  */
 const BILLING_IDENTITY = {
   billingName: BUSINESS_CONFIG.billingName,
-  address: BUSINESS_CONFIG.address.full,
+  legalName: BUSINESS_CONFIG.legalName,
+  address: BUSINESS_CONFIG.invoiceAddress,
   gstin: BUSINESS_CONFIG.taxIdentity.gstin,
   stateCode: BUSINESS_CONFIG.taxIdentity.stateCode,
   stateName: BUSINESS_CONFIG.taxIdentity.stateName,
@@ -222,7 +223,7 @@ function generateInvoiceHtml(data: InvoicePrintData): string {
 <body>
   <div class="text-center">
     <div style="font-size: 15px; font-weight: bold; letter-spacing: 0.5px;">${BILLING_IDENTITY.billingName}</div>
-    <div style="font-size: 9.5px;">${BUSINESS_CONFIG.name} · Artisanal Cakes & Patisserie</div>
+    <div style="font-size: 9.5px;">Legal name: ${BILLING_IDENTITY.legalName}</div>
     <div style="font-size: 9px; margin-top: 2px;">${BILLING_IDENTITY.address}</div>
     <div style="font-size: 9px;">GSTIN: ${BILLING_IDENTITY.gstin}</div>
     <div style="font-size: 9px;">Ph: ${BILLING_IDENTITY.phone}</div>
@@ -453,7 +454,7 @@ function generateInvoiceHtml(data: InvoicePrintData): string {
       <tr>
         <td style="width: 62%;">
           <div class="brand-title">${BILLING_IDENTITY.billingName}</div>
-          <div class="brand-subtitle">${BUSINESS_CONFIG.name} · Artisanal Patisserie & Bespoke Cake Studio</div>
+          <div class="brand-subtitle">Legal name: ${BILLING_IDENTITY.legalName}</div>
           <div class="brand-address">
             <strong>Address:</strong> ${BILLING_IDENTITY.address}<br>
             <strong>Phone:</strong> ${BILLING_IDENTITY.phone} | <strong>Email:</strong> ${BILLING_IDENTITY.email}
@@ -973,7 +974,7 @@ export default function AdminBillingPage() {
     const cleanPhone = customerMobile.replace(/[^0-9]/g, "");
     const lines = [
       `*${BILLING_IDENTITY.billingName}* 🎂`,
-      `_${BUSINESS_CONFIG.name} · Artisanal Cakes & Patisserie_`,
+      `_Legal name: ${BILLING_IDENTITY.legalName}_`,
       `--------------------------------`,
       `*Bill / Tax Invoice:* #${invoiceSuccess || "INV"}`,
       `*Customer:* ${customerName}`,
@@ -2035,7 +2036,7 @@ export default function AdminBillingPage() {
                       {BILLING_IDENTITY.billingName}
                     </h2>
                     <p className="text-[10px] uppercase tracking-wider font-semibold text-stone-500">
-                      {BUSINESS_CONFIG.name} · Artisanal Oven-Fresh Patisserie & Bespoke Cake Studio
+                      Legal name: {BILLING_IDENTITY.legalName}
                     </p>
                     <div className="text-[11px] text-stone-600 mt-1 space-y-0.5">
                       <p>{BILLING_IDENTITY.address}</p>
