@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 import path from "path";
 
 const nextConfig: NextConfig = {
+  // Cap worker concurrency to prevent OS thread/process exhaustion (EAGAIN/os error 11) in cloud/container CI environments
+  experimental: {
+    cpus: 4,
+  },
   turbopack: {
     root: path.resolve(__dirname),
   },
