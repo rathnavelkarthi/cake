@@ -105,7 +105,7 @@ function wrapInEmailLayout(contentHtml: string, title = "Kichee's Baked Delights
       <div class="header" style="background: #3d2314; padding: 28px 20px; text-align: center;">
         <div class="logo-badge" style="background-color: #fef3c7; color: #78350f; font-weight: 800; font-size: 11px; letter-spacing: 1.5px; padding: 4px 12px; border-radius: 20px; display: inline-block; margin-bottom: 6px;">ARTISANAL PATISSERIE</div>
         <h1 class="brand-title" style="color: #ffffff; font-size: 22px; font-weight: 700; margin: 0;">Kichee's Baked Delights</h1>
-        <p class="brand-sub" style="color: #d6c7be; font-size: 12px; margin: 4px 0 0 0;">Nungambakkam High Road, Chennai · Pure Elegance</p>
+        <p class="brand-sub" style="color: #d6c7be; font-size: 12px; margin: 4px 0 0 0;">${BUSINESS_CONFIG.address.locality}, Chennai · Pure Elegance</p>
       </div>
 
       <!-- Main Body -->
@@ -187,7 +187,7 @@ export function generateOrderConfirmationEmail(order: {
       ${
         isDelivery
           ? `<p style="margin: 0 0 4px 0; font-size: 13px;"><strong>Delivery Destination:</strong> ${order.deliveryAddress || "Nungambakkam & Central Chennai"}</p>`
-          : `<p style="margin: 0 0 4px 0; font-size: 13px;"><strong>Pickup Location:</strong> Central Kitchen, Wheatcrofts Rd, Nungambakkam</p>`
+          : `<p style="margin: 0 0 4px 0; font-size: 13px;"><strong>Pickup Location:</strong> ${BUSINESS_CONFIG.address.full}</p>`
       }
       ${order.deliveryDate ? `<p style="margin: 0; font-size: 13px;"><strong>Scheduled Time:</strong> ${order.deliveryDate} ${order.deliveryTime ? `(${order.deliveryTime})` : ""}</p>` : ""}
     </div>

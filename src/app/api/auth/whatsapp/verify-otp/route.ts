@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { formatWhatsAppNumber } from "@/lib/evolution/client";
-import { globalOtpStore } from "../send-otp/route";
+import { globalOtpStore } from "@/lib/otp-store";
 
 // POST /api/auth/whatsapp/verify-otp
 export async function POST(req: NextRequest) {

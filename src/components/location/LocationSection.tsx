@@ -71,7 +71,7 @@ export default function LocationSection() {
             </h2>
 
             <p style={{ fontSize: "15px", color: "var(--text-secondary)", lineHeight: 1.6, marginBottom: "28px" }}>
-              Centrally located on Nungambakkam High Road. Walk in for counter takeaways, cake tastings, or pick up your pre-ordered celebration gateaux in as little as 30 minutes.
+              Centrally located in Nungambakkam. Walk in for counter takeaways, cake tastings, or pick up your pre-ordered celebration gateaux in as little as 30 minutes.
             </p>
 
             {/* Info Cards */}
@@ -293,7 +293,7 @@ export default function LocationSection() {
                   }}
                 />
                 <span style={{ fontSize: "13px", fontWeight: 700 }}>
-                  Kichees • 142 Nungambakkam High Rd
+                  Kichees • Casablanca Studio, Dr. Thirumurthy Nagar
                 </span>
               </div>
             </div>
@@ -305,7 +305,7 @@ export default function LocationSection() {
                   Need assistance finding us?
                 </div>
                 <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
-                  We are right near the Sterling Road junction.
+                  We are located at KG Casa Blanca - 1, No. 17/18, Dr. Thirumurthy Nagar Main Road.
                 </div>
               </div>
 

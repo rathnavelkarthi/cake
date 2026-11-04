@@ -10,6 +10,7 @@ export interface BusinessConfig {
   billingName: string;
   /** GST legal name (proprietor) — printed as a secondary line on tax invoices. */
   legalName: string;
+  constitution?: string;
   tagline: string;
   shortDescription: string;
   foundedYear: number;
@@ -22,6 +23,7 @@ export interface BusinessConfig {
     line1: string;
     locality: string;
     city: string;
+    district?: string;
     state: string;
     pincode: string;
     landmark: string;
@@ -41,6 +43,8 @@ export interface BusinessConfig {
     gstin: string;
     stateCode: string;
     stateName: string;
+    legalName?: string;
+    tradeName?: string;
   };
   mapsUrl: string;
   googleMapsEmbedUrl?: string;
@@ -70,6 +74,7 @@ export const BUSINESS_CONFIG: BusinessConfig = {
   billingName: "Home Made Connexions",
   // Legal / proprietor name from GST REG-06
   legalName: "Rajkumar Krishika",
+  constitution: "Proprietorship",
   tagline: "Artisanal Bakes & Bespoke Celebrations",
   shortDescription: "Handcrafted cakes, fudge brownies, and European pastries baked fresh daily in Nungambakkam, Chennai.",
   foundedYear: 2021,
@@ -78,27 +83,29 @@ export const BUSINESS_CONFIG: BusinessConfig = {
   whatsapp: "+919884631078",
   whatsappDisplay: "+91 98846 31078",
   email: "orders@kichees.in",
-  // Customer-facing storefront address (unchanged branding).
-  // The former Harrisons Hotel counter is no longer a separate outlet.
+  // Customer-facing storefront address and registered studio location
   address: {
-    line1: "KG Casablanca 1, S2, Ground Floor",
-    locality: "Dr. Thirumoorthy Nagar, Nungambakkam",
+    line1: "Flat No. S2, Ground Floor, KG Casa Blanca - 1, No. 17/18",
+    locality: "Dr. Thirumurthy Nagar Main Road, Nungambakkam",
     city: "Chennai",
+    district: "Chennai",
     state: "Tamil Nadu",
     pincode: "600034",
-    landmark: "Dr. Thirumoorthy Nagar Main Road",
-    full: "KG Casablanca 1, S2, Ground Floor, Dr. Thirumoorthy Nagar Main Road, Nungambakkam, Chennai, Tamil Nadu 600034",
+    landmark: "Dr. Thirumurthy Nagar Main Road",
+    full: "Flat No. S2, Ground Floor, KG Casa Blanca - 1, No. 17/18, Dr. Thirumurthy Nagar Main Road, Nungambakkam, Chennai, Tamil Nadu - 600034",
   },
   // Principal place of business from GST REG-06 — invoices only.
   invoiceAddress:
-    "Flat No. S2, Ground Floor, KG Casa Blanca - 1, No. 17/18, Dr. Thirumurthy Nagar Main Road, Nungambakkam, Chennai, Tamil Nadu 600034",
+    "Flat No. S2, Ground Floor, KG Casa Blanca - 1, No. 17/18, Dr. Thirumurthy Nagar Main Road, Nungambakkam, Chennai, Tamil Nadu - 600034",
   taxIdentity: {
     gstin: "33BCVPK6982M2ZL",
     stateCode: "33",
     stateName: "Tamil Nadu",
+    legalName: "Rajkumar Krishika",
+    tradeName: "Home Made Connexions",
   },
   mapsUrl:
-    "https://maps.google.com/?q=KG+Casablanca+1+Dr+Thirumoorthy+Nagar+Nungambakkam+Chennai+600034",
+    "https://maps.google.com/?q=KG+Casa+Blanca+1+No+17+18+Dr+Thirumurthy+Nagar+Nungambakkam+Chennai+600034",
   openingHours: [
     { days: "Monday to Sunday", hours: "9:00 AM to 10:30 PM", isOpenToday: true },
   ],

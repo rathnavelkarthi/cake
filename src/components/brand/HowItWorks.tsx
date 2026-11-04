@@ -16,7 +16,7 @@ const STEPS = [
     step: "02",
     title: "Choose delivery slot or counter pickup",
     description:
-      "Select thirty minute pickup at Nungambakkam High Road or scheduled temperature safe dispatch to your doorstep anywhere in Chennai.",
+      "Select thirty minute pickup at our Casablanca Studio (Nungambakkam) or scheduled temperature safe dispatch to your doorstep anywhere in Chennai.",
     icon: Calendar,
   },
   {

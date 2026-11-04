@@ -931,7 +931,7 @@ export default function Navbar() {
                   gap: "6px",
                 }}
               >
-                <div>142 Nungambakkam High Rd • Open Daily 9:00 AM – 10:30 PM</div>
+                <div>KG Casa Blanca - 1, Dr. Thirumurthy Nagar, Nungambakkam • Open Daily 9:00 AM – 10:30 PM</div>
                 <div style={{ display: "flex", justifyContent: "center", gap: "14px", flexWrap: "wrap", fontSize: "11px" }}>
                   <a href="/privacy" onClick={handleCloseMenu} style={{ color: "rgba(255, 255, 255, 0.6)", textDecoration: "none" }}>Privacy</a>
                   <a href="/terms" onClick={handleCloseMenu} style={{ color: "rgba(255, 255, 255, 0.6)", textDecoration: "none" }}>Terms</a>

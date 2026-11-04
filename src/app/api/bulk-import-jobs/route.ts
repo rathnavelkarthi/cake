@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
-export interface BulkImportJobPayload {
+interface BulkImportJobPayload {
   id?: string;
   mode: string;
   fileName?: string;

@@ -21,13 +21,16 @@ import {
   Clock,
   Layers,
   MessageCircle,
+  Download,
+  Printer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BUSINESS_CONFIG } from "@/lib/config/business";
-import { createQuotation } from "@/lib/quotations/quotation-store";
+import { createQuotation, generateQuotationHtml, Quotation } from "@/lib/quotations/quotation-store";
+import { downloadHtmlAsPdf } from "@/lib/utils/pdf-download";
 import confetti from "canvas-confetti";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -75,9 +78,34 @@ function QuoteRequestContent() {
     quoteNumber: string;
     customerName: string;
     whatsappUrl: string;
+    quote?: Quotation;
   } | null>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    if (!submittedQuote?.quote) return;
+    const html = generateQuotationHtml(submittedQuote.quote);
+    const filename = `Quotation-${submittedQuote.quote.quotationNumber}.pdf`;
+    setIsDownloadingPdf(true);
+    try {
+      toast.info("Preparing your quotation PDF download...");
+      await downloadHtmlAsPdf(html, filename, { format: "a4" });
+      toast.success(`Downloaded ${filename}`);
+    } catch (err: any) {
+      toast.error("Unable to generate PDF directly. Opening print view.");
+      const printWindow = window.open("", "_blank");
+      if (printWindow) {
+        printWindow.document.write(html);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => printWindow.print(), 350);
+      }
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -162,6 +190,7 @@ Looking forward to your bespoke design proposal and quotation!`;
         quoteNumber: newQuote.quotationNumber,
         customerName: customerName.trim(),
         whatsappUrl,
+        quote: newQuote,
       });
 
       // Celebration
@@ -213,19 +242,31 @@ Looking forward to your bespoke design proposal and quotation!`;
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <Button
+                type="button"
+                onClick={handleDownloadPdf}
+                disabled={isDownloadingPdf}
+                className="w-full justify-center gap-2 py-3.5 bg-amber-900 hover:bg-amber-950 text-white font-semibold rounded-xl h-auto shadow-xs"
+              >
+                <Download className="h-4 w-4 text-amber-200" />
+                <span>{isDownloadingPdf ? "Preparing PDF..." : "Download Quotation (PDF)"}</span>
+              </Button>
+
               <a
                 href={submittedQuote.whatsappUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="btn-primary w-full justify-center gap-2 py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-xl"
+                className="btn-primary w-full justify-center gap-2 py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-xl flex items-center"
               >
                 <MessageCircle className="h-5 w-5" />
                 <span>Chat with Chef on WhatsApp</span>
               </a>
+            </div>
 
+            <div className="pt-1">
               <Link
                 href="/shop"
-                className="btn-secondary w-full justify-center py-3.5 rounded-xl text-center"
+                className="btn-secondary w-full justify-center py-3 rounded-xl text-center block text-sm"
               >
                 Browse Standard Menu
               </Link>

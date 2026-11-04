@@ -27,6 +27,7 @@ import {
   Building2,
   Layers,
   ShoppingBag,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,6 +65,7 @@ import {
 } from "@/lib/quotations/quotation-store";
 import { getInventoryProducts, AdminProductItem } from "@/lib/db/admin-data";
 import { BUSINESS_CONFIG } from "@/lib/config/business";
+import { downloadHtmlAsPdf } from "@/lib/utils/pdf-download";
 import { toast } from "sonner";
 
 export default function QuotationsPage() {
@@ -76,6 +78,7 @@ export default function QuotationsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
   const [previewQuote, setPreviewQuote] = useState<Quotation | null>(null);
+  const [downloadingQuoteId, setDownloadingQuoteId] = useState<string | null>(null);
 
   // Form State
   const [customerName, setCustomerName] = useState("");
@@ -358,6 +361,23 @@ export default function QuotationsPage() {
     if (confirm(`Are you sure you want to delete Quotation ${quoteNum}?`)) {
       deleteQuotation(id);
       toast.success(`Quotation ${quoteNum} deleted`);
+    }
+  };
+
+  // Direct PDF Download
+  const handleDownloadPdf = async (quote: Quotation) => {
+    const html = generateQuotationHtml(quote);
+    const filename = `Quotation-${quote.quotationNumber}.pdf`;
+    setDownloadingQuoteId(quote.id);
+    try {
+      toast.info(`Preparing ${quote.quotationNumber} PDF download...`);
+      await downloadHtmlAsPdf(html, filename, { format: "a4" });
+      toast.success(`Downloaded ${filename}`);
+    } catch (err: any) {
+      toast.error("Failed to generate PDF. Triggering print window.");
+      handlePrint(quote);
+    } finally {
+      setDownloadingQuoteId(null);
     }
   };
 
@@ -736,6 +756,18 @@ export default function QuotationsPage() {
                           className="h-8 w-8 text-amber-800 hover:text-amber-950 hover:bg-amber-50 rounded-lg"
                         >
                           <Mail className="h-4 w-4" />
+                        </Button>
+
+                        {/* Download PDF */}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDownloadPdf(quote)}
+                          disabled={downloadingQuoteId === quote.id}
+                          title="Download Quotation PDF"
+                          className="h-8 w-8 text-emerald-700 hover:text-emerald-900 hover:bg-emerald-50 rounded-lg"
+                        >
+                          <Download className="h-4 w-4" />
                         </Button>
 
                         {/* Print / PDF */}
@@ -1289,6 +1321,16 @@ export default function QuotationsPage() {
                 >
                   <Share2 className="h-3.5 w-3.5" />
                   <span>Send on WhatsApp</span>
+                </Button>
+
+                <Button
+                  size="sm"
+                  onClick={() => handleDownloadPdf(previewQuote)}
+                  disabled={downloadingQuoteId === previewQuote.id}
+                  className="bg-amber-900 hover:bg-amber-950 text-white gap-1.5 text-xs rounded-lg font-semibold"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  <span>{downloadingQuoteId === previewQuote.id ? "Saving PDF..." : "Download PDF"}</span>
                 </Button>
 
                 <Button

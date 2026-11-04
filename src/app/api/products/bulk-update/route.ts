@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
-export interface BulkUpdateItem {
+interface BulkUpdateItem {
   id?: string;
   sku?: string;
   name?: string;
@@ -22,7 +22,7 @@ export interface BulkUpdateItem {
   branchIds?: string[];
 }
 
-export interface UpdateRowResult {
+interface UpdateRowResult {
   index: number;
   id?: string;
   sku?: string;

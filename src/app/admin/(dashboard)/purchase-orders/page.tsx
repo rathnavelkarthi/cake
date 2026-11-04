@@ -102,7 +102,7 @@ export default function AdminPurchaseOrdersPage() {
   const [selectedSupplierId, setSelectedSupplierId] = useState<string>("");
   const [expectedDate, setExpectedDate] = useState<string>("");
   const [deliveryLocation, setDeliveryLocation] = useState(
-    `${BUSINESS_CONFIG.billingName} Central Kitchen, 18/4 Wheatcrofts Rd, Nungambakkam, Chennai - 600034`
+    `${BUSINESS_CONFIG.billingName} Central Kitchen, ${BUSINESS_CONFIG.address.full}`
   );
   const [paymentTerms, setPaymentTerms] = useState("Net 30 Days");
   const [poNotes, setPoNotes] = useState("");

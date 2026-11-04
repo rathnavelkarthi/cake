@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { sendCustomerOtpWhatsApp, formatWhatsAppNumber } from "@/lib/evolution/client";
-
-// In-memory fallback cache for OTPs (persists during server runtime)
-const globalOtpStore = new Map<string, { otp: string; expiresAt: number; name?: string }>();
+import { globalOtpStore } from "@/lib/otp-store";
 
 // POST /api/auth/whatsapp/send-otp
 export async function POST(req: NextRequest) {
@@ -57,4 +55,3 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export { globalOtpStore };

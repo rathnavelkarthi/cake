@@ -1,7 +1,7 @@
 // Kichee's Baked Delights: Single-Kitchen & Delivery Logistics Configuration
 //
-// Kichees operates from one location: KG Casablanca 1, S2 Ground Floor,
-// Dr. Thirumoorthy Nagar, Nungambakkam. The former Harrisons Hotel counter has
+// Kichees operates from one location: Flat No. S2, Ground Floor, KG Casa Blanca - 1, No. 17/18,
+// Dr. Thirumurthy Nagar Main Road, Nungambakkam. The former Harrisons Hotel counter has
 // been retired, so it must not be offered at checkout or printed on invoices.
 //
 // A separate delivery radius model still applies: we travel across Chennai, we
@@ -31,10 +31,10 @@ export const CHENNAI_BRANCHES: BranchLocation[] = [
   {
     id: "nungambakkam",
     name: "Kichee's Baked Delights - Casablanca Studio",
-    shortName: "Casablanca Studio (Thirumoorthy Nagar)",
+    shortName: "Casablanca Studio (Thirumurthy Nagar)",
     address:
-      "KG Casablanca 1, S2, Ground Floor, Dr. Thirumoorthy Nagar Main Road, Nungambakkam, Chennai - 600034, Tamil Nadu",
-    area: "Dr. Thirumoorthy Nagar, Nungambakkam",
+      "Flat No. S2, Ground Floor, KG Casa Blanca - 1, No. 17/18, Dr. Thirumurthy Nagar Main Road, Nungambakkam, Chennai - 600034, Tamil Nadu",
+    area: "Dr. Thirumurthy Nagar, Nungambakkam",
     city: "Chennai",
     pincode: "600034",
     phone: "+91 98846 31078",
@@ -42,7 +42,7 @@ export const CHENNAI_BRANCHES: BranchLocation[] = [
     lat: 13.0601,
     lng: 80.2372,
     mapLink:
-      "https://maps.google.com/?q=KG+Casablanca+1+Dr+Thirumoorthy+Nagar+Nungambakkam+Chennai",
+      "https://maps.google.com/?q=KG+Casa+Blanca+1+No+17+18+Dr+Thirumurthy+Nagar+Nungambakkam+Chennai+600034",
     isPickupAvailable: true,
     isActive: true,
   },

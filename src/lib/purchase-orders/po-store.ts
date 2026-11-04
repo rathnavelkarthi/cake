@@ -124,7 +124,7 @@ export const INITIAL_PURCHASE_ORDERS: PurchaseOrder[] = [
     supplier: INITIAL_SUPPLIERS[0],
     date: "2026-09-28",
     expectedDeliveryDate: "2026-10-01",
-    deliveryLocation: "Kichee's Central Kitchen, 18/4 Wheatcrofts Rd, Nungambakkam, Chennai - 600034",
+    deliveryLocation: "Kichee's Central Kitchen, Flat No. S2, Ground Floor, KG Casa Blanca - 1, No. 17/18, Dr. Thirumurthy Nagar Main Road, Nungambakkam, Chennai, Tamil Nadu - 600034",
     paymentTerms: "Net 30 Days",
     items: [
       {
@@ -158,7 +158,7 @@ export const INITIAL_PURCHASE_ORDERS: PurchaseOrder[] = [
     supplier: INITIAL_SUPPLIERS[1],
     date: "2026-10-01",
     expectedDeliveryDate: "2026-10-03",
-    deliveryLocation: "Kichee's Central Kitchen, 18/4 Wheatcrofts Rd, Nungambakkam, Chennai - 600034",
+    deliveryLocation: "Kichee's Central Kitchen, Flat No. S2, Ground Floor, KG Casa Blanca - 1, No. 17/18, Dr. Thirumurthy Nagar Main Road, Nungambakkam, Chennai, Tamil Nadu - 600034",
     paymentTerms: "Net 15 Days",
     items: [
       {
@@ -202,7 +202,7 @@ export const INITIAL_PURCHASE_ORDERS: PurchaseOrder[] = [
     supplier: INITIAL_SUPPLIERS[4],
     date: "2026-10-02",
     expectedDeliveryDate: "2026-10-05",
-    deliveryLocation: "Kichee's Central Kitchen, 18/4 Wheatcrofts Rd, Nungambakkam, Chennai - 600034",
+    deliveryLocation: "Kichee's Central Kitchen, Flat No. S2, Ground Floor, KG Casa Blanca - 1, No. 17/18, Dr. Thirumurthy Nagar Main Road, Nungambakkam, Chennai, Tamil Nadu - 600034",
     paymentTerms: "Net 30 Days",
     items: [
       {

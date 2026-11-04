@@ -841,10 +841,10 @@ export default function AdminProductsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all" className="text-xs font-semibold">
-                        📍 Kichee's @ Casablanca Studio (Dr. Thirumoorthy Nagar)
+                        📍 Kichee's @ Casablanca Studio (Dr. Thirumurthy Nagar)
                       </SelectItem>
                       <SelectItem value="nungambakkam" className="text-xs">
-                        📍 Kichee's @ Casablanca Studio (Dr. Thirumoorthy Nagar)
+                        📍 Kichee's @ Casablanca Studio (Dr. Thirumurthy Nagar)
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -1757,7 +1757,7 @@ export default function AdminProductsPage() {
                       <span>SKU: {viewingProduct.sku}</span>
                       <span>•</span>
                       <span className="text-amber-300 flex items-center gap-1 font-sans">
-                        <MapPin className="w-3 h-3" /> Casablanca Studio (Dr. Thirumoorthy Nagar)
+                        <MapPin className="w-3 h-3" /> Casablanca Studio (Dr. Thirumurthy Nagar)
                       </span>
                     </p>
                   </div>
@@ -1850,7 +1850,7 @@ export default function AdminProductsPage() {
                       </h4>
                       <div className="text-xs text-stone-800 bg-stone-50/50 p-2.5 rounded-xl border border-stone-100 flex items-center gap-2">
                         <MapPin className="w-3.5 h-3.5 text-amber-800 shrink-0" />
-                        <span>Kichee's @ Casablanca Studio, Dr. Thirumoorthy Nagar, Nungambakkam</span>
+                        <span>Kichee's @ Casablanca Studio, Dr. Thirumurthy Nagar, Nungambakkam</span>
                       </div>
                     </div>
                   </div>
@@ -2103,10 +2103,10 @@ export default function AdminProductsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all" className="text-xs font-semibold">
-                        📍 Kichee's @ Casablanca Studio (Dr. Thirumoorthy Nagar)
+                        📍 Kichee's @ Casablanca Studio (Dr. Thirumurthy Nagar)
                       </SelectItem>
                       <SelectItem value="nungambakkam" className="text-xs">
-                        📍 Kichee's @ Casablanca Studio (Dr. Thirumoorthy Nagar)
+                        📍 Kichee's @ Casablanca Studio (Dr. Thirumurthy Nagar)
                       </SelectItem>
                     </SelectContent>
                   </Select>

@@ -29,7 +29,7 @@ export const FAQS: FAQItem[] = [
     id: "faq-5",
     category: "orders",
     question: "Can I pick up my order directly from the bakery counter?",
-    answer: "Yes. Select pickup at checkout or message us on WhatsApp. Our team will keep your box chilled in our display counter at 142 Nungambakkam High Road ready for you in thirty minutes.",
+    answer: "Yes. Select pickup at checkout or message us on WhatsApp. Our team will keep your box chilled in our display counter at our Casablanca Studio (Flat No. S2, KG Casa Blanca - 1, No. 17/18, Dr. Thirumurthy Nagar Main Road, Nungambakkam) ready for you in thirty minutes.",
   },
   {
     id: "faq-6",

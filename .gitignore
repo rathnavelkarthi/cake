@@ -102,4 +102,8 @@ brag-output*
 skills/
 data/skills/
 *.zip
+.codex/
+LOOP.md
+STATE.md
+loop-*.md
 

@@ -65,6 +65,7 @@ import {
   BillingInvoice,
 } from "@/lib/billing/billing-store";
 import { BillingExportModal } from "@/components/admin/BillingExportModal";
+import { downloadHtmlAsPdf } from "@/lib/utils/pdf-download";
 import { toast } from "sonner";
 
 /**
@@ -102,6 +103,7 @@ interface InvoicePrintData {
   date: string;
   customerName: string;
   customerMobile: string;
+  customerEmail?: string;
   paymentMethod: string;
   items: BillItem[];
   subtotal: number;
@@ -112,6 +114,7 @@ interface InvoicePrintData {
   discount: number;
   grandTotal: number;
   format: "a4" | "thermal";
+  notes?: string;
 }
 
 // Convert number to Indian Rupees in words
@@ -663,6 +666,7 @@ export default function AdminBillingPage() {
   // Invoice Modal & Print Format State
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [printFormat, setPrintFormat] = useState<"a4" | "thermal">("a4");
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   // Export Settings Modal & Billing Register History State
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -948,14 +952,44 @@ export default function AdminBillingPage() {
     setIsInvoiceModalOpen(true);
   };
 
-  // Direct print function
-  const triggerPrintReceipt = (format: "a4" | "thermal" = printFormat) => {
-    if (!invoiceSuccess) return;
-    printInvoiceDocument({
+  // Helper to compile invoice print data
+  const getInvoicePrintData = (
+    format: "a4" | "thermal" = printFormat,
+    targetInvoice?: BillingInvoice | null
+  ): InvoicePrintData | null => {
+    const inv =
+      targetInvoice ||
+      (invoiceSuccess ? allInvoices.find((i) => i.invoiceNumber === invoiceSuccess) : null);
+
+    if (inv) {
+      return {
+        invoiceNumber: inv.invoiceNumber,
+        date: inv.date,
+        customerName: inv.customerName,
+        customerMobile: inv.customerMobile,
+        customerEmail: inv.customerEmail,
+        paymentMethod: inv.paymentMethod,
+        items: inv.items,
+        subtotal: inv.subtotal,
+        tax: inv.tax,
+        includeGst: inv.includeGst,
+        gstRate: inv.gstRate,
+        deliveryFee: inv.deliveryFee,
+        discount: inv.discount,
+        grandTotal: inv.grandTotal,
+        format,
+        notes: inv.notes,
+      };
+    }
+
+    if (!invoiceSuccess) return null;
+
+    return {
       invoiceNumber: invoiceSuccess,
       date: invoiceDate || new Date().toLocaleString("en-IN"),
       customerName,
       customerMobile,
+      customerEmail: customerEmail.trim() || undefined,
       paymentMethod,
       items: billItems,
       subtotal,
@@ -966,7 +1000,44 @@ export default function AdminBillingPage() {
       discount,
       grandTotal,
       format,
-    });
+      notes: undefined,
+    };
+  };
+
+  // Direct print function
+  const triggerPrintReceipt = (
+    format: "a4" | "thermal" = printFormat,
+    targetInvoice?: BillingInvoice | null
+  ) => {
+    const data = getInvoicePrintData(format, targetInvoice);
+    if (!data) return;
+    printInvoiceDocument(data);
+  };
+
+  // Direct PDF download function
+  const triggerDownloadPdf = async (
+    format: "a4" | "thermal" = printFormat,
+    targetInvoice?: BillingInvoice | null
+  ) => {
+    const data = getInvoicePrintData(format, targetInvoice);
+    if (!data) {
+      toast.error("No active invoice available to download.");
+      return;
+    }
+    const html = generateInvoiceHtml(data);
+    const filename = `Tax-Invoice-${data.invoiceNumber}${format === "thermal" ? "-slip" : ""}.pdf`;
+
+    setIsDownloadingPdf(true);
+    try {
+      toast.info(`Generating ${data.invoiceNumber} PDF download...`);
+      await downloadHtmlAsPdf(html, filename, { format });
+      toast.success(`Downloaded ${filename}`);
+    } catch (err: any) {
+      toast.error("Failed to generate PDF. Triggering print dialog instead.");
+      printInvoiceDocument(data);
+    } finally {
+      setIsDownloadingPdf(false);
+    }
   };
 
   // WhatsApp share link generator
@@ -1236,6 +1307,17 @@ export default function AdminBillingPage() {
               >
                 <Printer className="h-3.5 w-3.5" />
                 Print A4 PDF
+              </Button>
+
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => triggerDownloadPdf("a4")}
+                disabled={isDownloadingPdf}
+                className="bg-white border-amber-400 text-amber-900 hover:bg-amber-100 text-xs gap-1.5 h-8 font-bold shadow-2xs"
+              >
+                <Download className="h-3.5 w-3.5 text-amber-800" />
+                {isDownloadingPdf ? "Saving PDF..." : "Download PDF"}
               </Button>
 
               <Button
@@ -1938,6 +2020,17 @@ export default function AdminBillingPage() {
                           <Button
                             size="sm"
                             variant="outline"
+                            onClick={() => triggerDownloadPdf("a4", inv)}
+                            disabled={isDownloadingPdf}
+                            className="h-7 px-2 text-[11px] border-emerald-300 text-emerald-800 hover:bg-emerald-50 font-semibold"
+                            title="Download Tax Invoice PDF"
+                          >
+                            <Download className="h-3 w-3 mr-1 text-emerald-700" />
+                            PDF
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => {
                               setExportTargetInvoice(inv);
                               setIsExportModalOpen(true);
@@ -2011,11 +2104,20 @@ export default function AdminBillingPage() {
                 </Button>
 
                 <Button
+                  onClick={() => triggerDownloadPdf(printFormat)}
+                  disabled={isDownloadingPdf}
+                  className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs h-8 gap-1.5 font-bold shadow-xs"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  {isDownloadingPdf ? "Saving PDF..." : "Download PDF"}
+                </Button>
+
+                <Button
                   onClick={() => triggerPrintReceipt(printFormat)}
                   className="bg-amber-900 hover:bg-amber-950 text-white text-xs h-8 gap-1.5 font-bold shadow-xs"
                 >
                   <Printer className="h-3.5 w-3.5" />
-                  Print / Save PDF
+                  Print Receipt
                 </Button>
               </div>
             </div>
@@ -2195,6 +2297,15 @@ export default function AdminBillingPage() {
             {/* Bottom Actions */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-stone-200">
               <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => triggerDownloadPdf(printFormat)}
+                  disabled={isDownloadingPdf}
+                  className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs gap-1.5 h-9 font-bold"
+                >
+                  <Download className="h-4 w-4" />
+                  {isDownloadingPdf ? "Saving PDF..." : `Download PDF (${printFormat === "thermal" ? "80mm" : "A4"})`}
+                </Button>
+
                 <Button
                   onClick={() => triggerPrintReceipt("a4")}
                   className="bg-amber-900 hover:bg-amber-950 text-white text-xs gap-1.5 h-9 font-bold"
