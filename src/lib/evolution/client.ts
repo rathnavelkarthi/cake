@@ -468,7 +468,7 @@ export function generateBillingInvoiceWhatsAppText(invoice: {
 
   const lines = [
     `🍰 *${BUSINESS_CONFIG.billingName} - TAX INVOICE*`,
-    `_${BUSINESS_CONFIG.name}_`,
+    `_Legal name: ${BUSINESS_CONFIG.legalName}_`,
     `━━━━━━━━━━━━━━━━━━━━`,
     `*Invoice Number:* #${invoice.invoiceNumber}`,
     `*Customer:* ${invoice.customerName}`,
@@ -484,9 +484,10 @@ export function generateBillingInvoiceWhatsAppText(invoice: {
     `*GRAND TOTAL: ₹${Number(invoice.grandTotal || 0).toLocaleString("en-IN")}*`,
     `*Payment Status:* PAID via ${invoice.paymentMethod}`,
     `━━━━━━━━━━━━━━━━━━━━`,
-    `Thank you for celebrating with ${BUSINESS_CONFIG.name}! 🎂`,
-    `📍 ${BUSINESS_CONFIG.address.full}`,
+    `Thank you for celebrating with ${BUSINESS_CONFIG.billingName}! 🎂`,
+    `📍 ${BUSINESS_CONFIG.invoiceAddress}`,
     `📞 ${BUSINESS_CONFIG.phone}`,
+    `GSTIN: ${BUSINESS_CONFIG.taxIdentity.gstin}`,
   ].filter(Boolean);
 
   return lines.join("\n");

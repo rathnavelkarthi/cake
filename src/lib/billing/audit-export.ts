@@ -679,9 +679,9 @@ export function exportToHtml(
     <div class="header-bar">
       <div>
         <div class="company-title">${config.companyName}</div>
-        <div class="company-sub">${BUSINESS_CONFIG.name} · Artisanal Patisserie</div>
+        <div class="company-sub">Legal name: ${BUSINESS_CONFIG.legalName}</div>
         <div class="company-meta">
-          ${BUSINESS_CONFIG.address.full}<br>
+          ${BUSINESS_CONFIG.invoiceAddress}<br>
           GSTIN: <strong>${config.gstin}</strong> | State: <strong>${config.stateCode} (${config.stateName})</strong><br>
           Ph: ${BUSINESS_CONFIG.phoneDisplay} | Email: ${BUSINESS_CONFIG.email}
         </div>
@@ -895,7 +895,7 @@ export async function exportToJpeg(
 
   ctx.fillStyle = "#FDE68A";
   ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-  ctx.fillText(`${BUSINESS_CONFIG.name.toUpperCase()} · ARTISANAL OVEN-FRESH BAKERY`, 36, 75);
+  ctx.fillText(`LEGAL NAME: ${BUSINESS_CONFIG.legalName.toUpperCase()}`, 36, 75);
 
   ctx.fillStyle = "#E7E5E4";
   ctx.font = "11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
@@ -1093,12 +1093,12 @@ export function exportToJson(
     generatedAt: new Date().toISOString(),
     generator: "Kichees Bakery POS Billing - Audit Export",
     taxpayerDetails: {
-      legalName: config.companyName,
-      tradeName: BUSINESS_CONFIG.name,
+      legalName: BUSINESS_CONFIG.legalName,
+      tradeName: BUSINESS_CONFIG.billingName,
       gstin: config.gstin,
       stateCode: config.stateCode,
       stateName: config.stateName,
-      address: BUSINESS_CONFIG.address,
+      address: BUSINESS_CONFIG.invoiceAddress,
       contact: {
         phone: BUSINESS_CONFIG.phoneDisplay,
         email: BUSINESS_CONFIG.email,
@@ -1240,9 +1240,9 @@ export function exportToPdf(
   <div class="header">
     <div>
       <div class="title">${config.companyName}</div>
-      <div class="subtitle">${BUSINESS_CONFIG.name} · Artisanal Patisserie</div>
+      <div class="subtitle">Legal name: ${BUSINESS_CONFIG.legalName}</div>
       <div class="meta">
-        ${BUSINESS_CONFIG.address.full}<br>
+        ${BUSINESS_CONFIG.invoiceAddress}<br>
         GSTIN: <strong>${config.gstin}</strong> | State: ${config.stateCode} (${config.stateName}) | Ph: ${BUSINESS_CONFIG.phoneDisplay}
       </div>
     </div>

@@ -6,7 +6,10 @@ export interface OpeningHour {
 
 export interface BusinessConfig {
   name: string;
+  /** GST trade name — printed as the primary business name on tax invoices. */
   billingName: string;
+  /** GST legal name (proprietor) — printed as a secondary line on tax invoices. */
+  legalName: string;
   tagline: string;
   shortDescription: string;
   foundedYear: number;
@@ -24,6 +27,12 @@ export interface BusinessConfig {
     landmark: string;
     full: string;
   };
+  /**
+   * Principal place of business as registered on the GST certificate.
+   * Used on tax invoices / audit exports only — storefront copy keeps
+   * `address.full` so the customer-facing site is not rebranded.
+   */
+  invoiceAddress: string;
   /**
    * Tax registration details printed on every invoice. Kept here rather than
    * inline in the billing page so the number is changed in exactly one place.
@@ -57,7 +66,10 @@ export interface BusinessConfig {
 
 export const BUSINESS_CONFIG: BusinessConfig = {
   name: "Kichees Baked Delights",
+  // Trade name from GST REG-06 (33BCVPK6982M2ZL)
   billingName: "Home Made Connexions",
+  // Legal / proprietor name from GST REG-06
+  legalName: "Rajkumar Krishika",
   tagline: "Artisanal Bakes & Bespoke Celebrations",
   shortDescription: "Handcrafted cakes, fudge brownies, and European pastries baked fresh daily in Nungambakkam, Chennai.",
   foundedYear: 2021,
@@ -66,8 +78,8 @@ export const BUSINESS_CONFIG: BusinessConfig = {
   whatsapp: "+919884631078",
   whatsappDisplay: "+91 98846 31078",
   email: "orders@kichees.in",
-  // Single registered place of business. The former Harrisons Hotel counter is
-  // no longer a separate outlet, so it must not appear on invoices.
+  // Customer-facing storefront address (unchanged branding).
+  // The former Harrisons Hotel counter is no longer a separate outlet.
   address: {
     line1: "KG Casablanca 1, S2, Ground Floor",
     locality: "Dr. Thirumoorthy Nagar, Nungambakkam",
@@ -77,6 +89,9 @@ export const BUSINESS_CONFIG: BusinessConfig = {
     landmark: "Dr. Thirumoorthy Nagar Main Road",
     full: "KG Casablanca 1, S2, Ground Floor, Dr. Thirumoorthy Nagar Main Road, Nungambakkam, Chennai, Tamil Nadu 600034",
   },
+  // Principal place of business from GST REG-06 — invoices only.
+  invoiceAddress:
+    "Flat No. S2, Ground Floor, KG Casa Blanca - 1, No. 17/18, Dr. Thirumurthy Nagar Main Road, Nungambakkam, Chennai, Tamil Nadu 600034",
   taxIdentity: {
     gstin: "33BCVPK6982M2ZL",
     stateCode: "33",

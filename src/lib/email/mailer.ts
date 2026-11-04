@@ -115,8 +115,9 @@ function wrapInEmailLayout(contentHtml: string, title = "Kichee's Baked Delights
 
       <!-- Footer -->
       <div class="footer" style="background-color: #faf6f0; padding: 20px 24px; text-align: center; border-top: 1px solid #eee4da; color: #78716c; font-size: 11.5px;">
-        <p style="margin: 0 0 6px 0; font-weight: 600; color: #44403c;">${BUSINESS_CONFIG.billingName} (${BUSINESS_CONFIG.name})</p>
-        <p style="margin: 0 0 6px 0;">${BUSINESS_CONFIG.address.full}</p>
+        <p style="margin: 0 0 6px 0; font-weight: 600; color: #44403c;">${BUSINESS_CONFIG.billingName}</p>
+        <p style="margin: 0 0 4px 0;">Legal name: ${BUSINESS_CONFIG.legalName}</p>
+        <p style="margin: 0 0 6px 0;">${BUSINESS_CONFIG.invoiceAddress}</p>
         <p style="margin: 0 0 8px 0;"><strong>GSTIN:</strong> ${BUSINESS_CONFIG.taxIdentity.gstin} · <strong>Tel:</strong> ${BUSINESS_CONFIG.phoneDisplay}</p>
         <p style="margin: 0; color: #a8a29e;">This email was sent from the official billing system (${BUSINESS_CONFIG.email}).</p>
       </div>
